@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NPV ESG Exercises</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #dbe3ee;
+      --accent: #2563eb;
+      --accent-2: #0f766e;
+      --cash: #1d4ed8;
+      --rate: #7c3aed;
+      --demand: #b45309;
+      --initial: #be185d;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1, h2, h3 { margin: 0 0 10px; }
+    p { margin: 0 0 12px; }
+
+    .hero, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+
+    .card { padding: 20px; }
+    .muted { color: var(--muted); }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    select, button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    select {
+      min-width: 340px;
+      max-width: 100%;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--accent-2);
+      color: white;
+      border-color: var(--accent-2);
+      font-weight: 600;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .cash { color: var(--cash); }
+    .rate { color: var(--rate); }
+    .demand { color: var(--demand); }
+    .initial { color: var(--initial); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { background: #f8fafc; }
+
+    .question {
+      background: #f8fbff;
+      border: 1px dashed #bfd6ff;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .answer {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .answer.show { display: block; }
+
+    .formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      margin: 10px 0;
+    }
+
+    .decision {
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    .good {
+      background: #ecfdf5;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .warn {
+      background: #fff7ed;
+      color: #92400e;
+      border: 1px solid #fed7aa;
+    }
+
+    .small { font-size: 13px; }
+    .section-title { margin-top: 18px; }
+
+    @media (max-width: 920px) {
+      .grid { grid-template-columns: 1fr; }
+      select { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>NPV Exercises: ESG and Investment Decisions</h1>
+      <p>
+        Here you can find NPV exercises in which the <strong>ESG-friendly project starts with the lower baseline NPV</strong>.
+        You must assess whether the conclusion changes once an ESG-related factor affects one key NPV channel:
+        <strong>cash flows, cost of capital, demand from customers, or initial investment</strong>.
+      </p>
+      <p class="muted">
+        Each case includes a short-horizon and long-horizon view to highlight how short-term decision rules can ignore long-term damages, regulation, technology shifts, financing constraints, and stakeholder impacts.
+      </p>
+      <div class="controls">
+        <label for="caseSelect"><strong>Select case:</strong></label>
+        <select id="caseSelect"></select>
+        <button id="toggleAnswerBtn">Show solution</button>
+      </div>
+      <div class="legend">
+        <span class="pill cash">Channel: Cash flows</span>
+        <span class="pill rate">Channel: Discount rate / cost of capital</span>
+        <span class="pill demand">Channel: Customer demand / declining revenues</span>
+        <span class="pill initial">Channel: Initial investment</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div id="exercise"></div>
+      </div>
+
+      <div class="card">
+        <h2>Case logic</h2>
+        <p>
+          In every exercise, the conventional project looks better at first. The ESG-friendly project or ESG-compliant version initially appears to destroy value or to offer a lower NPV. The question is whether the conclusion changes once sustainability-related effects are allowed to affect the NPV.
+        </p>
+        <h3 class="section-title">Four channels used in the generator</h3>
+        <table>
+          <thead>
+            <tr><th>Channel</th><th>How it enters the NPV</th><th>Typical ESG trigger</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Cash flows</td><td>Operating costs or net annual cash flow change</td><td>Carbon prices, fines, worker injuries, supply disruptions, remediation costs</td></tr>
+            <tr><td>Discount rate</td><td>Higher required return lowers present value</td><td>Transition risk, legal risk, financing penalties, lender restrictions</td></tr>
+            <tr><td>Demand</td><td>Revenues decline over time</td><td>Customer switching, regulation, greener substitutes, reputation loss</td></tr>
+            <tr><td>Initial investment</td><td>Higher up-front capital needed reduces NPV immediately</td><td>Investor shortages, bank exclusion policies, costly bond issuance, financing frictions</td></tr>
+          </tbody>
+        </table>
+        <p class="small muted" style="margin-top:14px;">
+          Calculation notes: level cash flows use the annuity factor AF = (1 - (1 + r)^(-n)) / r. Declining cash flows use the growing annuity formula PV = CF₁ × [1 - ((1 + g)/(1 + r))^n] / (r - g), where g can be negative.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function annuityFactor(r, n) {
+      return (1 - Math.pow(1 + r, -n)) / r;
+    }
+
+    function pvLevel(cf, r, n) {
+      return cf * annuityFactor(r, n);
+    }
+
+    function pvGrowing(cf1, r, g, n) {
+      if (Math.abs(r - g) < 1e-10) return cf1 * n / (1 + r);
+      return cf1 * (1 - Math.pow((1 + g) / (1 + r), n)) / (r - g);
+    }
+
+    function npvLevel(initial, cf, r, n) {
+      return -initial + pvLevel(cf, r, n);
+    }
+
+    function npvGrowing(initial, cf1, r, g, n) {
+      return -initial + pvGrowing(cf1, r, g, n);
+    }
+
+    function eur(v) {
+      const sign = v < 0 ? '-' : '';
+      const abs = Math.abs(v);
+      return `${sign}€${abs.toFixed(abs >= 100 ? 0 : 1)}m`;
+    }
+
+    function pct(v) {
+      return `${(v * 100).toFixed(1)}%`;
+    }
+
+    function yearSamples(cf1, g, years) {
+      return years.map(year => ({ year, cf: cf1 * Math.pow(1 + g, year - 1) }));
+    }
+
+    function decisionText(friendly, conventional, friendlyName) {
+      if (friendly > conventional) return `Decision reverses: choose ${friendlyName}.`;
+      return 'The conventional option still looks financially stronger on this narrow NPV view.';
+    }
+
+    function decisionClass(friendly, conventional) {
+      return friendly > conventional ? 'good' : 'warn';
+    }
+
+    function channelBadge(type) {
+      if (type === 'cash') return '<span class="pill cash">Spotlight: Cash flows</span>';
+      if (type === 'rate') return '<span class="pill rate">Spotlight: Discount rate / cost of capital</span>';
+      if (type === 'demand') return '<span class="pill demand">Spotlight: Customer demand / declining revenues</span>';
+      return '<span class="pill initial">Spotlight: Initial investment</span>';
+    }
+
+    const cases = [
+      {
+        id: 1,
+        title: 'Coal boiler vs. electric heat pump in a factory',
+        channel: 'cash',
+        narrative: 'A manufacturer can either keep a coal-based industrial boiler or invest in an electric heat pump system. The electric system is cleaner but has a lower baseline NPV. The spotlight is on cash flows: future carbon costs and expected environmental regulation raise the operating cost of the coal option.',
+        baseline: { friendlyName: 'Electric heat pump (ESG-friendly)', conventionalName: 'Coal boiler', friendlyInitial: 180, friendlyCF: 28, conventionalInitial: 120, conventionalCF: 30, rFriendly: 0.08, rConventional: 0.08, shortN: 8, longN: 20 },
+        shock: { type: 'cash', details: 'Expected carbon price and pollution-control compliance add €12m per year to the coal boiler costs.', deltaCFConventional: -12, policy: 'Expected tightening of industrial emissions rules' }
+      },
+      {
+        id: 2,
+        title: 'Warehouse solar roof vs. diesel backup dependence',
+        channel: 'rate',
+        narrative: 'A logistics firm can keep a diesel-heavy site configuration or build a solar-plus-storage roof system. The green investment starts with a lower NPV. The spotlight is on the discount rate: lenders penalize the diesel-dependent project because of transition and fuel-price risk.',
+        baseline: { friendlyName: 'Solar roof + battery system (ESG-friendly)', conventionalName: 'Diesel-reliant warehouse configuration', friendlyInitial: 95, friendlyCF: 13, conventionalInitial: 60, conventionalCF: 12, rFriendly: 0.08, rConventional: 0.08, shortN: 7, longN: 18 },
+        shock: { type: 'rate', details: 'Banks raise the required return on the diesel-dependent project from 8% to 13% because of transition risk and refinancing uncertainty.', newRConventional: 0.13, policy: 'Green lending criteria and rising concern about stranded fossil dependence' }
+      },
+      {
+        id: 3,
+        title: 'Supplier labor upgrade vs. low-cost outsourcing',
+        channel: 'demand',
+        narrative: 'A clothing brand can continue relying on a low-cost supplier with poor labor conditions or switch to a certified supplier network with better labor standards. The certified option starts with a lower baseline NPV. The spotlight is on customer demand: if labor abuses are exposed, revenues on the cheap-sourcing model can erode over time.',
+        baseline: { friendlyName: 'Certified supplier network (ESG-friendly)', conventionalName: 'Low-cost outsourcing with weak labor standards', friendlyInitial: 70, friendlyCF: 14, conventionalInitial: 40, conventionalCF: 15.5, rFriendly: 0.09, rConventional: 0.09, shortN: 6, longN: 15 },
+        shock: { type: 'demand', details: 'Expected customer backlash and retailer delistings cause revenues of the weak-labor model to decline by 8% per year.', gConventional: -0.08, technology: 'Traceability technology makes labor abuses easier to detect publicly' }
+      },
+      {
+        id: 4,
+        title: 'Employee gym and wellness program vs. no intervention',
+        channel: 'cash',
+        narrative: 'A company can build a gym and wellness program to improve employee health, retention, and absenteeism outcomes, or it can do nothing. The wellness option has the lower baseline NPV because the up-front investment is higher. The spotlight is on cash flows: the no-intervention option faces rising absenteeism and turnover costs over time.',
+        baseline: { friendlyName: 'Gym + wellness program (ESG-friendly)', conventionalName: 'Do nothing', friendlyInitial: 22, friendlyCF: 4.2, conventionalInitial: 2, conventionalCF: 2.8, rFriendly: 0.08, rConventional: 0.08, shortN: 5, longN: 12 },
+        shock: { type: 'cash', details: 'Absenteeism, burnout, and replacement costs reduce the annual cash flow of the do-nothing option by €2.4m.', deltaCFConventional: -2.4, policy: 'Expected tightening of psychosocial risk obligations and employer duty-of-care scrutiny' }
+      },
+      {
+        id: 5,
+        title: 'Compliant wastewater system vs. cheating on regulation',
+        channel: 'cash',
+        narrative: 'A chemicals plant can invest in a compliant wastewater treatment upgrade or continue a cheaper non-compliant setup. The compliant version starts with a lower baseline NPV. The spotlight is on cash flows: enforcement, fines, remediation, and shutdowns hit the non-compliant option.',
+        baseline: { friendlyName: 'Compliant wastewater upgrade (ESG-friendly)', conventionalName: 'Non-compliant shortcut', friendlyInitial: 110, friendlyCF: 20, conventionalInitial: 60, conventionalCF: 21, rFriendly: 0.08, rConventional: 0.08, shortN: 6, longN: 16 },
+        shock: { type: 'cash', details: 'Expected fines, mandatory clean-up, and downtime lower the annual cash flow of the non-compliant option by €12m.', deltaCFConventional: -12, policy: 'Expected regulatory enforcement and stricter water discharge monitoring' }
+      },
+      {
+        id: 6,
+        title: 'Gas fleet vs. EV delivery fleet',
+        channel: 'demand',
+        narrative: 'A delivery company can stay with a gas fleet or shift to EVs. The EV strategy starts with a lower baseline NPV because of the larger initial outlay. The spotlight is on demand: clients increasingly prefer low-emission logistics providers and may switch away from the gas-heavy option.',
+        baseline: { friendlyName: 'EV fleet (ESG-friendly)', conventionalName: 'Gas delivery fleet', friendlyInitial: 160, friendlyCF: 27, conventionalInitial: 100, conventionalCF: 28, rFriendly: 0.08, rConventional: 0.08, shortN: 7, longN: 15 },
+        shock: { type: 'demand', details: 'As low-emission delivery becomes the norm, cash flows from the gas fleet decline by 6% per year.', gConventional: -0.06, technology: 'Rapid improvement in charging and route-optimization technology lowers the appeal of gas fleets' }
+      },
+      {
+        id: 7,
+        title: 'Data center renewable PPA vs. coal-linked power',
+        channel: 'rate',
+        narrative: 'A data center can sign a renewable power purchase agreement or stay exposed to carbon-intensive grid power. The renewable contract starts with a lower baseline NPV. The spotlight is on cost of capital: investors and lenders apply a higher rate to carbon-intensive operations with transition exposure.',
+        baseline: { friendlyName: 'Renewable PPA (ESG-friendly)', conventionalName: 'Coal-linked grid exposure', friendlyInitial: 75, friendlyCF: 11.5, conventionalInitial: 40, conventionalCF: 10.5, rFriendly: 0.08, rConventional: 0.08, shortN: 6, longN: 14 },
+        shock: { type: 'rate', details: 'The carbon-intensive option is discounted at 16% rather than 8% because of financing penalties and transition risk.', newRConventional: 0.16, policy: 'Investor decarbonization mandates and tighter green financing standards' }
+      },
+      {
+        id: 8,
+        title: 'Circular packaging redesign vs. single-use plastic',
+        channel: 'demand',
+        narrative: 'A consumer goods firm can redesign packaging to be circular and recyclable or continue with cheaper single-use plastic. The circular redesign begins with the lower baseline NPV. The spotlight is on demand: customers and retailers progressively shift away from plastic-heavy products.',
+        baseline: { friendlyName: 'Circular packaging redesign (ESG-friendly)', conventionalName: 'Single-use plastic packaging', friendlyInitial: 48, friendlyCF: 8.0, conventionalInitial: 20, conventionalCF: 7.3, rFriendly: 0.08, rConventional: 0.08, shortN: 5, longN: 12 },
+        shock: { type: 'demand', details: 'Sales tied to the single-use plastic format decline by 8% per year as retailers and consumers switch.', gConventional: -0.08, technology: 'New low-impact packaging alternatives become commercially viable' }
+      },
+      {
+        id: 9,
+        title: 'Mine safety upgrade vs. deferred maintenance',
+        channel: 'cash',
+        narrative: 'A mining company can invest in a major worker safety upgrade or postpone it to preserve current profitability. The safety investment starts with a lower baseline NPV. The spotlight is on cash flows: injuries, stoppages, insurance costs, and legal liabilities reduce the value of the deferred-maintenance option.',
+        baseline: { friendlyName: 'Safety upgrade (ESG-friendly)', conventionalName: 'Deferred maintenance', friendlyInitial: 130, friendlyCF: 24, conventionalInitial: 70, conventionalCF: 25, rFriendly: 0.09, rConventional: 0.09, shortN: 6, longN: 18 },
+        shock: { type: 'cash', details: 'Expected accident-related costs lower annual cash flows of the deferred-maintenance option by €10m.', deltaCFConventional: -10, policy: 'Expected tighter safety enforcement and more severe liability exposure' }
+      },
+      {
+        id: 10,
+        title: 'Green steel process vs. conventional blast furnace',
+        channel: 'rate',
+        narrative: 'A steel producer can invest in a greener process or keep a conventional blast furnace. The green process starts with the lower baseline NPV. The spotlight is on cost of capital: long-dated high-carbon assets face a higher discount rate because they risk becoming stranded as regulation and alternative technology advance.',
+        baseline: { friendlyName: 'Green steel process (ESG-friendly)', conventionalName: 'Conventional blast furnace', friendlyInitial: 420, friendlyCF: 65, conventionalInitial: 260, conventionalCF: 58, rFriendly: 0.08, rConventional: 0.08, shortN: 8, longN: 22 },
+        shock: { type: 'rate', details: 'The blast furnace is discounted at 15% instead of 8% because lenders price transition risk and potential stranded-asset exposure.', newRConventional: 0.15, technology: 'Cleaner industrial production technology becomes increasingly competitive' }
+      },
+      {
+        id: 11,
+        title: 'Casino expansion vs. community entertainment complex',
+        channel: 'cash',
+        narrative: 'A leisure company can expand a casino business or invest in a broader community entertainment complex with lower addiction risk. The community-oriented option starts with a lower baseline NPV. The spotlight is on cash flows: regulators are increasingly considering making gambling operators bear part of the social costs linked to addiction as new scientific studies document stronger long-term harms.',
+        baseline: { friendlyName: 'Community entertainment complex (ESG-friendly)', conventionalName: 'Casino expansion', friendlyInitial: 140, friendlyCF: 22, conventionalInitial: 90, conventionalCF: 23, rFriendly: 0.08, rConventional: 0.08, shortN: 6, longN: 16 },
+        shock: { type: 'cash', details: 'Expected addiction-compensation levies, mandated prevention spending, and litigation risk reduce annual cash flows of the casino project by €13m.', deltaCFConventional: -13, policy: 'Regulators are considering making operators pay for documented downstream addiction harms' }
+      },
+      {
+        id: 12,
+        title: 'Sugary drinks line vs. healthier reformulation',
+        channel: 'cash',
+        narrative: 'A beverage company can continue relying on a highly sugary product line or invest in a healthier reformulation strategy. The healthier strategy starts with a lower baseline NPV. The spotlight is on cash flows: recent scientific evidence linking excess sugar consumption to long-term health problems increases the probability of future levies, warning-label costs, and health-related liability exposure.',
+        baseline: { friendlyName: 'Healthier reformulation strategy (ESG-friendly)', conventionalName: 'Sugary drinks line', friendlyInitial: 85, friendlyCF: 13, conventionalInitial: 45, conventionalCF: 13.8, rFriendly: 0.08, rConventional: 0.08, shortN: 5, longN: 14 },
+        shock: { type: 'cash', details: 'Expected health levies, compliance costs, and litigation exposure reduce annual cash flows of the sugary drinks line by €7.5m.', deltaCFConventional: -7.5, policy: 'Regulators are increasingly considering forcing firms to bear more of the long-term health costs documented in recent studies' }
+      },
+      {
+        id: 13,
+        title: 'Weapons component plant vs. civilian engineering plant',
+        channel: 'initial',
+        narrative: 'A manufacturer can build a plant focused on weapons components or redirect investment toward civilian engineering products. The civilian option starts with a lower baseline NPV. The spotlight is on the initial investment requirement: because some banks and bond investors have strict exclusion policies, the controversial project faces a financing shortfall and higher up-front capital needs.',
+        baseline: { friendlyName: 'Civilian engineering plant (ESG-friendlier)', conventionalName: 'Weapons component plant', friendlyInitial: 150, friendlyCF: 24, conventionalInitial: 100, conventionalCF: 25, rFriendly: 0.08, rConventional: 0.08, shortN: 7, longN: 18 },
+        shock: { type: 'initial', details: 'Because many lenders and bond investors refuse to finance weapons-related activity, the plant now requires an extra €75m in up-front financing costs and structuring expenses.', deltaInitialConventional: 75, policy: 'Strict bank exclusion policies and a shortage of willing investors raise the effective initial investment' }
+      },
+      {
+        id: 14,
+        title: 'High-alcohol beverage rollout vs. low-alcohol portfolio',
+        channel: 'initial',
+        narrative: 'A drinks company can launch a high-alcohol product expansion or invest in a low-alcohol portfolio. The low-alcohol option starts with a lower baseline NPV. The spotlight is on the initial investment requirement: a stricter funding environment means the controversial project needs more expensive and more complex financing because mainstream banks have tightened their policies.',
+        baseline: { friendlyName: 'Low-alcohol portfolio (ESG-friendly)', conventionalName: 'High-alcohol expansion', friendlyInitial: 95, friendlyCF: 15, conventionalInitial: 60, conventionalCF: 15.8, rFriendly: 0.08, rConventional: 0.08, shortN: 6, longN: 15 },
+        shock: { type: 'initial', details: 'Due to stricter bank policies and weaker bond-market appetite for alcohol-related expansion, the project needs an extra €48m in up-front financing and issuance costs.', deltaInitialConventional: 48, policy: 'A shortage of willing financiers raises the effective initial investment of the controversial option' }
+      }
+    ];
+
+    function baselineNPVs(c) {
+      const b = c.baseline;
+      return {
+        shortFriendly: npvLevel(b.friendlyInitial, b.friendlyCF, b.rFriendly, b.shortN),
+        shortConventional: npvLevel(b.conventionalInitial, b.conventionalCF, b.rConventional, b.shortN),
+        longFriendly: npvLevel(b.friendlyInitial, b.friendlyCF, b.rFriendly, b.longN),
+        longConventional: npvLevel(b.conventionalInitial, b.conventionalCF, b.rConventional, b.longN)
+      };
+    }
+
+    function shockedNPVs(c) {
+      const b = c.baseline;
+      const s = c.shock;
+      const out = {
+        shortFriendly: npvLevel(b.friendlyInitial, b.friendlyCF, b.rFriendly, b.shortN),
+        longFriendly: npvLevel(b.friendlyInitial, b.friendlyCF, b.rFriendly, b.longN),
+        shortConventional: 0,
+        longConventional: 0
+      };
+
+      if (s.type === 'cash') {
+        const newCF = b.conventionalCF + s.deltaCFConventional;
+        out.shortConventional = npvLevel(b.conventionalInitial, newCF, b.rConventional, b.shortN);
+        out.longConventional = npvLevel(b.conventionalInitial, newCF, b.rConventional, b.longN);
+      } else if (s.type === 'rate') {
+        out.shortConventional = npvLevel(b.conventionalInitial, b.conventionalCF, s.newRConventional, b.shortN);
+        out.longConventional = npvLevel(b.conventionalInitial, b.conventionalCF, s.newRConventional, b.longN);
+      } else if (s.type === 'initial') {
+        const newInitial = b.conventionalInitial + s.deltaInitialConventional;
+        out.shortConventional = npvLevel(newInitial, b.conventionalCF, b.rConventional, b.shortN);
+        out.longConventional = npvLevel(newInitial, b.conventionalCF, b.rConventional, b.longN);
+      } else {
+        out.shortConventional = npvGrowing(b.conventionalInitial, b.conventionalCF, b.rConventional, s.gConventional, b.shortN);
+        out.longConventional = npvGrowing(b.conventionalInitial, b.conventionalCF, b.rConventional, s.gConventional, b.longN);
+      }
+      return out;
+    }
+
+    function demandTable(cf1, g) {
+      return yearSamples(cf1, g, [1, 3, 5, 8, 12]).map(x => `<tr><td>${x.year}</td><td>${eur(x.cf)}</td></tr>`).join('');
+    }
+
+    function renderCase(c) {
+      const b = c.baseline;
+      const base = baselineNPVs(c);
+      const after = shockedNPVs(c);
+
+      const shortGapBase = base.shortConventional - base.shortFriendly;
+      const longGapBase = base.longConventional - base.longFriendly;
+      const shortGapAfter = after.shortConventional - after.shortFriendly;
+      const longGapAfter = after.longConventional - after.longFriendly;
+
+      let calcBlock = '';
+      let extraBlock = '';
+
+      if (c.shock.type === 'cash') {
+        const newCF = b.conventionalCF + c.shock.deltaCFConventional;
+        calcBlock = `Baseline conventional annuity factor (${pct(b.rConventional)}, ${b.shortN}y) = ${annuityFactor(b.rConventional, b.shortN).toFixed(2)}
+Baseline conventional NPV (short) = -${b.conventionalInitial} + ${b.conventionalCF} × ${annuityFactor(b.rConventional, b.shortN).toFixed(2)} = ${base.shortConventional.toFixed(1)}
+
+ESG-adjusted conventional annual cash flow = ${b.conventionalCF} ${c.shock.deltaCFConventional < 0 ? '-' : '+'} ${Math.abs(c.shock.deltaCFConventional)} = ${newCF.toFixed(1)}
+Adjusted conventional NPV (short) = -${b.conventionalInitial} + ${newCF.toFixed(1)} × ${annuityFactor(b.rConventional, b.shortN).toFixed(2)} = ${after.shortConventional.toFixed(1)}
+Adjusted conventional NPV (long) = -${b.conventionalInitial} + ${newCF.toFixed(1)} × ${annuityFactor(b.rConventional, b.longN).toFixed(2)} = ${after.longConventional.toFixed(1)}`;
+      } else if (c.shock.type === 'rate') {
+        calcBlock = `Baseline conventional annuity factor (${pct(b.rConventional)}, ${b.shortN}y) = ${annuityFactor(b.rConventional, b.shortN).toFixed(2)}
+Baseline conventional NPV (short) = -${b.conventionalInitial} + ${b.conventionalCF} × ${annuityFactor(b.rConventional, b.shortN).toFixed(2)} = ${base.shortConventional.toFixed(1)}
+
+New annuity factor (${pct(c.shock.newRConventional)}, ${b.shortN}y) = ${annuityFactor(c.shock.newRConventional, b.shortN).toFixed(2)}
+Adjusted conventional NPV (short) = -${b.conventionalInitial} + ${b.conventionalCF} × ${annuityFactor(c.shock.newRConventional, b.shortN).toFixed(2)} = ${after.shortConventional.toFixed(1)}
+Adjusted conventional NPV (long) = -${b.conventionalInitial} + ${b.conventionalCF} × ${annuityFactor(c.shock.newRConventional, b.longN).toFixed(2)} = ${after.longConventional.toFixed(1)}`;
+      } else if (c.shock.type === 'initial') {
+        const newInitial = b.conventionalInitial + c.shock.deltaInitialConventional;
+        calcBlock = `Baseline conventional annuity factor (${pct(b.rConventional)}, ${b.shortN}y) = ${annuityFactor(b.rConventional, b.shortN).toFixed(2)}
+Baseline conventional NPV (short) = -${b.conventionalInitial} + ${b.conventionalCF} × ${annuityFactor(b.rConventional, b.shortN).toFixed(2)} = ${base.shortConventional.toFixed(1)}
+
+ESG-adjusted conventional initial investment = ${b.conventionalInitial} + ${c.shock.deltaInitialConventional} = ${newInitial.toFixed(1)}
+Adjusted conventional NPV (short) = -${newInitial.toFixed(1)} + ${b.conventionalCF} × ${annuityFactor(b.rConventional, b.shortN).toFixed(2)} = ${after.shortConventional.toFixed(1)}
+Adjusted conventional NPV (long) = -${newInitial.toFixed(1)} + ${b.conventionalCF} × ${annuityFactor(b.rConventional, b.longN).toFixed(2)} = ${after.longConventional.toFixed(1)}`;
+      } else {
+        calcBlock = `Growing annuity with decline g = ${pct(c.shock.gConventional)}
+PV of conventional cash flows (short) = ${ (after.shortConventional + b.conventionalInitial).toFixed(1) }
+Adjusted conventional NPV (short) = -${b.conventionalInitial} + ${(after.shortConventional + b.conventionalInitial).toFixed(1)} = ${after.shortConventional.toFixed(1)}
+PV of conventional cash flows (long) = ${(after.longConventional + b.conventionalInitial).toFixed(1)}
+Adjusted conventional NPV (long) = -${b.conventionalInitial} + ${(after.longConventional + b.conventionalInitial).toFixed(1)} = ${after.longConventional.toFixed(1)}`;
+        extraBlock = `<table><thead><tr><th>Year</th><th>Conventional annual cash flow</th></tr></thead><tbody>${demandTable(b.conventionalCF, c.shock.gConventional)}</tbody></table>`;
+      }
+
+      document.getElementById('exercise').innerHTML = `
+        <h2>${c.title}</h2>
+        ${channelBadge(c.channel)}
+        <p>${c.narrative}</p>
+
+        <h3 class="section-title">Project data</h3>
+        <table>
+          <thead>
+            <tr><th></th><th>${b.friendlyName}</th><th>${b.conventionalName}</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Initial investment</td><td>${eur(b.friendlyInitial)}</td><td>${eur(b.conventionalInitial)}</td></tr>
+            <tr><td>Annual cash flow (baseline)</td><td>${eur(b.friendlyCF)}</td><td>${eur(b.conventionalCF)}</td></tr>
+            <tr><td>Discount rate</td><td>${pct(b.rFriendly)}</td><td>${pct(b.rConventional)}</td></tr>
+            <tr><td>Short horizon</td><td>${b.shortN} years</td><td>${b.shortN} years</td></tr>
+            <tr><td>Long horizon</td><td>${b.longN} years</td><td>${b.longN} years</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="section-title">Baseline NPV snapshot</h3>
+        <table>
+          <thead><tr><th></th><th>Short horizon</th><th>Long horizon</th></tr></thead>
+          <tbody>
+            <tr><td>${b.friendlyName}</td><td>${eur(base.shortFriendly)}</td><td>${eur(base.longFriendly)}</td></tr>
+            <tr><td>${b.conventionalName}</td><td>${eur(base.shortConventional)}</td><td>${eur(base.longConventional)}</td></tr>
+          </tbody>
+        </table>
+
+        <div class="question">
+          <p><strong>Student task</strong></p>
+          <p>At baseline, the ESG-friendly option has the lower NPV. Would the conclusion change once ESG considerations are introduced through the highlighted NPV channel?</p>
+          <p>Answer separately for the <strong>short horizon</strong> and the <strong>long horizon</strong>.</p>
+          <p><strong>ESG trigger:</strong> ${c.shock.details}</p>
+          ${c.shock.policy ? `<p><strong>Regulatory / financing context:</strong> ${c.shock.policy}</p>` : ''}
+          ${c.shock.technology ? `<p><strong>Technology / market context:</strong> ${c.shock.technology}</p>` : ''}
+        </div>
+
+        <div class="answer" id="answerBox">
+          <h3>Solution and full calculations</h3>
+          <p><strong>Step 1. Baseline comparison</strong></p>
+          <div class="formula">Friendly NPV (short) = -${b.friendlyInitial} + ${b.friendlyCF} × ${annuityFactor(b.rFriendly, b.shortN).toFixed(2)} = ${base.shortFriendly.toFixed(1)}
+Conventional NPV (short) = -${b.conventionalInitial} + ${b.conventionalCF} × ${annuityFactor(b.rConventional, b.shortN).toFixed(2)} = ${base.shortConventional.toFixed(1)}
+
+Friendly NPV (long) = -${b.friendlyInitial} + ${b.friendlyCF} × ${annuityFactor(b.rFriendly, b.longN).toFixed(2)} = ${base.longFriendly.toFixed(1)}
+Conventional NPV (long) = -${b.conventionalInitial} + ${b.conventionalCF} × ${annuityFactor(b.rConventional, b.longN).toFixed(2)} = ${base.longConventional.toFixed(1)}</div>
+          <p><strong>Step 2. Introduce the ESG-related effect</strong></p>
+          ${extraBlock}
+          <div class="formula">${calcBlock}</div>
+          <p><strong>Step 3. Compare outcomes</strong></p>
+          <table>
+            <thead><tr><th></th><th>Friendly option</th><th>Conventional option</th><th>Gap (Conventional - Friendly)</th></tr></thead>
+            <tbody>
+              <tr><td>Short horizon baseline</td><td>${eur(base.shortFriendly)}</td><td>${eur(base.shortConventional)}</td><td>${eur(shortGapBase)}</td></tr>
+              <tr><td>Long horizon baseline</td><td>${eur(base.longFriendly)}</td><td>${eur(base.longConventional)}</td><td>${eur(longGapBase)}</td></tr>
+              <tr><td>Short horizon after ESG</td><td>${eur(after.shortFriendly)}</td><td>${eur(after.shortConventional)}</td><td>${eur(shortGapAfter)}</td></tr>
+              <tr><td>Long horizon after ESG</td><td>${eur(after.longFriendly)}</td><td>${eur(after.longConventional)}</td><td>${eur(longGapAfter)}</td></tr>
+            </tbody>
+          </table>
+          <div class="decision ${decisionClass(after.shortFriendly, after.shortConventional)}">Short horizon conclusion: ${decisionText(after.shortFriendly, after.shortConventional, b.friendlyName)}</div>
+          <div class="decision ${decisionClass(after.longFriendly, after.longConventional)}">Long horizon conclusion: ${decisionText(after.longFriendly, after.longConventional, b.friendlyName)}</div>
+        </div>
+      `;
+    }
+
+    const select = document.getElementById('caseSelect');
+    select.innerHTML = cases.map(c => `<option value="${c.id}">${c.id}. ${c.title}</option>`).join('');
+
+    select.addEventListener('change', () => {
+      const c = cases.find(x => x.id === Number(select.value));
+      renderCase(c);
+      document.getElementById('toggleAnswerBtn').textContent = 'Show solution';
+    });
+
+    document.getElementById('toggleAnswerBtn').addEventListener('click', () => {
+      const box = document.getElementById('answerBox');
+      if (!box) return;
+      box.classList.toggle('show');
+      document.getElementById('toggleAnswerBtn').textContent = box.classList.contains('show') ? 'Hide solution' : 'Show solution';
+    });
+
+    select.value = '1';
+    renderCase(cases[0]);
+  </script>
+</body>
+</html>
