@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPV Explorer — Coal vs. Solar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #1a2744;
+    --coal:   #c0392b;
+    --solar:  #1d7a5f;
+    --gold:   #e8a820;
+    --bg:     #f2f4f8;
+    --panel:  #ffffff;
+    --border: #dde3ee;
+    --muted:  #64748b;
+    --dark:   #1a2744;
+  }
+
+  body {
+    font-family: 'Fraunces', Georgia, serif;
+    background: var(--bg);
+    color: var(--dark);
+    min-height: 100vh;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  header {
+    max-width: 1100px;
+    margin: 0 auto 2.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1.2rem;
+    border-bottom: 2px solid var(--navy);
+    padding-bottom: 1rem;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+  }
+  header p {
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(26,39,68,.07);
+  }
+
+  .ctrl-section {
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .ctrl-section:last-child { border-bottom: none; }
+
+  .ctrl-section h3 {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.85rem;
+  }
+
+  .channel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+  }
+  .channel-header h3 { margin-bottom: 0; }
+
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle input:checked + .toggle-track { background: var(--navy); }
+  .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+  .channel-c1 .toggle input:checked + .toggle-track { background: var(--coal); }
+  .channel-c2 .toggle input:checked + .toggle-track { background: #7b3fa0; }
+  .channel-c3 .toggle input:checked + .toggle-track { background: var(--solar); }
+
+  .param { margin-bottom: 0.75rem; }
+  .param:last-child { margin-bottom: 0; }
+  .param label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    color: var(--dark);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 0.28rem;
+    font-weight: 400;
+  }
+  .param label span {
+    font-weight: 500;
+    color: var(--navy);
+    min-width: 52px;
+    text-align: right;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    appearance: none;
+    background: var(--border);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px; height: 14px;
+    background: var(--navy);
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    transition: transform .15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+  .channel-c1 input[type=range]::-webkit-slider-thumb { background: var(--coal); }
+  .channel-c2 input[type=range]::-webkit-slider-thumb { background: #7b3fa0; }
+  .channel-c3 input[type=range]::-webkit-slider-thumb { background: var(--solar); }
+
+  .disabled-overlay { opacity: 0.38; pointer-events: none; }
+
+  /* ── RESULTS ── */
+  .results { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .verdict {
+    background: var(--navy);
+    color: white;
+    border-radius: 10px;
+    padding: 1.1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    box-shadow: 0 4px 18px rgba(26,39,68,.18);
+  }
+  .verdict-label {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 0.2rem;
+  }
+  .verdict-text {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .verdict-text.solar { color: #5ee8b8; }
+  .verdict-text.coal  { color: #f4866e; }
+  .verdict-swing {
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    opacity: 0.75;
+    line-height: 1.5;
+  }
+  .verdict-swing strong {
+    display: block;
+    font-size: 1.1rem;
+    opacity: 1;
+    color: var(--gold);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(26,39,68,.06);
+  }
+  .card-header {
+    padding: 0.55rem 1rem;
+    font-size: 0.68rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: white;
+  }
+  .card-coal .card-header   { background: var(--coal); }
+  .card-solar .card-header  { background: var(--solar); }
+
+  .card-body { padding: 1rem; }
+
+  .npv-display {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+    transition: color .3s;
+  }
+  .npv-positive { color: var(--solar); }
+  .npv-negative { color: var(--coal); }
+
+  .card-formula {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 0.7rem;
+    margin-top: 0.5rem;
+  }
+
+  /* breakdown table */
+  .breakdown {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(26,39,68,.06);
+  }
+  .breakdown-title {
+    padding: 0.7rem 1.1rem;
+    font-size: 0.68rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+  th {
+    background: #f8f9fc;
+    text-align: left;
+    padding: 0.55rem 1.1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+  th:not(:first-child) { text-align: right; }
+  td {
+    padding: 0.5rem 1.1rem;
+    border-bottom: 1px solid #f0f2f7;
+    color: var(--dark);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+  }
+  td:not(:first-child) { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+  .row-total td {
+    font-weight: 600;
+    border-top: 2px solid var(--border);
+    border-bottom: none;
+    background: #f8f9fc;
+  }
+  .pos { color: var(--solar); }
+  .neg { color: var(--coal); }
+
+  /* channels badge */
+  .channels-active {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .badge-c1 { background: #fdecea; color: var(--coal); }
+  .badge-c2 { background: #f0e8f8; color: #7b3fa0; }
+  .badge-c3 { background: #e6f5f0; color: var(--solar); }
+  .badge-off { background: #f0f2f7; color: var(--muted); }
+
+  /* note */
+  .note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    padding: 0.5rem 0;
+    font-weight: 300;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NPV Explorer — Coal vs. Solar</h1>
+  <p>Activate channels separately or jointly to see when solar dominates</p>
+</header>
+
+<div class="layout">
+
+  <!-- CONTROLS -->
+  <aside class="controls">
+
+    <!-- Base parameters -->
+    <div class="ctrl-section">
+      <h3>Base Parameters</h3>
+      <div class="param">
+        <label>Coal investment <span id="v-inv-coal">€500m</span></label>
+        <input type="range" id="inv-coal" min="200" max="900" step="10" value="500">
+      </div>
+      <div class="param">
+        <label>Solar investment <span id="v-inv-solar">€700m</span></label>
+        <input type="range" id="inv-solar" min="200" max="1200" step="10" value="700">
+      </div>
+      <div class="param">
+        <label>Coal annual cash flow <span id="v-cf-coal">€120m</span></label>
+        <input type="range" id="cf-coal" min="20" max="300" step="5" value="120">
+      </div>
+      <div class="param">
+        <label>Solar annual cash flow <span id="v-cf-solar">€80m</span></label>
+        <input type="range" id="cf-solar" min="20" max="200" step="5" value="80">
+      </div>
+      <div class="param">
+        <label>Project lifetime <span id="v-life">25 yrs</span></label>
+        <input type="range" id="life" min="5" max="40" step="1" value="25">
+      </div>
+      <div class="param">
+        <label>Base discount rate <span id="v-rate">8%</span></label>
+        <input type="range" id="rate" min="2" max="20" step="0.5" value="8">
+      </div>
+    </div>
+
+    <!-- Channel 1 -->
+    <div class="ctrl-section channel-c1">
+      <div class="channel-header">
+        <label class="toggle">
+          <input type="checkbox" id="ch1-on">
+          <span class="toggle-track"></span>
+        </label>
+        <h3 style="color:var(--coal)">Channel 1 — Carbon Costs</h3>
+      </div>
+      <div id="ch1-params" class="disabled-overlay">
+        <div class="param">
+          <label>Avg. carbon price (€/tonne) <span id="v-cp">€130</span></label>
+          <input type="range" id="cp" min="10" max="300" step="5" value="130">
+        </div>
+        <div class="param">
+          <label>Annual CO₂ emissions (Mt) <span id="v-co2">2.0 Mt</span></label>
+          <input type="range" id="co2" min="0.1" max="10" step="0.1" value="2.0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Channel 2 -->
+    <div class="ctrl-section channel-c2">
+      <div class="channel-header">
+        <label class="toggle">
+          <input type="checkbox" id="ch2-on">
+          <span class="toggle-track"></span>
+        </label>
+        <h3 style="color:#7b3fa0">Channel 2 — Discount Rate</h3>
+      </div>
+      <div id="ch2-params" class="disabled-overlay">
+        <div class="param">
+          <label>Coal discount rate <span id="v-rate-coal">12%</span></label>
+          <input type="range" id="rate-coal" min="2" max="25" step="0.5" value="12">
+        </div>
+        <p style="font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:0.3rem">
+          Solar keeps base rate. Coal rate reflects lender's transition risk premium.
+        </p>
+      </div>
+    </div>
+
+    <!-- Channel 3 -->
+    <div class="ctrl-section channel-c3">
+      <div class="channel-header">
+        <label class="toggle">
+          <input type="checkbox" id="ch3-on">
+          <span class="toggle-track"></span>
+        </label>
+        <h3 style="color:var(--solar)">Channel 3 — Demand Erosion</h3>
+      </div>
+      <div id="ch3-params" class="disabled-overlay">
+        <div class="param">
+          <label>Annual revenue decline <span id="v-erosion">3%</span></label>
+          <input type="range" id="erosion" min="0.5" max="15" step="0.5" value="3">
+        </div>
+        <p style="font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:0.3rem">
+          Coal revenues shrink yearly as clients switch to cheaper renewables.
+        </p>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- RESULTS -->
+  <div class="results">
+
+    <!-- Verdict -->
+    <div class="verdict">
+      <div>
+        <div class="verdict-label">Decision</div>
+        <div class="verdict-text" id="verdict-text">Build the Coal Plant</div>
+        <div style="margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap" id="badges-container"></div>
+      </div>
+      <div class="verdict-swing">
+        Gap (Coal − Solar)
+        <strong id="verdict-gap">+€626m</strong>
+        in favour of <span id="verdict-favour">coal</span>
+      </div>
+    </div>
+
+    <!-- NPV Cards -->
+    <div class="cards">
+      <div class="card card-coal">
+        <div class="card-header">Coal Plant</div>
+        <div class="card-body">
+          <div class="npv-display" id="npv-coal-display">+€780m</div>
+          <div class="card-formula" id="formula-coal">
+            −500 + 120 × 10.67
+          </div>
+        </div>
+      </div>
+      <div class="card card-solar">
+        <div class="card-header">Solar Farm</div>
+        <div class="card-body">
+          <div class="npv-display" id="npv-solar-display">+€154m</div>
+          <div class="card-formula" id="formula-solar">
+            −700 + 80 × 10.67
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breakdown table -->
+    <div class="breakdown">
+      <div class="breakdown-title">Cash flow breakdown</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Coal</th>
+            <th>Solar</th>
+          </tr>
+        </thead>
+        <tbody id="breakdown-body"></tbody>
+      </table>
+    </div>
+
+    <p class="note">Numbers in €m. Annuity factor = (1 − (1+r)⁻ⁿ) / r.</p>
+
+  </div>
+</div>
+
+<script>
+  // ── helpers ──────────────────────────────────────────────────
+  const fmt = v => {
+    const sign = v >= 0 ? '+' : '−';
+    return sign + '€' + Math.abs(Math.round(v)) + 'm';
+  };
+
+  const annuity = (r, n) => (1 - Math.pow(1 + r, -n)) / r;
+
+  // Declining annuity PV: sum of CF*(1-g)^(t-1) / (1+r)^t
+  // = CF / (r + g) * (1 - ((1-g)/(1+r))^n)
+  const decliningAnnuity = (cf, r, g, n) => {
+    const ratio = (1 - g) / (1 + r);
+    return (cf / (r + g)) * (1 - Math.pow(ratio, n));
+  };
+
+  // ── bind sliders ─────────────────────────────────────────────
+  const bind = (id, displayId, fmt2) => {
+    const el = document.getElementById(id);
+    const disp = document.getElementById(displayId);
+    el.addEventListener('input', () => { disp.textContent = fmt2(el.value); compute(); });
+  };
+
+  bind('inv-coal',   'v-inv-coal',   v => '€'+v+'m');
+  bind('inv-solar',  'v-inv-solar',  v => '€'+v+'m');
+  bind('cf-coal',    'v-cf-coal',    v => '€'+v+'m');
+  bind('cf-solar',   'v-cf-solar',   v => '€'+v+'m');
+  bind('life',       'v-life',       v => v+' yrs');
+  bind('rate',       'v-rate',       v => v+'%');
+  bind('cp',         'v-cp',         v => '€'+v);
+  bind('co2',        'v-co2',        v => parseFloat(v).toFixed(1)+' Mt');
+  bind('rate-coal',  'v-rate-coal',  v => v+'%');
+  bind('erosion',    'v-erosion',    v => v+'%');
+
+  // toggles
+  ['ch1-on','ch2-on','ch3-on'].forEach((id, i) => {
+    document.getElementById(id).addEventListener('change', () => {
+      const param = document.getElementById(['ch1-params','ch2-params','ch3-params'][i]);
+      param.classList.toggle('disabled-overlay', !document.getElementById(id).checked);
+      compute();
+    });
+  });
+
+  // ── compute ───────────────────────────────────────────────────
+  function compute() {
+    const invCoal  = +document.getElementById('inv-coal').value;
+    const invSolar = +document.getElementById('inv-solar').value;
+    const cfCoal   = +document.getElementById('cf-coal').value;
+    const cfSolar  = +document.getElementById('cf-solar').value;
+    const n        = +document.getElementById('life').value;
+    const rBase    = +document.getElementById('rate').value / 100;
+    const ch1      = document.getElementById('ch1-on').checked;
+    const ch2      = document.getElementById('ch2-on').checked;
+    const ch3      = document.getElementById('ch3-on').checked;
+    const carbonP  = +document.getElementById('cp').value;
+    const co2Mt    = +document.getElementById('co2').value;
+    const rCoalOv  = +document.getElementById('rate-coal').value / 100;
+    const erosion  = +document.getElementById('erosion').value / 100;
+
+    // Effective parameters for coal
+    const rCoal  = ch2 ? rCoalOv : rBase;
+    const rSolar = rBase;
+
+    // Carbon annual cost
+    const carbonCost = ch1 ? carbonP * co2Mt : 0;  // €m (price €/t × Mt)
+
+    // Effective coal annual CF
+    const netCfCoal = cfCoal - carbonCost;
+
+    // Coal NPV
+    let pvCoal;
+    if (ch3) {
+      pvCoal = decliningAnnuity(netCfCoal, rCoal, erosion, n);
+    } else {
+      pvCoal = netCfCoal * annuity(rCoal, n);
+    }
+    const npvCoal = -invCoal + pvCoal;
+
+    // Solar NPV (no carbon, no erosion assumed)
+    const pvSolar = cfSolar * annuity(rSolar, n);
+    const npvSolar = -invSolar + pvSolar;
+
+    const gap = npvCoal - npvSolar;
+    const solarWins = npvSolar > npvCoal;
+
+    // ── update UI ──
+    const afCoal  = annuity(rCoal, n).toFixed(2);
+    const afSolar = annuity(rSolar, n).toFixed(2);
+
+    // NPV displays
+    const coalEl = document.getElementById('npv-coal-display');
+    coalEl.textContent = fmt(npvCoal);
+    coalEl.className = 'npv-display ' + (npvCoal >= 0 ? 'npv-positive' : 'npv-negative');
+
+    const solarEl = document.getElementById('npv-solar-display');
+    solarEl.textContent = fmt(npvSolar);
+    solarEl.className = 'npv-display ' + (npvSolar >= 0 ? 'npv-positive' : 'npv-negative');
+
+    // Formulas
+    let coalFormula = `−${invCoal} + ${netCfCoal.toFixed(0)} × ${afCoal}`;
+    if (ch3) coalFormula += ` (declining ${(erosion*100).toFixed(1)}%/yr)`;
+    document.getElementById('formula-coal').textContent = coalFormula;
+    document.getElementById('formula-solar').textContent = `−${invSolar} + ${cfSolar} × ${afSolar}`;
+
+    // Verdict
+    const vt = document.getElementById('verdict-text');
+    if (solarWins) {
+      vt.textContent = 'Build the Solar Farm';
+      vt.className = 'verdict-text solar';
+    } else {
+      vt.textContent = 'Build the Coal Plant';
+      vt.className = 'verdict-text coal';
+    }
+    const gapEl = document.getElementById('verdict-gap');
+    gapEl.textContent = fmt(Math.abs(gap));
+    document.getElementById('verdict-favour').textContent = solarWins ? 'solar' : 'coal';
+
+    // Badges
+    const bc = document.getElementById('badges-container');
+    bc.innerHTML = '';
+    const active = [];
+    if (ch1) active.push(['Carbon costs','badge-c1']);
+    if (ch2) active.push(['Discount rate','badge-c2']);
+    if (ch3) active.push(['Demand erosion','badge-c3']);
+    if (!active.length) active.push(['Baseline — no channels active','badge-off']);
+    active.forEach(([label, cls]) => {
+      const b = document.createElement('span');
+      b.className = 'badge ' + cls;
+      b.textContent = label;
+      bc.appendChild(b);
+    });
+
+    // Breakdown table
+    const tbody = document.getElementById('breakdown-body');
+    const rows = [
+      ['Initial investment', fmt(-invCoal), fmt(-invSolar)],
+      ['Base annual CF', fmt(cfCoal), fmt(cfSolar)],
+    ];
+    if (ch1) rows.push(['Carbon cost/yr', fmt(-carbonCost), '—']);
+    if (ch1) rows.push(['Net annual CF', fmt(netCfCoal), fmt(cfSolar)]);
+    if (ch2) rows.push(['Discount rate', (rCoal*100).toFixed(1)+'%', (rSolar*100).toFixed(1)+'%']);
+    if (ch3) rows.push(['Revenue erosion', (erosion*100).toFixed(1)+'%/yr', '—']);
+    rows.push(['Annuity factor', afCoal, afSolar]);
+    rows.push(['PV of cash flows', fmt(pvCoal), fmt(pvSolar)]);
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r[0]}</td>
+        <td class="${parseFloat(r[1]) < 0 ? 'neg' : ''}">${r[1]}</td>
+        <td class="${parseFloat(r[2]) < 0 ? 'neg' : ''}">${r[2]}</td>
+      </tr>`).join('') + `
+      <tr class="row-total">
+        <td>NPV</td>
+        <td class="${npvCoal < 0 ? 'neg' : 'pos'}">${fmt(npvCoal)}</td>
+        <td class="${npvSolar < 0 ? 'neg' : 'pos'}">${fmt(npvSolar)}</td>
+      </tr>`;
+  }
+
+  compute();
+</script>
+</body>
+</html>
