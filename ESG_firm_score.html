@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ESG firm scores – explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020617;
+      --bg-alt: #020617;
+      --panel: #020617;
+      --panel-alt: #020617;
+      --border: #1f2937;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --table-header: #0b1120;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #082f49 0, #020617 40%, #020617 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px;
+      max-width: 1240px;
+      margin: 0 auto 32px auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin: 0 0 4px 0;
+      letter-spacing: 0.02em;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin: 0 0 10px 0;
+    }
+
+    p {
+      margin: 0 0 8px 0;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .page-header {
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      margin-bottom: 18px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.06), transparent 55%),
+                  linear-gradient(to bottom right, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 16px 18px 16px 18px;
+      box-shadow:
+        0 18px 45px rgba(15, 23, 42, 0.7),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .small {
+      font-size: 0.8rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: inline-block;
+      margin-bottom: 2px;
+    }
+
+    select,
+    input[type="number"],
+    input[type="file"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    select:focus,
+    input[type="number"]:focus,
+    input[type="file"]:focus {
+      outline: 1px solid var(--accent);
+      border-color: var(--accent);
+    }
+
+    button {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: linear-gradient(to right, rgba(56, 189, 248, 0.08), rgba(56, 189, 248, 0.2));
+      color: #e0f2fe;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .status-error {
+      color: var(--danger);
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: flex-end;
+    }
+
+    .controls-row > div {
+      min-width: 160px;
+      flex: 1;
+    }
+
+    .table-wrapper {
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      overflow: hidden;
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    .scroll-y {
+      max-height: 520px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    thead {
+      background: linear-gradient(to right, #020617, #020617 30%, #030712 100%);
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: linear-gradient(to right, #020617, #020617 30%, #030712 100%);
+    }
+
+    th, td {
+      padding: 6px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.95);
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    tbody tr:hover {
+      background: rgba(30, 64, 175, 0.45);
+    }
+
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .def-panel {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .def-panel h3 {
+      margin: 0 0 4px 0;
+      font-size: 1rem;
+    }
+
+    .def-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .def-chip {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.65);
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <h1>ESG firm score explorer - CAC40 (end of 2022)</h1>
+      <div class="subtitle">
+        Explore firm‑level ESG scores and quickly identify companies performing well on specific indicators.
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- 1. How to use this page -->
+      <section>
+        <div class="card">
+          <h2>1. How to use this page</h2>
+          <ul class="small" style="margin:0 0 4px 18px; padding:0; color:var(--muted);">
+            <li><strong>Select indicator:</strong> Use the “Indicator” dropdown to pick one numeric score (e.g. ESG score, Environmental pillar, individual category scores).</li>
+            <li><strong>Ranking:</strong> For each indicator, firms are ranked from best to worst performer based on the raw values in the file (taking polarity into account).</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2. Pick indicator & filters -->
+      <section>
+        <div class="card">
+          <h2>2. Indicator & filters</h2>
+          <div class="controls-row">
+            <div>
+              <label for="indicatorSelect">Indicator</label>
+              <select id="indicatorSelect" disabled>
+                <option>Loading indicators…</option>
+              </select>
+            </div>
+          </div>
+          <div id="loadStatus" class="status small"></div>
+        </div>
+      </section>
+
+      <!-- 3. Results table + definition -->
+      <section>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2>3. Firms ranked on selected indicator</h2>
+              <p class="muted small">
+                Sorted from best to worst ESG performance on the chosen indicator (taking polarity into account).
+              </p>
+            </div>
+            <div class="small muted" id="currentIndicatorLabel">Load a file and select an indicator.</div>
+          </div>
+
+          <div class="table-wrapper scroll-y" style="margin-top:8px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40%;">Company</th>
+                  <th style="width:20%;">RIC</th>
+                  <th style="width:40%;" id="valueHeader">Value</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+                <tr><td colspan="3" class="muted small">No data loaded yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="defPanel" class="def-panel" style="display:none;"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // ------------------------------
+    // Small helpers
+    // ------------------------------
+    function updateStatus(kind, msg) {
+      const el = document.getElementById('loadStatus');
+      el.textContent = msg || '';
+      el.className = 'status small';
+      if (kind === 'error') el.classList.add('status-error');
+    }
+
+    function isNullish(v) {
+      if (v === undefined || v === null) return true;
+      const s = String(v).trim();
+      return s === '' || s.toUpperCase() === 'NA' || s.toUpperCase() === 'N/A';
+    }
+
+    function parseCsv(text, delimiter) {
+      const delim = delimiter || (text.indexOf(';') >= 0 && text.trim().split('\n')[0].split(';').length > 2 ? ';' : ',');
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim().length > 0);
+      if (!lines.length) return { headers: [], rows: [] };
+      const split = (line) => {
+        const result = [];
+        let cur = '', inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+            else inQuotes = !inQuotes;
+          } else if (ch === delim && !inQuotes) {
+            result.push(cur);
+            cur = '';
+          } else {
+            cur += ch;
+          }
+        }
+        result.push(cur);
+        return result.map(s => s.replace(/^\s+|\s+$/g, '').replace(/^"|"$/g, ''));
+      };
+      const headers = split(lines[0]);
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = split(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = cols[idx] !== undefined ? cols[idx] : '';
+        });
+        rows.push(row);
+      }
+      return { headers, rows };
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      const t = document.createElement('span');
+      t.textContent = s;
+      return t.innerHTML;
+    }
+
+    // ------------------------------
+    // State
+    // ------------------------------
+    const state = {
+      rawRows: [],
+      headers: [],
+      indicatorHeaders: [],
+      defsByCode: {},     // field_code -> def row
+      defsByLower: {},    // lower(field_code) -> def row
+      indicator: null,
+      companyField: null,
+      ricField: null
+    };
+
+    // Manual definitions for columns that are not standard LSEG field codes
+    const MANUAL_DEFS = {
+      'ESG Score': {
+        code: 'ESG Score',
+        label: 'Overall ESG score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Overall',
+        category: 'ESG score',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Composite ESG performance score on a 0–100 scale aggregating environmental, social and governance pillars for each firm.'
+      },
+      'ESG Score Grade': {
+        code: 'ESG Score Grade',
+        label: 'Overall ESG letter grade',
+        data_type: 'Text / categorical',
+        pillar: 'Overall',
+        category: 'ESG score',
+        polarity: 'Higher is better',
+        unit: 'Letter grade (e.g. A, B+, C‑)',
+        definition: 'Letter grade equivalent of the overall ESG score, from worst (e.g. D‑) to best (e.g. A+).'
+      },
+      'Environmental Pillar Score': {
+        code: 'Environmental Pillar Score',
+        label: 'Environmental pillar score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Environmental',
+        category: 'Pillar score',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Aggregated score for the environmental dimension, combining Resource Use, Emissions and Innovation category scores.'
+      },
+      'Social Pillar Score': {
+        code: 'Social Pillar Score',
+        label: 'Social pillar score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Social',
+        category: 'Pillar score',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Aggregated score for the social dimension, combining Workforce, Human Rights, Community and Product Responsibility category scores.'
+      },
+      'Governance Pillar Score': {
+        code: 'Governance Pillar Score',
+        label: 'Governance pillar score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Governance',
+        category: 'Pillar score',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Aggregated score for the governance dimension, combining Management, Shareholders and CSR Strategy category scores.'
+      },
+      'Resource Use Score': {
+        code: 'Resource Use Score',
+        label: 'Resource use category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Environmental',
+        category: 'Resource use',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score capturing how efficiently the company uses energy, water and other resources across its operations and supply chain.'
+      },
+      'Emissions Score': {
+        code: 'Emissions Score',
+        label: 'Emissions category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Environmental',
+        category: 'Emissions',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score reflecting the company’s performance and commitments in managing greenhouse gas and other pollutant emissions.'
+      },
+      'Environmental Innovation Score': {
+        code: 'Environmental Innovation Score',
+        label: 'Environmental innovation score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Environmental',
+        category: 'Innovation',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score for the extent to which the company develops environmentally beneficial products, services and technologies.'
+      },
+      'Workforce Score': {
+        code: 'Workforce Score',
+        label: 'Workforce category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Social',
+        category: 'Workforce',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score covering employment quality, diversity & inclusion, training, and health & safety for the company’s workforce.'
+      },
+      'Human Rights Score': {
+        code: 'Human Rights Score',
+        label: 'Human rights category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Social',
+        category: 'Human rights',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score for the company’s policies and practices on labour standards, human rights due diligence and responsible supply chains.'
+      },
+      'Community Score': {
+        code: 'Community Score',
+        label: 'Community category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Social',
+        category: 'Community',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score for business ethics, anti‑corruption, community investment and political/lobbying transparency.'
+      },
+      'Product Responsibility Score': {
+        code: 'Product Responsibility Score',
+        label: 'Product responsibility score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Social',
+        category: 'Product responsibility',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score for customer health & safety, product quality, responsible marketing and controversial product exposure.'
+      },
+      'Management Score': {
+        code: 'Management Score',
+        label: 'Management category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Governance',
+        category: 'Management',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score capturing board structure, independence, diversity, expertise and oversight of key ESG risks.'
+      },
+      'Shareholder Score': {
+        code: 'Shareholder Score',
+        label: 'Shareholders category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Governance',
+        category: 'Shareholders',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score for shareholder rights, alignment of executive pay with performance and protection from anti‑takeover provisions.'
+      },
+      'CSR Strategy Score': {
+        code: 'CSR Strategy Score',
+        label: 'CSR strategy category score',
+        data_type: 'Numeric (0–100)',
+        pillar: 'Governance',
+        category: 'CSR strategy',
+        polarity: 'Higher is better',
+        unit: 'Score 0–100',
+        definition: 'Score for the integration of ESG into corporate strategy, reporting quality and long‑term sustainability commitments.'
+      },
+      'Policy Responsible Marketing': {
+        code: 'Policy Responsible Marketing',
+        label: 'Policy on responsible marketing',
+        data_type: 'Boolean',
+        pillar: 'Social',
+        category: 'Product responsibility',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Indicator of whether the company has a formal policy covering responsible and non‑misleading marketing and advertising practices.'
+      },
+      'Product Responsibility Monitoring': {
+        code: 'Product Responsibility Monitoring',
+        label: 'Product responsibility monitoring',
+        data_type: 'Boolean',
+        pillar: 'Social',
+        category: 'Product responsibility',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Indicates whether the company monitors compliance with its product responsibility and customer health & safety standards.'
+      },
+      'Animal Wellbeing': {
+        code: 'Animal Wellbeing',
+        label: 'Animal wellbeing policy',
+        data_type: 'Boolean',
+        pillar: 'Social',
+        category: 'Product responsibility',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Shows whether the company has policies and practices in place to protect animal welfare in its products or supply chain.'
+      },
+      'Policy Fair Trade': {
+        code: 'Policy Fair Trade',
+        label: 'Fair trade policy',
+        data_type: 'Boolean',
+        pillar: 'Social',
+        category: 'Product responsibility',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Indicates whether the company has a policy to source or sell products under fair‑trade or equivalent ethical trade standards.'
+      },
+      'Product Access Low Price': {
+        code: 'Product Access Low Price',
+        label: 'Access to products at low price',
+        data_type: 'Boolean',
+        pillar: 'Social',
+        category: 'Product responsibility',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Signals whether the company provides affordable access to essential products or services (e.g. low‑price ranges or inclusive pricing).'
+      },
+      'Healthy Food or Products': {
+        code: 'Healthy Food or Products',
+        label: 'Healthy products offering',
+        data_type: 'Boolean',
+        pillar: 'Social',
+        category: 'Product responsibility',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Indicates whether the company offers product lines that are explicitly positioned as healthier or lower‑risk for consumers.'
+      },
+      'CEO Chairman Duality': {
+        code: 'CEO Chairman Duality',
+        label: 'CEO / Chair duality',
+        data_type: 'Boolean',
+        pillar: 'Governance',
+        category: 'Management',
+        polarity: 'Lower is better',
+        unit: 'True / False',
+        definition: 'TRUE when the same person holds both CEO and board chair roles; FALSE when the roles are separated.'
+      },
+      'Policy Board Independence': {
+        code: 'Policy Board Independence',
+        label: 'Board independence policy',
+        data_type: 'Boolean',
+        pillar: 'Governance',
+        category: 'Management',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Indicates whether the company has a formal policy specifying a minimum share of independent directors on the board.'
+      },
+      'Nomination on Board Committee': {
+        code: 'Nomination on Board Committee',
+        label: 'Nomination committee on the board',
+        data_type: 'Boolean',
+        pillar: 'Governance',
+        category: 'Management',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'TRUE if the board has a dedicated nomination committee overseeing director appointments; FALSE otherwise.'
+      },
+      'Policy Equal Voting Right': {
+        code: 'Policy Equal Voting Right',
+        label: 'Equal voting rights policy',
+        data_type: 'Boolean',
+        pillar: 'Governance',
+        category: 'Shareholders',
+        polarity: 'Higher is better',
+        unit: 'True / False',
+        definition: 'Shows whether the company commits to “one share, one vote” or otherwise guarantees equal voting rights for shareholders.'
+      },
+      'Anti Takeover Devices Above Two': {
+        code: 'Anti Takeover Devices Above Two',
+        label: 'Number of anti‑takeover devices (>2)',
+        data_type: 'Numeric',
+        pillar: 'Governance',
+        category: 'Shareholders',
+        polarity: 'Lower is better',
+        unit: 'Count',
+        definition: 'Counts how many anti‑takeover mechanisms the company has in place; higher values mean stronger defences against takeovers.'
+      }
+    };
+
+    // ------------------------------
+    // Definitions (from LSEG CSV)
+    // ------------------------------
+    async function loadDefinitions() {
+      // Seed state with manually hard-coded definitions
+      Object.keys(MANUAL_DEFS).forEach(key => {
+        const def = MANUAL_DEFS[key];
+        state.defsByCode[def.code] = def;
+        state.defsByLower[String(def.code).toLowerCase()] = def;
+      });
+    }
+
+    function findDefinition(code) {
+      if (!code) return null;
+      if (MANUAL_DEFS[code]) return MANUAL_DEFS[code];
+      return state.defsByCode[code] || state.defsByLower[String(code).toLowerCase()] || null;
+    }
+
+    function showDefinition(header) {
+      const panel = document.getElementById('defPanel');
+      const def = findDefinition(header);
+      if (!def) {
+        panel.style.display = 'block';
+        panel.innerHTML =
+          '<h3>No definition found</h3>' +
+          '<p class="small muted">No definition for <span class="code">' + escapeHtml(header) + '</span> in the built-in indicator definitions.</p>';
+        return;
+      }
+      panel.style.display = 'block';
+      let html = '';
+      html += '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;">';
+      html += '<h3>' + escapeHtml(def.label || def.code) + '</h3>';
+      html += '<span class="code">' + escapeHtml(def.code) + '</span>';
+      html += '</div>';
+      html += '<div class="def-meta">';
+      if (def.pillar) html += '<span class="def-chip"><strong>Pillar&nbsp;</strong>' + escapeHtml(def.pillar) + '</span>';
+      if (def.category) html += '<span class="def-chip"><strong>Category&nbsp;</strong>' + escapeHtml(def.category) + '</span>';
+      if (def.polarity) html += '<span class="def-chip"><strong>Polarity&nbsp;</strong>' + escapeHtml(def.polarity) + '</span>';
+      if (def.data_type) html += '<span class="def-chip"><strong>Type&nbsp;</strong>' + escapeHtml(def.data_type) + '</span>';
+      if (def.unit) html += '<span class="def-chip"><strong>Unit&nbsp;</strong>' + escapeHtml(def.unit) + '</span>';
+      html += '</div>';
+      html += '<p class="small" style="margin-bottom:0;">' + (def.definition ? escapeHtml(def.definition) : 'No definition text.') + '</p>';
+      panel.innerHTML = html;
+    }
+
+    // ------------------------------
+    // Load dataset from CSV
+    // ------------------------------
+    async function loadDataset() {
+      state.rawRows = [];
+      state.headers = [];
+      state.indicatorHeaders = [];
+      state.indicator = null;
+
+      updateStatus('info', 'Loading ESG firm scores…');
+      try {
+        const resp = await fetch('ESG firm scores.csv');
+        if (!resp.ok) {
+          updateStatus('error', 'Could not load ESG firm scores.csv. Place it in the same folder as this HTML and open the page via a local server (e.g. Live Server).');
+          return;
+        }
+        const text = await resp.text();
+        const parsed = parseCsv(text, ';');
+        state.headers = parsed.headers;
+        state.rawRows = parsed.rows;
+        detectCommonFields();
+        buildIndicatorSelect();
+      updateStatus('ok', 'Data loaded from ESG firm scores.csv. Choose an indicator.');
+      } catch (err) {
+        console.error(err);
+        updateStatus('error', 'Failed to load ESG firm scores.csv.');
+      }
+    }
+
+    function detectCommonFields() {
+      const headers = state.headers;
+      const lower = headers.map(h => String(h).toLowerCase());
+
+      function findHeader(candidates) {
+        for (const cand of candidates) {
+          const idx = lower.indexOf(cand.toLowerCase());
+          if (idx !== -1) return headers[idx];
+        }
+        return null;
+      }
+
+      state.companyField = findHeader(['Company Common Name', 'Company', 'Name', 'Issuer Name']);
+      state.ricField = findHeader(['RIC', 'Instrument', 'TR.RIC', 'Please sign in']);
+    }
+
+    function buildIndicatorSelect() {
+      const sel = document.getElementById('indicatorSelect');
+      sel.innerHTML = '';
+
+      const numericCandidates = [];
+      const sample = state.rawRows.slice(0, 40);
+      state.headers.forEach(h => {
+        if (!h) return;
+        if (h === state.companyField || h === state.ricField) return;
+        let numericCount = 0;
+        let total = 0;
+        sample.forEach(row => {
+          const v = row[h];
+          if (isNullish(v)) return;
+          total++;
+          const n = Number(String(v).replace(/,/g, ''));
+          if (!Number.isNaN(n)) numericCount++;
+        });
+        if (total > 0 && numericCount / total > 0.7) {
+          numericCandidates.push(h);
+        }
+      });
+
+      state.indicatorHeaders = numericCandidates;
+      if (!numericCandidates.length) {
+        sel.disabled = true;
+        sel.innerHTML = '<option>No numeric indicators found</option>';
+        return;
+      }
+
+      numericCandidates.forEach(h => {
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = h;
+        sel.appendChild(opt);
+      });
+      sel.disabled = false;
+      state.indicator = numericCandidates[0];
+      document.getElementById('currentIndicatorLabel').textContent = numericCandidates[0];
+      document.getElementById('valueHeader').textContent = numericCandidates[0];
+      renderResults();
+    }
+
+    function isBooleanIndicator(header) {
+      // Try LSEG definition first
+      const def = findDefinition(header);
+      if (def && def.data_type && /boolean/i.test(def.data_type)) return true;
+      // Fallback: inspect values
+      const vals = state.rawRows
+        .map(r => r[header])
+        .filter(v => !isNullish(v))
+        .slice(0, 60);
+      if (!vals.length) return false;
+      return vals.every(v => {
+        const s = String(v).trim().toLowerCase();
+        return s === 'true' || s === 'false' || s === '0' || s === '1';
+      });
+    }
+
+    function isHigherBetter(header) {
+      const def = findDefinition(header);
+      if (!def || !def.polarity) return true;
+      const p = String(def.polarity).toLowerCase();
+      if (p.includes('lower') || p.includes('negative')) return false;
+      return true;
+    }
+
+    function buildRowsForIndicator(header) {
+      const rows = [];
+      const companyField = state.companyField;
+      const ricField = state.ricField;
+
+      state.rawRows.forEach(r => {
+        const raw = r[header];
+        if (isNullish(raw)) return;
+        const n = Number(String(raw).replace(/,/g, ''));
+        if (Number.isNaN(n)) return;
+        const name = companyField ? (r[companyField] || '') : '';
+        const ric = ricField ? (r[ricField] || '') : '';
+        rows.push({
+          name: name || ric || '(unknown)',
+          ric,
+          rawNumeric: n,
+          rawDisplay: String(raw)
+        });
+      });
+
+      if (!rows.length) return [];
+
+      return rows;
+    }
+
+    function renderResults() {
+      const body = document.getElementById('resultsBody');
+      const header = state.indicator;
+      if (!header) {
+        body.innerHTML = '<tr><td colspan="3" class="muted small">Select an indicator.</td></tr>';
+        return;
+      }
+
+      const allRows = buildRowsForIndicator(header);
+      if (!allRows.length) {
+        body.innerHTML = '<tr><td colspan="3" class="muted small">No numeric data for this indicator.</td></tr>';
+        return;
+      }
+
+      let rows = allRows;
+      const higherBetter = isHigherBetter(header);
+      rows.sort((a, b) => higherBetter === false
+        ? a.rawNumeric - b.rawNumeric
+        : b.rawNumeric - a.rawNumeric);
+
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="3" class="muted small">No firms meet the filters.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = rows.map(r => {
+        return '<tr>' +
+          '<td>' + escapeHtml(r.name) + '</td>' +
+          '<td><span class="code">' + escapeHtml(r.ric || '') + '</span></td>' +
+          '<td>' + escapeHtml(r.rawDisplay) + '</td>' +
+        '</tr>';
+      }).join('');
+
+      document.getElementById('currentIndicatorLabel').textContent = header;
+      document.getElementById('valueHeader').textContent = header;
+      showDefinition(header);
+    }
+
+    // ------------------------------
+    // Event wiring
+    // ------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDefinitions();
+      loadDataset();
+
+      document.getElementById('indicatorSelect').addEventListener('change', (e) => {
+        state.indicator = e.target.value || null;
+        renderResults();
+      });
+    });
+  </script>
+</body>
+</html>
+
