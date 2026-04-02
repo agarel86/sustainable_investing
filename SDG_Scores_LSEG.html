@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SDG Scores Explorer (LSEG)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #020617;
+      --accent: #38bdf8;
+      --border: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.9);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #1d283a 0, #020617 45%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    main {
+      max-width: 1240px;
+      margin: 24px auto 32px auto;
+      padding: 0 16px 32px 16px;
+    }
+    h1, h2, h3 { margin: 0; font-weight: 600; }
+    h1 { font-size: clamp(1.8rem, 1.4rem + 1vw, 2.1rem); }
+    h2 { font-size: 1.1rem; }
+    p { margin: 0; line-height: 1.5; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+    .page-header { margin-bottom: 18px; }
+    .card {
+      background: radial-gradient(circle at top left, #1f2937 0, #020617 55%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: var(--shadow-soft);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    label {
+      display: inline-block;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    select {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 9px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 7px 9px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px 14px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      align-items: flex-end;
+    }
+    button.primary {
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #22c55e, #22c55e 30%, #38bdf8);
+      color: #020617;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 7px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.45);
+      white-space: nowrap;
+    }
+    button.primary:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+    .status {
+      margin-top: 4px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      min-height: 0;
+    }
+    .status.info { border-color: rgba(56, 189, 248, 0.4); background: rgba(15, 23, 42, 0.9); color: var(--muted); }
+    .status.error { border-color: rgba(248, 113, 113, 0.7); background: rgba(30, 64, 175, 0.1); color: #fecaca; }
+    .status.ok { border-color: rgba(74, 222, 128, 0.6); background: rgba(21, 128, 61, 0.15); color: #bbf7d0; }
+    .table-wrapper {
+      margin-top: 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: radial-gradient(circle at top left, #020617 0, #020617 50%, #000 100%);
+      overflow: visible;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    thead {
+      background: radial-gradient(circle at top left, #0f172a 0, #020617 60%);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    th, td {
+      padding: 7px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+    }
+    th { font-weight: 500; color: #e5e7eb; white-space: nowrap; }
+    tbody tr:nth-child(even) { background: rgba(15, 23, 42, 0.75); }
+    tbody tr:nth-child(odd) { background: rgba(2, 6, 23, 0.85); }
+    tbody tr:hover { background: rgba(30, 64, 175, 0.6); }
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      padding: 1px 5px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    .pill-yes { color: #86efac; }
+    .pill-no { color: var(--muted); }
+    .pill-null { color: #94a3b8; font-style: italic; }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <div>
+        <h1>SDG Scores Explorer (LSEG)</h1>
+        <p class="muted small" style="margin-top:6px;">
+          This page uses the <span class="code">SDGs.csv</span> file (LSEG Refinitiv data) to explore which companies
+          report support for each of the 17 UN Sustainable Development Goals. You can view the full SDG profile for one
+          company, or list which companies support a chosen SDG. Company names are resolved from the CAC constituents list
+          where available.
+        </p>
+      </div>
+    </header>
+
+    <section>
+      <div class="card">
+        <div class="card-header">
+          <h2>1. Company SDG profile</h2>
+          <span class="small muted">Select a company to see its reported support for each of the 17 SDGs.</span>
+        </div>
+        <div class="controls-grid">
+          <div>
+            <label for="companySelect">Company</label>
+            <select id="companySelect" disabled>
+              <option>Loading…</option>
+            </select>
+          </div>
+          <div style="min-width:140px;">
+            <button type="button" class="primary" id="companyBtn" disabled>Show SDG profile</button>
+          </div>
+          <div style="display:flex;align-items:center;">
+            <span id="sdgScoreDisplay" class="small muted" style="margin-left:8px;">—</span>
+          </div>
+        </div>
+        <div id="companyStatus" class="status small"></div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:55%;">SDG</th>
+                <th style="width:45%;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="companyTableBody">
+              <tr><td colspan="2" class="muted small">Select a company and click “Show SDG profile”.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const RIC_NAME_FALLBACKS = {
+      "ORP.PA": "Orpea",
+      "VIV.PA": "Vivendi SA",
+      "BNP.PA": "BNP Paribas SA",
+      "BNPP.PA": "BNP Paribas SA",
+      "ACA.PA": "Crédit Agricole S.A.",
+      "CAP.PA": "Capgemini SE",
+      "AIR.PA": "Airbus SE",
+      "LVMH.PA": "LVMH Moet Hennessy Louis Vuitton SE",
+      "SGO.PA": "Saint-Gobain",
+      "SANP.PA": "Sanofi",
+      "MC.PA": "Hermès International"
+    };
+
+    function parseCsv(text, delimiter) {
+      const delim = delimiter || (text.indexOf(";") >= 0 ? ";" : ",");
+      const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").filter((l) => l.trim().length > 0);
+      if (!lines.length) return { headers: [], rows: [] };
+      const split = (line) => {
+        const result = [];
+        let cur = "";
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === "\"") {
+            if (inQuotes && line[i + 1] === "\"") { cur += "\""; i++; }
+            else inQuotes = !inQuotes;
+          } else if (ch === delim && !inQuotes) { result.push(cur); cur = ""; }
+          else cur += ch;
+        }
+        result.push(cur);
+        return result.map((s) => s.trim().replace(/^"|"$/g, ""));
+      };
+      const headers = split(lines[0]);
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = split(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => { row[h] = cols[idx] !== undefined ? cols[idx] : ""; });
+        rows.push(row);
+      }
+      return { headers, rows };
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return "";
+      const t = document.createElement("span");
+      t.textContent = String(s);
+      return t.innerHTML;
+    }
+
+    const state = {
+      rows: [],
+      sdgColumns: [],
+      sdgLabels: {},
+      companies: [],
+      companyNameByRic: {}
+    };
+
+    function getCompanyName(ric) {
+      if (!ric) return "";
+      return state.companyNameByRic[ric] || RIC_NAME_FALLBACKS[ric] || "";
+    }
+
+    function normaliseValue(v) {
+      const s = String(v || "").trim().toUpperCase();
+      if (s === "TRUE" || s === "1") return "TRUE";
+      if (s === "FALSE" || s === "0") return "FALSE";
+      return "NULL";
+    }
+
+    async function loadCompanyNames() {
+      const map = {};
+      try {
+        const resp = await fetch("cac_constituents.csv");
+        if (!resp.ok) return map;
+        const text = await resp.text();
+        const parsed = parseCsv(text, ",");
+        const headers = parsed.headers;
+        let ricHeader = null, nameHeader = null;
+        headers.forEach((h) => {
+          const k = String(h || "").toLowerCase();
+          if (k === "ric") ricHeader = h;
+          if (k === "company common name" || k === "company" || k === "issuer name") nameHeader = h;
+        });
+        if (!ricHeader || !nameHeader) return map;
+        parsed.rows.forEach((r) => {
+          const ric = r[ricHeader], name = r[nameHeader];
+          if (ric && name) map[String(ric)] = String(name);
+        });
+      } catch (e) { console.error(e); }
+      return map;
+    }
+
+    async function loadDataset() {
+      const companyStatus = document.getElementById("companyStatus");
+      companyStatus.textContent = "Loading SDGs.csv…";
+      companyStatus.className = "status small info";
+
+      try {
+        const resp = await fetch("SDGs.csv");
+        if (!resp.ok) {
+          companyStatus.textContent = "Could not load SDGs.csv. Place it in the same folder as this HTML and open via a local server.";
+          companyStatus.className = "status small error";
+          return;
+        }
+        const text = await resp.text();
+        const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").filter((l) => l.trim().length > 0);
+        if (lines.length < 3) {
+          companyStatus.textContent = "Not enough data in SDGs.csv.";
+          companyStatus.className = "status small error";
+          return;
+        }
+
+        const split = (line) => {
+          const result = [];
+          let cur = "", inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === "\"") {
+              if (inQuotes && line[i + 1] === "\"") { cur += "\""; i++; }
+              else inQuotes = !inQuotes;
+            } else if (ch === ";" && !inQuotes) { result.push(cur.trim().replace(/^"|"$/g, "")); cur = ""; }
+            else cur += ch;
+          }
+          result.push(cur.trim().replace(/^"|"$/g, ""));
+          return result;
+        };
+
+        const headerRow = split(lines[0]);
+        const labelRow = split(lines[1]);
+        const headers = headerRow.map((h, i) => (i === 0 && (!h || h === "")) ? "RIC" : h || "Col" + i);
+        if (headers[0] !== "RIC") headers[0] = "RIC";
+
+        state.sdgColumns = headers.slice(1);
+        state.sdgLabels = {};
+        state.sdgColumns.forEach((col, i) => {
+          state.sdgLabels[col] = labelRow[i + 1] || col;
+        });
+
+        const rows = [];
+        for (let i = 2; i < lines.length; i++) {
+          const cols = split(lines[i]);
+          const row = { RIC: cols[0] || "" };
+          state.sdgColumns.forEach((col, j) => {
+            row[col] = normaliseValue(cols[j + 1]);
+          });
+          rows.push(row);
+        }
+
+        state.rows = rows;
+        state.companies = Array.from(new Set(rows.map((r) => r.RIC).filter(Boolean))).sort();
+        state.companyNameByRic = await loadCompanyNames();
+
+        const ricsWithData = new Set();
+        rows.forEach((r) => {
+          if (!r.RIC) return;
+          const hasAny = state.sdgColumns.some((col) => r[col] !== "NULL");
+          if (hasAny) ricsWithData.add(r.RIC);
+        });
+        state.companies = state.companies.filter((ric) => ricsWithData.has(ric));
+
+        const companySelect = document.getElementById("companySelect");
+        companySelect.innerHTML = "";
+        state.companies.forEach((ric) => {
+          const opt = document.createElement("option");
+          opt.value = ric;
+          const name = getCompanyName(ric);
+          opt.textContent = name ? name + " (" + ric + ")" : ric;
+          companySelect.appendChild(opt);
+        });
+        companySelect.disabled = false;
+
+        document.getElementById("companyBtn").disabled = false;
+
+        companyStatus.textContent = "Dataset loaded. Select a company.";
+        companyStatus.className = "status small ok";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("companyStatus").textContent = "Failed to load SDGs.csv.";
+        document.getElementById("companyStatus").className = "status small error";
+      }
+    }
+
+    function statusClass(v) {
+      if (v === "TRUE") return "pill-yes";
+      if (v === "FALSE") return "pill-no";
+      return "pill-null";
+    }
+
+    function statusText(v) {
+      if (v === "TRUE") return "TRUE";
+      if (v === "FALSE") return "FALSE";
+      return "NULL";
+    }
+
+    function renderCompanyProfile() {
+      const ric = document.getElementById("companySelect").value;
+      const body = document.getElementById("companyTableBody");
+      const statusEl = document.getElementById("companyStatus");
+      const scoreEl = document.getElementById("sdgScoreDisplay");
+
+      const row = state.rows.find((r) => r.RIC === ric);
+      if (!row) {
+        body.innerHTML = '<tr><td colspan="2" class="muted small">No data for this company.</td></tr>';
+        statusEl.textContent = "";
+        statusEl.className = "status small";
+        scoreEl.textContent = "—";
+        return;
+      }
+
+      const trueCount = state.sdgColumns.filter((col) => (row[col] || "").toUpperCase() === "TRUE").length;
+      scoreEl.textContent = trueCount + "/17";
+
+      const name = getCompanyName(ric);
+      body.innerHTML = state.sdgColumns.map((col) => {
+        const v = row[col] || "NULL";
+        return (
+          "<tr><td>" + escapeHtml(state.sdgLabels[col] || col) + "</td>" +
+          "<td class=\"" + statusClass(v) + "\">" + escapeHtml(statusText(v)) + "</td></tr>"
+        );
+      }).join("");
+
+      statusEl.textContent = "SDG profile for " + (name || ric) + " (" + ric + ").";
+      statusEl.className = "status small ok";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadDataset();
+      document.getElementById("companyBtn").addEventListener("click", renderCompanyProfile);
+    });
+  </script>
+</body>
+</html>
