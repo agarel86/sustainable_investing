@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ESG rating creator – CAC universe</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #020617;
+      --panel: rgba(15, 23, 42, 0.96);
+      --border: rgba(148, 163, 184, 0.35);
+      --accent: #38bdf8;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #082f49 0, #020617 45%, #020617 100%);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 13px;
+    }
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px 14px 20px;
+    }
+    h1 { font-size: 1.35rem; margin: 0 0 2px; }
+    .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 10px; }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 38%) 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+    }
+    .card h2 { font-size: 0.95rem; margin: 0 0 8px; font-weight: 600; }
+    label { font-size: 0.78rem; color: var(--muted); display: block; margin-bottom: 2px; }
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: rgba(2, 6, 23, 0.85);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    input[type="number"] { width: 56px; padding: 3px 5px; font-variant-numeric: tabular-nums; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 8px; }
+    .row label { display: inline-flex; align-items: center; gap: 5px; margin: 0; cursor: pointer; color: var(--text); }
+    .btn {
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .btn:hover { background: rgba(56, 189, 248, 0.22); }
+    .btn-sec {
+      border-color: var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--muted);
+    }
+    .status { font-size: 0.75rem; color: var(--muted); margin-top: 6px; min-height: 1.2em; }
+    .status.err { color: #fecaca; }
+    .status.ok { color: #bbf7d0; }
+    .var-scroll {
+      max-height: min(42vh, 320px);
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px;
+      background: rgba(2, 6, 23, 0.5);
+    }
+    .cat { margin-bottom: 8px; }
+    .cat-title { font-size: 0.72rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 4px 0 4px; }
+    .var-line {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      gap: 6px;
+      align-items: center;
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+    }
+    .var-line:last-child { border-bottom: none; }
+    .code { font-family: ui-monospace, monospace; font-size: 0.72rem; color: #cbd5e1; word-break: break-all; }
+    .weight-cell { opacity: 0.35; pointer-events: none; }
+    .weight-cell.on { opacity: 1; pointer-events: auto; }
+    .table-wrap {
+      max-height: min(58vh, 520px);
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { padding: 5px 8px; text-align: left; border-bottom: 1px solid rgba(30, 41, 59, 0.9); }
+    th {
+      position: sticky; top: 0;
+      background: linear-gradient(to bottom, #0f172a, #0f172a);
+      z-index: 1;
+      font-weight: 500;
+      color: #cbd5f5;
+    }
+    tbody tr:nth-child(even) { background: rgba(15, 23, 42, 0.5); }
+    .num { font-variant-numeric: tabular-nums; }
+    .muted { color: var(--muted); }
+    .hint { font-size: 0.72rem; color: var(--muted); line-height: 1.4; margin-top: 6px; }
+    .flex-gap { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .var-def-link {
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: rgba(56, 189, 248, 0.45);
+      text-underline-offset: 2px;
+    }
+    .var-def-link:hover { color: var(--accent); text-decoration-color: var(--accent); }
+    .def-panel {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(15, 23, 42, 0.95);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      max-height: 200px;
+      overflow: auto;
+    }
+    .def-panel.open { display: block; }
+    .def-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .def-panel-header h3 { margin: 0; font-size: 0.88rem; font-weight: 600; }
+    .def-close {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .def-close:hover { color: var(--text); }
+    .def-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+    .def-chip {
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .def-chip strong { color: var(--text); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ESG rating creator</h1>
+    <div class="subtitle">Build a custom composite score from LSEG datapoints. Pick variables, optional weights, and universe vs. industry scoring—then see the full firm ranking.</div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Your model</h2>
+        <div class="row">
+          <label><input type="radio" name="scoreMode" value="universe" checked /> Absolute (within full universe)</label>
+          <label><input type="radio" name="scoreMode" value="industry" /> Within industry (GICS sector)</label>
+        </div>
+        <div class="row">
+          <label><input type="radio" name="weightMode" value="equal" checked /> Equal weights across selected variables</label>
+          <label><input type="radio" name="weightMode" value="custom" /> Custom weights</label>
+        </div>
+        <div class="flex-gap" style="margin-bottom:8px;">
+          <button type="button" class="btn btn-sec" id="selectAllBtn">Select all listed</button>
+          <button type="button" class="btn btn-sec" id="selectNoneBtn">Clear</button>
+        </div>
+        <div id="varContainer" class="var-scroll muted">Loading variables…</div>
+        <div class="hint" id="varCountHint"></div>
+        <p class="hint" style="margin-top:4px;">Click a variable code to see its LSEG definition.</p>
+        <div id="defPanel" class="def-panel" aria-live="polite"></div>
+
+        <h2 style="margin-top:12px;">Save &amp; load</h2>
+        <p class="hint" style="margin-top:0;">Models are saved in <strong>your browser</strong> (persist across refreshes). You can also export/import <span class="code">.json</span> files to share with classmates.</p>
+        <label for="modelName">Model name</label>
+        <input type="text" id="modelName" placeholder="e.g. alex_energy_model" autocomplete="off" />
+        <div class="flex-gap" style="margin-top:8px;">
+          <button type="button" class="btn" id="saveStoreBtn">Save model</button>
+          <button type="button" class="btn btn-sec" id="exportBtn">Export to file</button>
+        </div>
+        <label for="loadSelect" style="margin-top:10px;">Load a saved model</label>
+        <select id="loadSelect"><option value="">— Choose —</option></select>
+        <div class="flex-gap" style="margin-top:6px;">
+          <button type="button" class="btn btn-sec" id="applyLoadBtn">Load selected</button>
+          <button type="button" class="btn btn-sec" id="deleteModelBtn">Delete selected</button>
+        </div>
+        <div class="flex-gap" style="margin-top:8px;">
+          <button type="button" class="btn btn-sec" id="importBtn">Import from file</button>
+          <input type="file" id="importFile" accept=".json" style="display:none;" />
+        </div>
+        <div class="status" id="ioStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>Ranking (composite 0–100)</h2>
+        <p class="muted" style="margin:0 0 8px; font-size:0.8rem;">Composite = average or weighted average of 0–100 scores per selected variable (polarity from LSEG definitions). Firms with no usable data on any selected variable are omitted.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="num">#</th>
+                <th>Company</th>
+                <th>RIC</th>
+                <th>Sector</th>
+                <th class="num">Score</th>
+              </tr>
+            </thead>
+            <tbody id="rankBody">
+              <tr><td colspan="5" class="muted">Load data…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="status" id="rankStatus"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const MODEL_STORE_FILE = 'esg_models_store.json';
+    const LS_STORE_KEY = 'esg_rating_creator_models_store_v1';
+
+    function readStoreFromLocal() {
+      try {
+        const raw = localStorage.getItem(LS_STORE_KEY);
+        if (!raw) return { models: {} };
+        const o = JSON.parse(raw);
+        if (o && o.models && typeof o.models === 'object' && !Array.isArray(o.models)) {
+          return { models: { ...o.models } };
+        }
+      } catch (e) { /* ignore */ }
+      return { models: {} };
+    }
+
+    function writeStoreToLocal(store) {
+      try {
+        localStorage.setItem(LS_STORE_KEY, JSON.stringify({ models: { ...(store.models || {}) } }));
+      } catch (e) { /* quota / private mode */ }
+    }
+
+    function mergeModelStores(fromFile, fromLocal) {
+      return { models: { ...(fromFile.models || {}), ...(fromLocal.models || {}) } };
+    }
+
+    function splitCsvLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+        else current += ch;
+      }
+      result.push(current);
+      return result.map(s => s.replace(/^\s+|\s+$/g, '').replace(/^"|"$/g, ''));
+    }
+
+    function parseCsv(text) {
+      text = String(text).replace(/^\uFEFF/, '');
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim().length > 0);
+      if (!lines.length) return { headers: [], rows: [] };
+      const headers = splitCsvLine(lines[0]).map(h => (h && typeof h === 'string') ? h.trim() : h);
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = splitCsvLine(lines[i]);
+        const row = {};
+        for (let j = 0; j < headers.length; j++) row[headers[j]] = cols[j] !== undefined ? cols[j] : '';
+        rows.push(row);
+      }
+      return { headers, rows };
+    }
+
+    function isNullishValue(v) {
+      if (v === undefined || v === null) return true;
+      const s = String(v).trim();
+      return s === '' || s.toUpperCase() === 'NA' || s.toUpperCase() === 'N/A';
+    }
+
+    function isBooleanVar(header) {
+      const def = state.definitions[header] || state.defByLower[String(header || '').toLowerCase()] || {};
+      if (def.data_type && /boolean/i.test(def.data_type)) return true;
+      const vals = state.esg.map(r => r[header]).filter(v => !isNullishValue(v)).slice(0, 50);
+      if (!vals.length) return false;
+      return vals.every(v => {
+        const s = String(v).trim().toLowerCase();
+        return s === 'true' || s === 'false' || s === '0' || s === '1';
+      });
+    }
+
+    function isNumericOrBooleanVar(header) {
+      const def = state.definitions[header] || state.defByLower[String(header || '').toLowerCase()] || {};
+      if (!def || !def.data_type) return false;
+      const t = def.data_type.toLowerCase();
+      return t.includes('numeric') || t.includes('number') || t.includes('score') || t.includes('boolean');
+    }
+
+    function numericValue(header, row) {
+      const raw = row[header];
+      const bool = isBooleanVar(header);
+      if (bool) {
+        if (isNullishValue(raw)) return NaN;
+        const s = String(raw).trim().toLowerCase();
+        if (s === 'true' || s === '1') return 1;
+        if (s === 'false' || s === '0') return 0;
+        return NaN;
+      }
+      if (isNullishValue(raw)) return NaN;
+      const n = Number(String(raw).replace(/,/g, ''));
+      return Number.isNaN(n) ? NaN : n;
+    }
+
+    function isHigherBetter(header) {
+      const def = state.definitions[header] || state.defByLower[String(header || '').toLowerCase()] || {};
+      if (!def || !def.polarity) return true;
+      const p = String(def.polarity).toLowerCase();
+      return !(p.includes('lower') || p.includes('negative') || p === 'negative');
+    }
+
+    function resolveHeader(code) {
+      if (!code) return null;
+      return state.headerByLower[String(code).toLowerCase()] || null;
+    }
+
+    const state = {
+      constituents: [],
+      constByRic: {},
+      esg: [],
+      esgHeaders: [],
+      definitions: {},
+      defByLower: {},
+      headerByLower: {},
+      nonEmptyVariables: [],
+      modelStore: { models: {} }
+    };
+
+    function percentileMapUniverse(items, higherBetter) {
+      const n = items.length;
+      const out = new Map();
+      if (!n) return out;
+      if (n === 1) { out.set(items[0].ric, 50); return out; }
+      const sorted = [...items].sort((a, b) => a.rawValue - b.rawValue);
+      sorted.forEach((item, i) => {
+        const t = i / (n - 1);
+        const score = (higherBetter === false ? (1 - t) : t) * 100;
+        out.set(item.ric, Math.round(score * 10) / 10);
+      });
+      return out;
+    }
+
+    function scoresForVariable(header, scoreMode) {
+      const isBool = isBooleanVar(header);
+      const higherBetter = isHigherBetter(header);
+      const rows = [];
+      state.esg.forEach(row => {
+        const ric = row.Instrument;
+        if (!ric) return;
+        const v = numericValue(header, row);
+        if (Number.isNaN(v)) return;
+        const meta = state.constByRic[String(ric).trim()] || {};
+        rows.push({
+          ric: String(ric).trim(),
+          sector: meta['GICS Sector Name'] || 'Other',
+          rawValue: v
+        });
+      });
+      const scoreByRic = new Map();
+      if (!rows.length) return scoreByRic;
+      if (isBool) {
+        const oneIsGood = higherBetter !== false;
+        rows.forEach(r => {
+          scoreByRic.set(r.ric, ((r.rawValue === 1) === oneIsGood) ? 100 : 0);
+        });
+        return scoreByRic;
+      }
+      if (scoreMode === 'universe') return percentileMapUniverse(rows, higherBetter);
+      const bySector = {};
+      rows.forEach(r => {
+        const s = r.sector || 'Other';
+        if (!bySector[s]) bySector[s] = [];
+        bySector[s].push(r);
+      });
+      Object.values(bySector).forEach(sectorRows => {
+        const m = percentileMapUniverse(sectorRows, higherBetter);
+        m.forEach((sc, ric) => scoreByRic.set(ric, sc));
+      });
+      return scoreByRic;
+    }
+
+    function getConfigFromUI() {
+      const scoreMode = document.querySelector('input[name="scoreMode"]:checked').value;
+      const weightMode = document.querySelector('input[name="weightMode"]:checked').value;
+      const vars = [];
+      const weights = {};
+      document.querySelectorAll('.var-cb:checked').forEach(cb => {
+        const h = cb.dataset.header;
+        vars.push(h);
+        const line = cb.closest('.var-line');
+        const inp = line ? line.querySelector('.var-w') : null;
+        const w = inp ? Number(inp.value) : 1;
+        weights[h] = Number.isFinite(w) && w > 0 ? w : 1;
+      });
+      return { scoreMode, weightMode, vars, weights, v: 1 };
+    }
+
+    function applyConfig(cfg) {
+      if (!cfg || !cfg.vars) return;
+      document.querySelectorAll('input[name="scoreMode"]').forEach(r => { r.checked = r.value === cfg.scoreMode; });
+      document.querySelectorAll('input[name="weightMode"]').forEach(r => { r.checked = r.value === cfg.weightMode; });
+      document.querySelectorAll('.var-cb').forEach(cb => {
+        cb.checked = cfg.vars.includes(cb.dataset.header);
+      });
+      document.querySelectorAll('.var-line').forEach(line => {
+        const cb = line.querySelector('.var-cb');
+        const inp = line.querySelector('.var-w');
+        if (!cb || !inp) return;
+        const h = cb.dataset.header;
+        if (cfg.weights && cfg.weights[h] != null) inp.value = String(cfg.weights[h]);
+      });
+      syncWeightInputs();
+      recomputeRanking();
+    }
+
+    function syncWeightInputs() {
+      const custom = document.querySelector('input[name="weightMode"]:checked').value === 'custom';
+      document.querySelectorAll('.weight-cell').forEach(el => {
+        el.classList.toggle('on', custom && el.closest('.var-line').querySelector('.var-cb').checked);
+      });
+    }
+
+    function compositeForAll(cfg) {
+      const { scoreMode, weightMode, vars, weights } = cfg;
+      if (!vars.length) return [];
+      const perVar = {};
+      vars.forEach(h => { perVar[h] = scoresForVariable(h, scoreMode); });
+      const rics = new Set();
+      state.esg.forEach(row => { if (row.Instrument) rics.add(String(row.Instrument).trim()); });
+      const out = [];
+      rics.forEach(ric => {
+        let sum = 0;
+        let wSum = 0;
+        vars.forEach(h => {
+          const sc = perVar[h].get(ric);
+          if (sc == null || Number.isNaN(sc)) return;
+          const w = weightMode === 'custom' ? (weights[h] != null ? weights[h] : 1) : 1;
+          sum += sc * w;
+          wSum += w;
+        });
+        if (wSum <= 0) return;
+        const meta = state.constByRic[ric] || {};
+        out.push({
+          ric,
+          name: meta['Company Common Name'] || ric,
+          sector: meta['GICS Sector Name'] || '–',
+          score: Math.round((sum / wSum) * 10) / 10
+        });
+      });
+      out.sort((a, b) => b.score - a.score || (a.name || '').localeCompare(b.name || ''));
+      return out;
+    }
+
+    function recomputeRanking() {
+      const cfg = getConfigFromUI();
+      const body = document.getElementById('rankBody');
+      const st = document.getElementById('rankStatus');
+      if (!cfg.vars.length) {
+        body.innerHTML = '<tr><td colspan="5" class="muted">Select at least one variable.</td></tr>';
+        st.textContent = '';
+        return;
+      }
+      const rows = compositeForAll(cfg);
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="5" class="muted">No firms with data on the selected variables.</td></tr>';
+        st.textContent = '';
+        return;
+      }
+      body.innerHTML = rows.map((r, i) =>
+        '<tr><td class="num">' + (i + 1) + '</td><td>' + escapeHtml(r.name) + '</td><td class="code">' + escapeHtml(r.ric) + '</td><td>' + escapeHtml(r.sector) + '</td><td class="num"><strong>' + r.score.toFixed(1) + '</strong></td></tr>'
+      ).join('');
+      st.textContent = rows.length + ' firms ranked · ' + cfg.vars.length + ' variable(s) · ' + (cfg.weightMode === 'custom' ? 'custom weights' : 'equal weights') + ' · ' + (cfg.scoreMode === 'industry' ? 'within-sector percentiles' : 'universe percentiles');
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      const t = document.createElement('span');
+      t.textContent = s;
+      return t.innerHTML;
+    }
+
+    function categoryForHeader(h) {
+      const d = state.definitions[h] || state.defByLower[String(h).toLowerCase()] || {};
+      return (d.category || d.pillar || 'Other').trim() || 'Other';
+    }
+
+    function hideDefPanel() {
+      const panel = document.getElementById('defPanel');
+      panel.classList.remove('open');
+      panel.innerHTML = '';
+    }
+
+    function showDefinition(code) {
+      const panel = document.getElementById('defPanel');
+      const defObj = state.definitions[code] || state.defByLower[String(code).toLowerCase().trim()] || null;
+      const label = defObj && defObj.label ? defObj.label : code;
+
+      let html = '<div class="def-panel-header">';
+      html += '<div style="min-width:0;">';
+      html += '<h3>' + escapeHtml(label) + '</h3>';
+      html += '<div class="code" style="margin-top:2px;">' + escapeHtml(code) + '</div>';
+      html += '</div>';
+      html += '<button type="button" class="def-close" aria-label="Close definition">&times;</button>';
+      html += '</div>';
+
+      if (!defObj) {
+        html += '<p class="muted" style="margin:0;">No definition found in lseg_esg_variable_definitions.csv for this field.</p>';
+        panel.innerHTML = html;
+        panel.classList.add('open');
+        const btn = panel.querySelector('.def-close');
+        if (btn) btn.addEventListener('click', hideDefPanel);
+        return;
+      }
+
+      const unit = defObj.unit || '';
+      const pillar = defObj.pillar || '';
+      const category = defObj.category || '';
+      const polarity = defObj.polarity || '';
+      const defText = defObj.definition || 'No definition text.';
+
+      html += '<div class="def-meta">';
+      if (pillar) html += '<span class="def-chip"><strong>Pillar</strong> ' + escapeHtml(pillar) + '</span>';
+      if (category) html += '<span class="def-chip"><strong>Category</strong> ' + escapeHtml(category) + '</span>';
+      if (polarity) html += '<span class="def-chip"><strong>Polarity</strong> ' + escapeHtml(polarity) + '</span>';
+      if (unit) html += '<span class="def-chip"><strong>Unit</strong> ' + escapeHtml(unit) + '</span>';
+      html += '</div>';
+      html += '<p style="margin:0;color:var(--text);">' + escapeHtml(defText) + '</p>';
+
+      panel.innerHTML = html;
+      panel.classList.add('open');
+      panel.querySelector('.def-close').addEventListener('click', hideDefPanel);
+    }
+
+    function buildVariableUI() {
+      const container = document.getElementById('varContainer');
+      const headers = [...state.nonEmptyVariables].sort((a, b) => {
+        const ca = categoryForHeader(a);
+        const cb = categoryForHeader(b);
+        if (ca !== cb) return ca.localeCompare(cb);
+        return a.localeCompare(b);
+      });
+      const byCat = {};
+      headers.forEach(h => {
+        const c = categoryForHeader(h);
+        if (!byCat[c]) byCat[c] = [];
+        byCat[c].push(h);
+      });
+      let html = '';
+      Object.keys(byCat).sort().forEach(cat => {
+        html += '<div class="cat"><div class="cat-title">' + escapeHtml(cat) + '</div>';
+        byCat[cat].forEach((h, idx) => {
+          const safe = 'cb_' + btoa(unescape(encodeURIComponent(h))).replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');
+          const id = safe + '_' + idx;
+          const attrH = String(h).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+          html += '<div class="var-line">';
+          html += '<input type="checkbox" class="var-cb" id="' + id + '" data-header="' + attrH + '" aria-label="Include in composite score" />';
+          html += '<div style="min-width:0;">';
+          html += '<span class="code var-def-link" role="button" tabindex="0" data-header="' + attrH + '" title="LSEG definition">' + escapeHtml(h) + '</span>';
+          html += '</div>';
+          html += '<div class="weight-cell"><input type="number" class="var-w" min="0.1" step="0.1" value="1" /></div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+      container.innerHTML = html;
+      hideDefPanel();
+      document.getElementById('varCountHint').textContent = headers.length + ' numeric/boolean variables with at least one non-missing value.';
+      container.querySelectorAll('.var-def-link').forEach(el => {
+        const open = (e) => {
+          if (e) { e.preventDefault(); e.stopPropagation(); }
+          const code = el.getAttribute('data-header');
+          if (code) showDefinition(code);
+        };
+        el.addEventListener('click', open);
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(e); }
+        });
+      });
+      container.querySelectorAll('.var-cb, .var-w').forEach(el => {
+        el.addEventListener('change', () => { syncWeightInputs(); recomputeRanking(); });
+      });
+      document.querySelectorAll('input[name="weightMode"]').forEach(r => {
+        r.addEventListener('change', () => { syncWeightInputs(); recomputeRanking(); });
+      });
+      document.querySelectorAll('input[name="scoreMode"]').forEach(r => {
+        r.addEventListener('change', recomputeRanking);
+      });
+      syncWeightInputs();
+      recomputeRanking();
+    }
+
+    function downloadTextFile(filename, text) {
+      const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
+
+    async function loadModelStoreFromFile() {
+      let fromFile = { models: {} };
+      let fileOk = false;
+      try {
+        const r = await fetch(MODEL_STORE_FILE + '?t=' + Date.now(), { cache: 'no-store' });
+        if (!r.ok) throw new Error(String(r.status));
+        const data = await r.json();
+        if (data && data.models && typeof data.models === 'object' && !Array.isArray(data.models)) {
+          fromFile = { models: { ...data.models } };
+          fileOk = true;
+        } else if (Array.isArray(data)) {
+          const models = {};
+          data.forEach(entry => {
+            if (entry && entry.name && entry.config) models[String(entry.name).trim()] = entry.config;
+          });
+          fromFile = { models };
+          fileOk = true;
+        }
+      } catch (e) {
+        /* file missing or offline — still merge local backup */
+      }
+      const fromLocal = readStoreFromLocal();
+      state.modelStore = mergeModelStores(fromFile, fromLocal);
+      return fileOk;
+    }
+
+    function populateModelDropdown(selectName) {
+      const sel = document.getElementById('loadSelect');
+      const prev = selectName != null ? selectName : sel.value;
+      sel.innerHTML = '<option value="">— Choose —</option>';
+      const models = state.modelStore.models || {};
+      Object.keys(models).sort((a, b) => a.localeCompare(b)).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+    }
+
+    function setIoStatus(msg, kind) {
+      const el = document.getElementById('ioStatus');
+      el.textContent = msg || '';
+      el.className = 'status' + (kind === 'err' ? ' err' : kind === 'ok' ? ' ok' : '');
+    }
+
+    async function loadAll() {
+      setIoStatus('Loading CSVs…', '');
+      const [constText, esgText, defText] = await Promise.all([
+        fetch('cac_constituents.csv').then(r => r.text()),
+        fetch('cac_esg_datapoints.csv').then(r => r.text()),
+        fetch('lseg_esg_variable_definitions.csv').then(r => r.text())
+      ]);
+
+      const constParsed = parseCsv(constText);
+      state.constituents = constParsed.rows;
+      state.constByRic = {};
+      state.constituents.forEach(r => {
+        const ric = r.RIC;
+        if (ric && String(ric).trim()) state.constByRic[String(ric).trim()] = r;
+      });
+
+      const esgParsed = parseCsv(esgText);
+      state.esgHeaders = esgParsed.headers;
+      state.esg = esgParsed.rows;
+      state.headerByLower = {};
+      state.esgHeaders.forEach(h => {
+        if (h) state.headerByLower[String(h).toLowerCase()] = h;
+      });
+
+      const defParsed = parseCsv(defText);
+      state.definitions = {};
+      state.defByLower = {};
+      const defHeaders = defParsed.headers || [];
+      const norm = (s) => String(s).replace(/\s/g, '').replace(/_/g, '').toLowerCase();
+      const codeKey = defHeaders.find(h => norm(h) === norm('field_code')) || 'field_code';
+      const getDef = (r, key) => {
+        const k = defHeaders.find(h => norm(h) === norm(key)) || key;
+        return (r[k] ?? r[key] ?? '').toString().trim();
+      };
+      defParsed.rows.forEach(r => {
+        const code = (r[codeKey] ?? r.field_code ?? '').toString().trim();
+        if (!code) return;
+        const def = {
+          label: getDef(r, 'label'),
+          unit: getDef(r, 'unit'),
+          pillar: getDef(r, 'pillar'),
+          category: getDef(r, 'category'),
+          polarity: getDef(r, 'polarity'),
+          data_type: getDef(r, 'data_type'),
+          definition: getDef(r, 'definition')
+        };
+        state.definitions[code] = def;
+        state.defByLower[String(code).toLowerCase().trim()] = def;
+      });
+
+      const nonEmpty = [];
+      state.esgHeaders.filter(h => h && h !== 'Instrument').forEach(h => {
+        if (!isNumericOrBooleanVar(h)) return;
+        const hasAny = state.esg.some(row => !isNullishValue(row[h]));
+        if (hasAny) nonEmpty.push(h);
+      });
+      state.nonEmptyVariables = nonEmpty;
+
+      const storeOk = await loadModelStoreFromFile();
+      buildVariableUI();
+      populateModelDropdown();
+      const nModels = Object.keys(state.modelStore.models || {}).length;
+      let storeStatusSet = false;
+      if (!storeOk && nModels === 0) {
+        setIoStatus('No shared models file found. Save a model to get started.', '');
+        storeStatusSet = true;
+      } else if (!storeOk && nModels > 0) {
+        setIoStatus('Using ' + nModels + ' model(s) saved in this browser.', '');
+        storeStatusSet = true;
+      } else if (!storeOk && nModels > 0) {
+        setIoStatus('Using models saved in this browser (' + nModels + '). Replace ' + MODEL_STORE_FILE + ' on disk to share with others.', '');
+        storeStatusSet = true;
+      }
+
+      document.getElementById('selectAllBtn').addEventListener('click', () => {
+        document.querySelectorAll('.var-cb').forEach(cb => { cb.checked = true; });
+        syncWeightInputs();
+        recomputeRanking();
+      });
+      document.getElementById('selectNoneBtn').addEventListener('click', () => {
+        document.querySelectorAll('.var-cb').forEach(cb => { cb.checked = false; });
+        syncWeightInputs();
+        recomputeRanking();
+      });
+
+      document.getElementById('saveStoreBtn').addEventListener('click', () => {
+        const name = document.getElementById('modelName').value.trim();
+        if (!name) { setIoStatus('Enter a model name.', 'err'); return; }
+        const cfg = getConfigFromUI();
+        if (!cfg.vars.length) { setIoStatus('Select at least one variable.', 'err'); return; }
+        if (!state.modelStore.models) state.modelStore.models = {};
+        state.modelStore.models[name] = cfg;
+        writeStoreToLocal(state.modelStore);
+        populateModelDropdown(name);
+        setIoStatus('Saved "' + name + '" to browser. Use Export to share with others.', 'ok');
+      });
+
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        const models = state.modelStore.models || {};
+        if (!Object.keys(models).length) { setIoStatus('No models to export. Save one first.', 'err'); return; }
+        downloadTextFile(MODEL_STORE_FILE, JSON.stringify(state.modelStore, null, 2));
+        setIoStatus('Exported ' + Object.keys(models).length + ' model(s) to ' + MODEL_STORE_FILE + '.', 'ok');
+      });
+
+      document.getElementById('importBtn').addEventListener('click', () => {
+        document.getElementById('importFile').click();
+      });
+
+      document.getElementById('importFile').addEventListener('change', (ev) => {
+        const file = ev.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            let imported = {};
+            if (data && data.models && typeof data.models === 'object' && !Array.isArray(data.models)) {
+              imported = data.models;
+            } else if (Array.isArray(data)) {
+              data.forEach(entry => {
+                if (entry && entry.name && entry.config) imported[String(entry.name).trim()] = entry.config;
+              });
+            } else {
+              setIoStatus('Invalid file format.', 'err'); return;
+            }
+            const count = Object.keys(imported).length;
+            if (!count) { setIoStatus('No models found in file.', 'err'); return; }
+            Object.assign(state.modelStore.models, imported);
+            writeStoreToLocal(state.modelStore);
+            populateModelDropdown();
+            setIoStatus('Imported ' + count + ' model(s): ' + Object.keys(imported).join(', '), 'ok');
+          } catch (err) {
+            setIoStatus('Could not parse file: ' + err.message, 'err');
+          }
+        };
+        reader.readAsText(file);
+        ev.target.value = '';
+      });
+
+      document.getElementById('deleteModelBtn').addEventListener('click', () => {
+        const name = document.getElementById('loadSelect').value;
+        if (!name) { setIoStatus('Pick a model to delete.', 'err'); return; }
+        delete state.modelStore.models[name];
+        writeStoreToLocal(state.modelStore);
+        populateModelDropdown();
+        setIoStatus('Deleted "' + name + '".', 'ok');
+      });
+
+      document.getElementById('applyLoadBtn').addEventListener('click', () => {
+        const name = document.getElementById('loadSelect').value;
+        if (!name) { setIoStatus('Pick a model from the list.', 'err'); return; }
+        const cfg = (state.modelStore.models || {})[name];
+        if (!cfg) { setIoStatus('Model "' + name + '" not found.', 'err'); return; }
+        document.getElementById('modelName').value = name;
+        applyConfig(cfg);
+        setIoStatus('Loaded "' + name + '".', 'ok');
+      });
+
+      if (!storeStatusSet && storeOk) {
+        const n = Object.keys(state.modelStore.models || {}).length;
+        setIoStatus('Data ready. ' + (n ? n + ' model(s) available.' : 'No models yet - save one.'), 'ok');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAll().catch(err => {
+        console.error(err);
+        document.getElementById('ioStatus').className = 'status err';
+        document.getElementById('ioStatus').textContent = 'Failed to load CSV files (same folder as this page).';
+      });
+    });
+  </script>
+</body>
+</html>
