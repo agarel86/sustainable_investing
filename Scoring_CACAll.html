@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CAC – ESG Datapoints Explorer</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f172a;
+      --bg-alt: #020617;
+      --panel: #0b1120;
+      --panel-alt: #020617;
+      --border: #1f2937;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --table-header: #111827;
+      --pill-env: #22c55e;
+      --pill-soc: #eab308;
+      --pill-gov: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #082f49 0, #020617 40%, #020617 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px;
+      max-width: 1320px;
+      margin: 0 auto 32px auto;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin: 0 0 4px 0;
+      letter-spacing: 0.02em;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin: 0 0 12px 0;
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      margin: 0 0 8px 0;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .page-header {
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 16px;
+    }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.06), transparent 55%),
+                  linear-gradient(to bottom right, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
+      padding: 16px 18px 18px 18px;
+    }
+
+    .card + .card {
+      margin-top: 10px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+
+    .pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.8);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--muted);
+    }
+
+    .pill-env .pill-dot {
+      background: var(--pill-env);
+    }
+
+    .pill-soc .pill-dot {
+      background: var(--pill-soc);
+    }
+
+    .pill-gov .pill-dot {
+      background: var(--pill-gov);
+    }
+
+    label {
+      font-size: 0.86rem;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    select:focus {
+      outline: 1px solid var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+    }
+
+    .inline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .inline-badge strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .pill-dot-sm {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .status span {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .status-error span {
+      border-color: rgba(248, 113, 113, 0.7);
+      color: #fecaca;
+    }
+
+    .status-ok span {
+      border-color: rgba(34, 197, 94, 0.7);
+      color: #bbf7d0;
+    }
+
+    .group-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .group-tab {
+      font-size: 0.8rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .group-tab small {
+      opacity: 0.8;
+    }
+
+    .group-tab.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .group-tab-pill {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.9);
+    }
+
+    .group-tab-pill.env {
+      background: var(--pill-env);
+    }
+
+    .group-tab-pill.soc {
+      background: var(--pill-soc);
+    }
+
+    .group-tab-pill.gov {
+      background: var(--pill-gov);
+    }
+
+    .table-wrapper {
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      overflow: hidden;
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    thead {
+      background: linear-gradient(to right, #020617, #020617 30%, #030712 100%);
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: linear-gradient(to right, #020617, #020617 30%, #030712 100%);
+    }
+
+    th, td {
+      padding: 6px 10px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.9);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #cbd5f5;
+      font-weight: 500;
+      font-size: 0.8rem;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.92);
+    }
+
+    tbody tr:hover {
+      background: rgba(30, 64, 175, 0.35);
+    }
+
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 5px;
+      padding: 1px 4px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .val-null {
+      color: rgba(148, 163, 184, 0.9);
+      font-style: italic;
+    }
+
+    .val-number {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .val-bool-true {
+      color: #bbf7d0;
+    }
+
+    .val-bool-false {
+      color: #fecaca;
+    }
+
+    .def-button {
+      border: none;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 999px;
+      padding: 1px 7px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .def-button:hover {
+      background: rgba(15, 118, 110, 0.35);
+    }
+
+    .def-panel {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 55%),
+                  linear-gradient(to bottom right, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      font-size: 0.84rem;
+    }
+
+    .def-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .def-panel-header h3 {
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    .def-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .def-chip {
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .def-chip strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .scroll-y {
+      max-height: 520px;
+      overflow: auto;
+    }
+
+    .small {
+      font-size: 0.8rem;
+    }
+
+    .faded {
+      opacity: 0.9;
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      padding: 2px 6px;
+      border-radius: 5px;
+      border: 1px solid rgba(148, 163, 184, 0.65);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--muted);
+    }
+
+    .weight-input {
+      width: 48px;
+      padding: 3px 4px;
+      border-radius: 5px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-size: 0.78rem;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .weight-input:focus {
+      outline: 1px solid var(--accent);
+      border-color: var(--accent);
+    }
+
+    .weight-input.changed {
+      border-color: rgba(250, 204, 21, 0.7);
+      background: rgba(250, 204, 21, 0.08);
+    }
+
+    .weight-reset-btn {
+      border: none;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 999px;
+      padding: 3px 10px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .weight-reset-btn:hover {
+      background: rgba(248, 113, 113, 0.15);
+      border-color: rgba(248, 113, 113, 0.5);
+      color: #fecaca;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <div>
+        <h1>ESG Datapoints – CAC Universe (latest)</h1>
+        <div class="subtitle">
+          Explore raw LSEG ESG datapoints by company, organised by the official 10‑category / 3‑pillar structure.
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- 2. How to use this page -->
+      <section>
+        <div class="card">
+          <h2>1. How to use this page</h2>
+          <ul class="small" style="margin:0 0 4px 18px; padding:0; color:var(--muted);">
+            <li><strong>Company selection:</strong> Use the dropdown below to pick a firm; the ESG datapoints and all rankings update automatically.</li>
+            <li><strong>Datapoints &amp; definitions:</strong> The datapoints table lists only numeric and Boolean variables with at least one non‑missing value across firms. Click “Definition” to see the LSEG description, unit and polarity.</li>
+            <li><strong>Distribution &amp; scores (section 3):</strong> Click any datapoint row to select it. The ranking table shows companies ordered by ESG performance on that variable, with scores from 0–100 (adjusted for polarity in the definitions). Choose “Best in universe” or “Best in industry (by GICS sector)”.</li>
+            <li><strong>Industry averages (section 3b):</strong> For the selected datapoint, see the average score per GICS sector and how many firms have data.</li>
+            <li><strong>Category-level scores (section 4):</strong> Category scores aggregate the datapoint scores within each ESG category. Switch between simple mean and materiality‑weighted mean; the “ESG score” column is the industry‑specific materiality‑weighted average of category scores.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 1. Select a company -->
+      <section>
+        <div class="card">
+          <h2>2. Select a company</h2>
+
+          <label for="companySelect">Company (common name)</label>
+          <select id="companySelect" disabled>
+            <option>Loading constituents…</option>
+          </select>
+
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:4px;">
+            <div class="inline-badge">
+              <span class="pill-dot-sm"></span>
+              <span><strong>RIC</strong>: <span id="companyRic">–</span></span>
+            </div>
+            <div class="inline-badge">
+              <span class="pill-dot-sm" style="background:var(--pill-env);"></span>
+              <span><strong>GICS sector</strong>: <span id="companySector">–</span></span>
+            </div>
+          </div>
+
+          <div id="loadStatus" class="status" style="display:none;">
+            <span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3, 4, 4b, 5 stacked -->
+      <section>
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px;">
+            <div>
+              <h2>3. ESG datapoints by category</h2>
+              <p class="muted small">
+                Only variables with at least one non‑missing value across all firms are shown.
+              </p>
+            </div>
+            <div class="small muted" id="currentCompanyLabel"></div>
+          </div>
+
+          <div class="group-tabs" id="groupTabs"></div>
+
+          <div class="table-wrapper scroll-y" id="tableContainer">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:26%;">Variable (code)</th>
+                  <th style="width:46%;">Value for selected company</th>
+                  <th style="width:28%;">Definition</th>
+                </tr>
+              </thead>
+              <tbody id="variablesBody">
+                <tr>
+                  <td colspan="3" class="muted small">No data loaded yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="defPanel" class="def-panel" style="display:none;"></div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+            <div>
+              <h2>3. Distribution &amp; scores</h2>
+              <p class="muted small">
+                Ranking of companies on the selected datapoint.
+              </p>
+            </div>
+            <div class="small muted" id="currentMetricLabel">Select a variable above.</div>
+          </div>
+
+          <div class="small" style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:10px;">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="radio" name="scoreMode" value="universe" checked />
+              <span>Best in universe (all firms)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="radio" name="scoreMode" value="industry" />
+              <span>Best in industry (by GICS sector)</span>
+            </label>
+          </div>
+
+          <div class="table-wrapper scroll-y" id="rankingContainer">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:30%;">Company</th>
+                  <th style="width:12%;">RIC</th>
+                  <th style="width:18%;">Sector</th>
+                  <th style="width:20%;">Raw value</th>
+                  <th style="width:20%;">Score (0–100)</th>
+                </tr>
+              </thead>
+              <tbody id="rankingBody">
+                <tr>
+                  <td colspan="5" class="muted small">Click a datapoint above to see rankings.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2>3b. Average score per industry</h2>
+              <p class="muted small">
+                For the selected datapoint: average percentile score (0–100) by GICS sector.
+              </p>
+            </div>
+            <div class="small muted" id="industryAvgMetricLabel">Select a variable above.</div>
+          </div>
+          <div class="table-wrapper scroll-y" style="max-height:220px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:50%;">Industry (GICS sector)</th>
+                  <th style="width:25%;">Average score (0–100)</th>
+                  <th style="width:25%;">Firms</th>
+                </tr>
+              </thead>
+              <tbody id="industryAvgBody">
+                <tr><td colspan="3" class="muted small">Click a datapoint above to see average score by industry.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2>4. Category-level scores</h2>
+              <p class="muted small">
+                Aggregate datapoints at category level: simple mean or materiality-weighted mean of percentile scores (0–100) per variable.
+                Scores are computed from available datapoints only — missing values are skipped, not penalized. Coverage (n/total) is shown below each score.
+              </p>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                <input type="radio" name="categoryAggMode" value="simple" checked />
+                <span>Simple mean</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                <input type="radio" name="categoryAggMode" value="weighted" />
+                <span>Weighted mean (materiality by industry)</span>
+              </label>
+              <button type="button" class="def-button" id="showWeightsBtn">Edit materiality weights</button>
+            </div>
+          </div>
+          <div id="materialityWeightsPanel" class="def-panel" style="display:none; margin-top:10px;"></div>
+          <div class="table-wrapper scroll-y" style="margin-top:10px; max-height:360px;">
+            <table>
+              <thead>
+                <tr id="categoryScoreSubHeader"></tr>
+              </thead>
+              <tbody id="categoryScoreBody">
+                <tr><td colspan="13" class="muted small">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // ------------------------------------------------------------------
+    // 1. Helpers – CSV parsing and utilities
+    // ------------------------------------------------------------------
+
+    function splitCsvLine(line) {
+      // Split on commas not inside quotes
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            // Escaped quote
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+      result.push(current);
+      return result.map(s => s.replace(/^\s+|\s+$/g, '').replace(/^"|"$/g, ''));
+    }
+
+    function parseCsv(text) {
+      text = String(text).replace(/^\uFEFF/, '');
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim().length > 0);
+      if (!lines.length) return { headers: [], rows: [] };
+      const headers = splitCsvLine(lines[0]).map(h => (h && typeof h === 'string') ? h.trim() : h);
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = splitCsvLine(lines[i]);
+        const row = {};
+        for (let j = 0; j < headers.length; j++) {
+          row[headers[j]] = cols[j] !== undefined ? cols[j] : '';
+        }
+        rows.push(row);
+      }
+      return { headers, rows };
+    }
+
+    function isNullishValue(v) {
+      if (v === undefined || v === null) return true;
+      const s = String(v).trim();
+      return s === '' || s.toUpperCase() === 'NA' || s.toUpperCase() === 'N/A';
+    }
+
+    function formatValue(v) {
+      if (isNullishValue(v)) {
+        return { text: 'NA', cls: 'val-null' };
+      }
+      const s = String(v).trim();
+      if (s === 'True' || s === 'False' || s === 'TRUE' || s === 'FALSE') {
+        return {
+          text: s.toLowerCase() === 'true' ? 'True' : 'False',
+          cls: s.toLowerCase() === 'true' ? 'val-bool-true' : 'val-bool-false'
+        };
+      }
+      const n = Number(s.replace(/,/g, ''));
+      if (!Number.isNaN(n) && s !== '') {
+        return { text: s, cls: 'val-number' };
+      }
+      return { text: s, cls: '' };
+    }
+
+    function isBooleanVar(header) {
+      const def = state.definitions[header] || state.defByLower[header?.toLowerCase?.() || ''];
+      if (def && def.data_type && /boolean/i.test(def.data_type)) return true;
+      const vals = state.esg
+        .map(r => r[header])
+        .filter(v => !isNullishValue(v))
+        .slice(0, 50);
+      if (!vals.length) return false;
+      return vals.every(v => {
+        const s = String(v).trim().toLowerCase();
+        return s === 'true' || s === 'false' || s === '0' || s === '1';
+      });
+    }
+
+    function isNumericOrBooleanVar(header) {
+      const def = state.definitions[header] || state.defByLower[header?.toLowerCase?.() || ''];
+      if (!def || !def.data_type) return false;
+      const t = def.data_type.toLowerCase();
+      if (t.includes('numeric') || t.includes('number') || t.includes('score')) return true;
+      if (t.includes('boolean')) return true;
+      return false;
+    }
+
+    function numericValue(header, row) {
+      const raw = row[header];
+      const bool = isBooleanVar(header);
+      const missing = isNullishValue(raw);
+      if (bool) {
+        if (missing) return NaN;
+        const s = String(raw).trim().toLowerCase();
+        if (s === 'true' || s === '1') return 1;
+        if (s === 'false' || s === '0') return 0;
+        return NaN;
+      }
+      if (missing) return NaN;
+      const n = Number(String(raw).replace(/,/g, ''));
+      return Number.isNaN(n) ? NaN : n;
+    }
+
+    function isHigherBetter(header) {
+      const def = state.definitions[header] || state.defByLower[header?.toLowerCase?.() || ''];
+      if (!def || !def.polarity) return true;
+      const p = String(def.polarity).toLowerCase();
+      return !(p.includes('lower') || p.includes('negative') || p === 'negative');
+    }
+
+    // ------------------------------------------------------------------
+    // 2. ESG variable groups (mirroring Python lists)
+    // ------------------------------------------------------------------
+
+    const GROUPS = {
+      resource_use: [
+        'TR.EnergyUseTotal',
+        'TR.EnergyPurchasedDirect',
+        'TR.EnergyUseIndirect',
+        'TR.ElectricityPurchased',
+        'TR.RenewEnergyUse',
+        'TR.TotalRenewableEnergy',
+        'TR.AnalyticEnergyUse',
+        'TR.AnalyticRenewEnergyUse',
+        'TR.PolicyResourceEfficiency',
+        'TR.TargetsResourceUse',
+        'TR.EnergyConsumptionExternalAssurance',
+        'TR.WaterWithdrawalTotal',
+        'TR.FreshWaterWithdrawalTotal',
+        'TR.WaterRecycled',
+        'TR.WaterWithdrawalInStressedRegions',
+        'TR.WaterStressedSites',
+        'TR.WaterManagementPlanDetails',
+        'TR.PolicyWaterEfficiency',
+        'TR.TargetsWaterEfficiency',
+        'TR.PolicyEnvSupplyChain',
+        'TR.SupplierEnvironmentalCommitment',
+        'TR.SupplierEnvironmentalRiskAssessment',
+        'TR.EnvSupplyChainMgt',
+        'TR.EnvSupplyChainMonitoring',
+        'TR.PolicySustainablePackaging',
+        'TR.LandEnvImpactReduction'
+      ],
+      emissions: [
+        'TR.CO2DirectScope1',
+        'TR.CO2IndirectScope2',
+        'TR.CO2IndirectScope3',
+        'TR.AnalyticCO2',
+        'TR.CO2EstimationMethod',
+        'TR.PolicyEmissions',
+        'TR.TargetsEmissionsReduction',
+        'TR.SBTiCommitment',
+        'TR.NetZeroCommitment',
+        'TR.CommitmentToAlignDisclosuresWithTCFDRecommendations',
+        'TR.ReportingAgainstTheTCFDRecommendations',
+        'TR.WasteTotal',
+        'TR.HazardousWaste',
+        'TR.WasteRecycledTotal',
+        'TR.PolicyWaste',
+        'TR.TargetsWaste',
+        'TR.WaterDischarged',
+        'TR.WaterPollutantEmissions',
+        'TR.BiodiversityCommitment',
+        'TR.BiodiversityTargets',
+        'TR.BiodiversityImpactReduction',
+        'TR.ISO14000',
+        'TR.EnvironmentalDataIndependentVerification',
+        'TR.AnalyticEnvControv',
+        'TR.ControvEnv',
+        'TR.RecentControvEnv'
+      ],
+      innovation: [
+        'TR.EnvProducts',
+        'TR.RevenueEnvProducts',
+        'TR.CleanEnergyProducts',
+        'TR.EcoDesignProducts',
+        'TR.LifecycleAnalysis',
+        'TR.TakebackRecyclingInitiatives',
+        'TR.EnvRD',
+        'TR.GreenBuildings',
+        'TR.EquatorPrinciples',
+        'TR.ESGAssetsUnderManagement'
+      ],
+      workforce: [
+        'TR.NumberofEmployees',
+        'TR.NumberofPartTimeEmployees',
+        'TR.TemporaryStaffProportion',
+        'TR.WomenEmployees',
+        'TR.NewWomenEmployees',
+        'TR.WomenManagers',
+        'TR.EmployeesWithDisabilities',
+        'TR.USLGBTEqualityIndex',
+        'TR.BBBEELevel',
+        'TR.MinoritiesSalaryGap',
+        'TR.PolicyDiversityOpportunity',
+        'TR.TargetsDiversityOpportunity',
+        'TR.EmployeeResourceGroups',
+        'TR.FlexibleWorkingHours',
+        'TR.AvgTrainingHours',
+        'TR.TrainingHoursTotal',
+        'TR.TrainingCostsTotal',
+        'TR.PolicySkillsTraining',
+        'TR.PolicyCareerDevelopment',
+        'TR.InternalPromotion',
+        'TR.MgtTraining',
+        'TR.SupplierEsgTraining',
+        'TR.TradeUnionRep',
+        'TR.TurnoverEmployees',
+        'TR.VoluntaryTurnoverEmployees',
+        'TR.InvoluntaryTurnoverEmployees',
+        'TR.AverageEmployeeLengthService',
+        'TR.SalariesCSRreporting',
+        'TR.EmployeesCSRreporting',
+        'TR.EmployeeSatisfaction',
+        'TR.HIVAIDSProgram',
+        'TR.EmployeeHealthSafetyPolicy',
+        'TR.SupplyChainHSPolicy',
+        'TR.SupplyChainHSTraining',
+        'TR.SupplyChainHSImprovements',
+        'TR.OHSAS18001',
+        'TR.EmployeesHealthSafetyTeam',
+        'TR.HealthSafetyTraining',
+        'TR.EmployeeHSTrainingHours',
+        'TR.RiskAssessmentHealthandSafety',
+        'TR.SafetyPerformanceMonitoring',
+        'TR.EmployeeSafetyInitiativeParticipation',
+        'TR.TIRTotal',
+        'TR.TIRContractors',
+        'TR.TIREmployees',
+        'TR.LTIRTotal',
+        'TR.LTIRContractors',
+        'TR.LTIREmployees',
+        'TR.AccidentsTotal',
+        'TR.ContractorAccidents',
+        'TR.EmployeeAccidents',
+        'TR.OccupationalDiseases',
+        'TR.EmployeeFatalities',
+        'TR.ContractorFatalities',
+        'TR.LostWorkingDays',
+        'TR.EmployeeLostWorkingDays',
+        'TR.ContractorLostworkingDays'
+      ],
+      human_rights: [
+        'TR.PolicyHumanRights',
+        'TR.PolicyForcedLabor',
+        'TR.PolicyChildLabor',
+        'TR.PolicyFreedomofAssociation',
+        'TR.PolicyCollectiveBargaining',
+        'TR.ILOFundamentalHumanRights',
+        'TR.HumanRightsContractor',
+        'TR.ETI',
+        'TR.CommitmentonHumanRights',
+        'TR.CommitmenttoUnGuidingPrinciplesorOECDGuidelines',
+        'TR.HumanRightsIdentification',
+        'TR.ImpactAssessmentHumanRights',
+        'TR.HumanRightsBoardOversight',
+        'TR.HumanRightsResponsibility',
+        'TR.HumanRightsStakeholderEngagement',
+        'TR.RiskAssessmentLabourStandards',
+        'TR.MitigationHumanRightsIssues',
+        'TR.RemedyHumanRightsImpacts',
+        'TR.EmbeddingHumanRights',
+        'TR.InternalHumanRightsTraining',
+        'TR.GrievanceMechanismsHumanRights',
+        'TR.CommunicationofLabourPolicy',
+        'TR.EqualPayforEqualWork',
+        'TR.PolicyLivingWage',
+        'TR.PolicyMinimumWage',
+        'TR.PolicyWorkingHours',
+        'TR.PolicyFreedomofExpression',
+        'TR.PolicyIndigenousRightsConsent',
+        'TR.PolicyIndigenousRightsConsultation',
+        'TR.PolicySecurityGuards',
+        'TR.PolicySiteDecommissioning',
+        'TR.CommunicationofSupplyChainPolicy',
+        'TR.SocialSupplyChainPolicy',
+        'TR.SocialSupplyPolicyIntegration',
+        'TR.SocialSupplyRiskAssessment',
+        'TR.FindingsfromSupplierMonitoring',
+        'TR.PolicyLocalSourcing'
+      ],
+      community: [
+        'TR.PolicyBusinessEthics',
+        'TR.PolicyBriberyandCorruption',
+        'TR.PolicyFairCompetition',
+        'TR.WhistleblowerProtection',
+        'TR.ImprovementToolsBusinessEthics',
+        'TR.OECDGuidelinesMultiEnterprises',
+        'TR.CorruptionDueDiligence',
+        'TR.CorruptionRiskAssessment',
+        'TR.CorruptionOversight',
+        'TR.CorruptionTraining',
+        'TR.CorruptionIntermediariesProcedures',
+        'TR.CorruptionProceduresforHighRiskOperations',
+        'TR.EITI',
+        'TR.PolicyCommunityInvolvement',
+        'TR.DonationsTotal',
+        'TR.CommunityWork',
+        'TR.PrinciplesforCommunityInvestments',
+        'TR.MicrofinanceImpactInvestment',
+        'TR.BottomPyramidPricing',
+        'TR.DiseasesDevelopingWorld',
+        'TR.CrisisMgtSystems',
+        'TR.PoliticalContributions',
+        'TR.LobbyingContributionAmount',
+        'TR.SupplierPolicyAnimalWelfare'
+      ],
+      product_responsibility: [
+        'TR.PolicyDataPrivacy',
+        'TR.PolicyCyberSecurity',
+        'TR.PolicyResponsibleMarketing',
+        'TR.PolicyFairTrade',
+        'TR.ProductQualityMonitoring',
+        'TR.PolicyCustomerHealthSafety',
+        'TR.ISO9000',
+        'TR.SixSigmaQMS',
+        'TR.CustomerSatisfaction',
+        'TR.ProductAccessLowPrice',
+        'TR.HealthyProducts',
+        'TR.RetailingResponsibility',
+        'TR.AnimalWellbeing',
+        'TR.Armaments',
+        'TR.Pornography',
+        'TR.Contraceptives',
+        'TR.ObesityRisk',
+        'TR.ClusterBombs',
+        'TR.AntiPersonnelLandmines',
+        'TR.Abortifacients',
+        'TR.NotApprovedDrug',
+        'TR.PorkProducts',
+        'TR.EmbryonicStemCellResearch'
+      ],
+      management: [
+        'TR.BoardSize',
+        'TR.BoardStructureType',
+        'TR.BoardMeetings',
+        'TR.BoardMeetingAttendanceAvg',
+        'TR.CommMeetingsAttendanceAvg',
+        'TR.BoardTermDuration',
+        'TR.AnalyticIndepBoard',
+        'TR.AnalyticBoardFemale',
+        'TR.AnalyticExperiencedBoard',
+        'TR.AnalyticChairpersonIndependent',
+        'TR.LeadIndependentDirector',
+        'TR.AnalyticCurrentCEOChairmanDuality',
+        'TR.AuditComm',
+        'TR.CompComm',
+        'TR.NominationComm',
+        'TR.CorporateGovernanceComm',
+        'TR.BoardSuccessionPlan',
+        'TR.BoardConflictsofInterest',
+        'TR.BoardEffectivenessReview',
+        'TR.BoardOversightofHealthandSafety'
+      ],
+      shareholders: [
+        'TR.SeniorExecsTotalComp',
+        'TR.AnalyticHighestRemuneration',
+        'TR.CEOCompTSR',
+        'TR.MedianSalaryGap',
+        'TR.AnalyticExecCompPolicy',
+        'TR.AnalyticExecCompLTObjectives',
+        'TR.AnalyticCSRCompIncentives',
+        'TR.ShareholderApprovalStockCompPlan',
+        'TR.BoardMemberLTCompIncentives',
+        'TR.BonusCapSeniorExecutives',
+        'TR.BonusCapHighPaidStaff',
+        'TR.CEOClawBack',
+        'TR.ExecutiveClawBack',
+        'TR.ExecutiveCompensationRisk',
+        'TR.ControvMgtComp',
+        'TR.BoardRelatedPartyTransactions',
+        'TR.CodeofConductNonCompliance',
+        'TR.CodeofConductOversight',
+        'TR.InternalAuditDepReporting',
+        'TR.CriticalCountry1',
+        'TR.CriticalCountry2',
+        'TR.GoldenParachute',
+        'TR.OneShareOneVote',
+        'TR.SupermajorityVote',
+        'TR.AuditorTenure'
+      ],
+      csr_strategy: [
+        'TR.CSRReporting',
+        'TR.CSRReportingGRI',
+        'TR.CSRReportingExternalAudit',
+        'TR.CSRReportingScope',
+        'TR.SustainabilityComm',
+        'TR.IntegratedStrategyMD&A',
+        'TR.StakeholderEngagement',
+        'TR.GlobalCompact',
+        'TR.UNPRISignatory',
+        'TR.PolicyTaxTransparency',
+        'TR.TaxOversightbyBoard',
+        'TR.TaxFairnessCommitment',
+        'TR.AuditOversightofTax'
+      ]
+    };
+
+    const GROUP_META = [
+      { key: 'emissions', label: 'Emissions', pillar: 'Environmental', pillarKey: 'E' },
+      { key: 'innovation', label: 'Innovation', pillar: 'Environmental', pillarKey: 'E' },
+      { key: 'resource_use', label: 'Resource use', pillar: 'Environmental', pillarKey: 'E' },
+      { key: 'workforce', label: 'Workforce', pillar: 'Social', pillarKey: 'S' },
+      { key: 'human_rights', label: 'Human rights', pillar: 'Social', pillarKey: 'S' },
+      { key: 'community', label: 'Community', pillar: 'Social', pillarKey: 'S' },
+      { key: 'product_responsibility', label: 'Product responsibility', pillar: 'Social', pillarKey: 'S' },
+      { key: 'management', label: 'Management', pillar: 'Governance', pillarKey: 'G' },
+      { key: 'shareholders', label: 'Shareholders', pillar: 'Governance', pillarKey: 'G' },
+      { key: 'csr_strategy', label: 'CSR strategy', pillar: 'Governance', pillarKey: 'G' }
+    ];
+
+    const CATEGORY_VAR_CODES = {
+      resource_use: GROUPS.resource_use,
+      emissions: GROUPS.emissions,
+      innovation: GROUPS.innovation,
+      workforce: GROUPS.workforce,
+      human_rights: GROUPS.human_rights,
+      community: GROUPS.community,
+      product_responsibility: GROUPS.product_responsibility,
+      management: GROUPS.management,
+      shareholders: GROUPS.shareholders,
+      csr_strategy: GROUPS.csr_strategy
+    };
+
+    const MATERIALITY_WEIGHTS = {
+      'Energy': { emissions: 2.0, innovation: 0.8, resource_use: 1.5, workforce: 1.2, human_rights: 0.8, community: 1.0, product_responsibility: 0.5, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Materials': { emissions: 1.5, innovation: 0.7, resource_use: 2.0, workforce: 1.2, human_rights: 1.0, community: 1.0, product_responsibility: 0.7, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Utilities': { emissions: 2.0, innovation: 0.8, resource_use: 1.8, workforce: 0.8, human_rights: 0.5, community: 0.8, product_responsibility: 0.7, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Industrials': { emissions: 1.3, innovation: 1.2, resource_use: 1.2, workforce: 1.2, human_rights: 0.8, community: 0.7, product_responsibility: 0.8, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Consumer Staples': { emissions: 0.8, innovation: 0.8, resource_use: 1.3, workforce: 1.0, human_rights: 1.5, community: 0.8, product_responsibility: 1.5, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Consumer Discretionary': { emissions: 0.7, innovation: 1.0, resource_use: 0.8, workforce: 1.0, human_rights: 1.5, community: 0.7, product_responsibility: 1.3, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Health Care': { emissions: 0.4, innovation: 2.0, resource_use: 0.6, workforce: 1.0, human_rights: 0.7, community: 1.2, product_responsibility: 2.0, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Information Technology': { emissions: 0.4, innovation: 1.8, resource_use: 0.8, workforce: 1.3, human_rights: 0.6, community: 0.5, product_responsibility: 1.8, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Communication Services': { emissions: 0.3, innovation: 1.3, resource_use: 0.5, workforce: 0.8, human_rights: 0.8, community: 0.7, product_responsibility: 1.8, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Financials': { emissions: 0.2, innovation: 0.8, resource_use: 0.2, workforce: 1.0, human_rights: 0.7, community: 1.5, product_responsibility: 1.5, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 },
+      'Real Estate': { emissions: 1.2, innovation: 0.8, resource_use: 1.8, workforce: 0.7, human_rights: 0.5, community: 0.8, product_responsibility: 0.7, management: 1.0, shareholders: 1.0, csr_strategy: 1.0 }
+    };
+
+    const DEFAULT_MATERIALITY_WEIGHTS = JSON.parse(JSON.stringify(MATERIALITY_WEIGHTS));
+
+    function pillarClass(pillar) {
+      if (pillar === 'Environmental') return 'env';
+      if (pillar === 'Social') return 'soc';
+      if (pillar === 'Governance') return 'gov';
+      return '';
+    }
+
+    function resolveHeader(code) {
+      if (!code) return null;
+      const lower = String(code).toLowerCase();
+      return state.headerByLower[lower] || null;
+    }
+
+    function getGroupHeaders(groupKey) {
+      const rawCodes = GROUPS[groupKey] || [];
+      const result = [];
+      rawCodes.forEach(code => {
+        const canon = resolveHeader(code);
+        if (canon && !result.includes(canon)) {
+          result.push(canon);
+        }
+      });
+      return result;
+    }
+
+    // ------------------------------------------------------------------
+    // 3. Data containers (populated from CSVs)
+    // ------------------------------------------------------------------
+
+    const state = {
+      constituents: [],
+      constByRic: {},
+      esg: [],
+      esgHeaders: [],
+      definitions: {},
+      defByLower: {},
+      headerByLower: {},
+      nonEmptyVariables: new Set(),
+      currentGroupKey: 'emissions',
+      currentRic: null,
+      currentVarCode: null,
+      scoreMode: 'universe',
+      categoryAggMode: 'simple',
+      varPercentiles: {}
+    };
+
+    // ------------------------------------------------------------------
+    // 4. Rendering helpers
+    // ------------------------------------------------------------------
+
+    function updateStatus(kind, msg) {
+      const el = document.getElementById('loadStatus');
+      el.className = 'status';
+      if (kind === 'error') el.classList.add('status-error');
+      if (kind === 'ok') el.classList.add('status-ok');
+      el.innerHTML = '<span>' + msg + '</span>';
+    }
+
+    function ricHasAnyData(ric) {
+      const esgRow = state.esg.find(r => r.Instrument === ric);
+      if (!esgRow) return false;
+      for (const h of state.nonEmptyVariables) {
+        if (!isNullishValue(esgRow[h])) return true;
+      }
+      return false;
+    }
+
+    function buildCompanySelect() {
+      const sel = document.getElementById('companySelect');
+      sel.innerHTML = '';
+      const sorted = [...state.constituents].sort((a, b) =>
+        a['Company Common Name'].localeCompare(b['Company Common Name'])
+      );
+      for (const row of sorted) {
+        const ric = row['RIC'];
+        if (!ric || !ric.trim()) continue;
+        if (!ricHasAnyData(ric)) continue;
+        const opt = document.createElement('option');
+        opt.value = ric;
+        opt.textContent = `${row['Company Common Name']} (${ric})`;
+        sel.appendChild(opt);
+      }
+      if (!sel.options.length) {
+        sel.disabled = true;
+        sel.innerHTML = '<option>No instruments found</option>';
+        return;
+      }
+      sel.disabled = false;
+      let defaultRic = sel.options[0].value;
+      sel.value = defaultRic;
+      state.currentRic = defaultRic;
+      sel.addEventListener('change', () => {
+        state.currentRic = sel.value;
+        renderCompanyMeta();
+        renderGroupTable();
+        renderRanking();
+      });
+      renderCompanyMeta();
+    }
+
+    function renderCompanyMeta() {
+      const ric = state.currentRic;
+      const meta = state.constituents.find(r => r.RIC === ric) || null;
+      document.getElementById('companyRic').textContent = ric || '–';
+      document.getElementById('companySector').textContent =
+        meta ? (meta['GICS Sector Name'] || '–') : '–';
+      const labelEl = document.getElementById('currentCompanyLabel');
+      if (meta) {
+        labelEl.textContent = `${meta['Company Common Name']} (${ric})`;
+      } else if (ric) {
+        labelEl.textContent = ric;
+      } else {
+        labelEl.textContent = '';
+      }
+    }
+
+    function buildGroupTabs() {
+      const container = document.getElementById('groupTabs');
+      container.innerHTML = '';
+      GROUP_META.forEach(meta => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'group-tab';
+        btn.dataset.groupKey = meta.key;
+        const pill = document.createElement('span');
+        pill.className = 'group-tab-pill ' + pillarClass(meta.pillar);
+        btn.appendChild(pill);
+        const label = document.createElement('span');
+        label.textContent = meta.label;
+        btn.appendChild(label);
+        const pillLabel = document.createElement('small');
+        pillLabel.textContent = meta.pillarKey;
+        btn.appendChild(pillLabel);
+        btn.addEventListener('click', () => {
+          state.currentGroupKey = meta.key;
+          for (const el of container.querySelectorAll('.group-tab')) {
+            el.classList.toggle('active', el === btn);
+          }
+          renderGroupTable();
+        });
+        container.appendChild(btn);
+      });
+      // Activate first group by default
+      const first = container.querySelector('.group-tab');
+      if (first) {
+        first.classList.add('active');
+        state.currentGroupKey = first.dataset.groupKey;
+      }
+    }
+
+    function renderGroupTable() {
+      const tbody = document.getElementById('variablesBody');
+      tbody.innerHTML = '';
+      const defPanel = document.getElementById('defPanel');
+      defPanel.style.display = 'none';
+      defPanel.innerHTML = '';
+
+      const ric = state.currentRic;
+      if (!ric) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 3;
+        td.className = 'muted small';
+        td.textContent = 'Select a company to see its datapoints.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      const row = state.esg.find(r => r.Instrument === ric);
+      if (!row) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 3;
+        td.className = 'muted small';
+        td.textContent = 'No ESG datapoints found for this instrument in cac_esg_datapoints.csv.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      const groupKey = state.currentGroupKey;
+      const codes = getGroupHeaders(groupKey);
+      const visibleCodes = codes.filter(c => state.nonEmptyVariables.has(c));
+
+      if (!visibleCodes.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 3;
+        td.className = 'muted small';
+        td.textContent = 'All variables in this category are NA across firms – nothing to display.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+        visibleCodes.forEach(code => {
+        const tr = document.createElement('tr');
+
+        const tdCode = document.createElement('td');
+        const codeEl = document.createElement('div');
+        codeEl.className = 'code';
+        codeEl.textContent = code;
+        tdCode.appendChild(codeEl);
+        const codeNorm = (code || '').toString().trim();
+        const defObj = state.definitions[code] || state.definitions[codeNorm] || state.defByLower[codeNorm.toLowerCase()];
+        const label = defObj?.label || '';
+        if (label) {
+          const labelEl = document.createElement('div');
+          labelEl.className = 'small muted';
+          labelEl.textContent = label;
+          tdCode.appendChild(labelEl);
+        }
+
+        const tdVal = document.createElement('td');
+        const rawVal = row[code];
+        const fv = formatValue(rawVal);
+        const spanVal = document.createElement('span');
+        spanVal.textContent = fv.text;
+        spanVal.className = fv.cls;
+        tdVal.appendChild(spanVal);
+
+        const tdDef = document.createElement('td');
+        const def = defObj;
+        if (def) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'def-button';
+          btn.innerHTML = '<span>Definition</span>';
+          btn.addEventListener('click', e => { e.stopPropagation(); showDefinition(code, def); });
+          tdDef.appendChild(btn);
+        } else {
+          const span = document.createElement('span');
+          span.className = 'small muted';
+          span.textContent = '–';
+          tdDef.appendChild(span);
+        }
+
+        tr.dataset.varCode = code;
+        tr.style.cursor = 'pointer';
+        tr.classList.toggle('selected-row', state.currentVarCode === code);
+        tr.addEventListener('click', () => {
+          state.currentVarCode = code;
+          document.querySelectorAll('#variablesBody tr[data-var-code]').forEach(row => {
+            row.classList.toggle('selected-row', row.dataset.varCode === code);
+          });
+          renderRanking();
+        });
+        tr.appendChild(tdCode);
+        tr.appendChild(tdVal);
+        tr.appendChild(tdDef);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showDefinition(code, def) {
+      const panel = document.getElementById('defPanel');
+      panel.style.display = 'block';
+      const label = def.label || code;
+      const unit = def.unit || '';
+      const pillar = def.pillar || '';
+      const category = def.category || '';
+      const polarity = def.polarity || '';
+      const defText = def.definition || 'No definition available.';
+
+      let html = '';
+      html += '<div class="def-panel-header">';
+      html += '<h3>' + label + '</h3>';
+      html += '<span class="code">' + code + '</span>';
+      html += '</div>';
+
+      html += '<div class="def-meta">';
+      if (pillar) {
+        html += '<span class="def-chip"><strong>Pillar&nbsp;</strong>' + pillar + '</span>';
+      }
+      if (category) {
+        html += '<span class="def-chip"><strong>Category&nbsp;</strong>' + category + '</span>';
+      }
+      if (polarity) {
+        html += '<span class="def-chip"><strong>Polarity&nbsp;</strong>' + polarity + '</span>';
+      }
+      if (unit) {
+        html += '<span class="def-chip"><strong>Unit&nbsp;</strong>' + unit + '</span>';
+      }
+      html += '</div>';
+
+      html += '<p class="small" style="margin-bottom:0;">' + defText + '</p>';
+      panel.innerHTML = html;
+    }
+
+    function renderRanking() {
+      const body = document.getElementById('rankingBody');
+      const labelEl = document.getElementById('currentMetricLabel');
+      const code = state.currentVarCode;
+      const header = code ? resolveHeader(code) : null;
+      if (!header || !state.nonEmptyVariables.has(header)) {
+        labelEl.textContent = 'Select a variable above.';
+        body.innerHTML = '<tr><td colspan="5" class="muted small">Click a datapoint above to see rankings.</td></tr>';
+        return;
+      }
+      const isBool = isBooleanVar(header);
+      const higherBetter = isHigherBetter(header);
+      const rows = [];
+      state.esg.forEach(row => {
+        const ric = row.Instrument;
+        if (!ric) return;
+        const v = numericValue(header, row);
+        if (Number.isNaN(v)) return;
+        const meta = state.constByRic[ric] || {};
+        rows.push({
+          ric,
+          name: meta['Company Common Name'] || ric,
+          sector: meta['GICS Sector Name'] || '–',
+          rawValue: v,
+          rawDisplay: formatValue(row[header]).text
+        });
+      });
+      if (!rows.length) {
+        labelEl.textContent = header + ' (no valid values)';
+        body.innerHTML = '<tr><td colspan="5" class="muted small">No firms with valid values for this variable.</td></tr>';
+        return;
+      }
+      if (isBool) {
+        rows.forEach(r => {
+          const oneIsGood = higherBetter !== false;
+          const v1 = r.rawValue === 1;
+          r.score = (v1 === oneIsGood) ? 100 : 0;
+        });
+      } else {
+        function percentile(arr, higherBetter) {
+          const sorted = [...arr].sort((a, b) => a.rawValue - b.rawValue);
+          const n = sorted.length;
+          const scoreByRow = new Map();
+          if (n === 1) {
+            scoreByRow.set(sorted[0], 50);
+            return scoreByRow;
+          }
+          sorted.forEach((item, i) => {
+            const t = i / (n - 1);
+            const score = (higherBetter === false ? (1 - t) : t) * 100;
+            scoreByRow.set(item, Math.round(score * 10) / 10);
+          });
+          return scoreByRow;
+        }
+        let scoreByRow;
+        if (state.scoreMode === 'industry') {
+          const bySector = {};
+          rows.forEach(r => {
+            const s = r.sector || 'Other';
+            if (!bySector[s]) bySector[s] = [];
+            bySector[s].push(r);
+          });
+          scoreByRow = new Map();
+          Object.values(bySector).forEach(sectorRows => {
+            const m = percentile(sectorRows, higherBetter);
+            m.forEach((score, row) => scoreByRow.set(row, score));
+          });
+        } else {
+          scoreByRow = percentile(rows, higherBetter);
+        }
+        rows.forEach(r => { r.score = scoreByRow.get(r); });
+      }
+      rows.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+      labelEl.textContent = header;
+      body.innerHTML = rows.map(r => {
+        const sel = state.currentRic === r.ric ? ' class="selected-row"' : '';
+        return '<tr' + sel + '><td>' + escapeHtml(r.name) + '</td><td class="code">' + escapeHtml(r.ric) + '</td><td>' + escapeHtml(r.sector) + '</td><td>' + escapeHtml(r.rawDisplay) + '</td><td><strong>' + (r.score != null ? r.score.toFixed(1) : '–') + '</strong></td></tr>';
+      }).join('');
+      renderIndustryAvg();
+    }
+
+    function renderIndustryAvg() {
+      const labelEl = document.getElementById('industryAvgMetricLabel');
+      const body = document.getElementById('industryAvgBody');
+      const code = state.currentVarCode;
+      const header = code ? resolveHeader(code) : null;
+      if (!header || !state.nonEmptyVariables.has(header)) {
+        labelEl.textContent = 'Select a variable above.';
+        body.innerHTML = '<tr><td colspan="3" class="muted small">Click a datapoint above to see average score by industry.</td></tr>';
+        return;
+      }
+      const isBool = isBooleanVar(header);
+      const higherBetter = isHigherBetter(header);
+      const rows = [];
+      state.esg.forEach(row => {
+        const ric = row.Instrument;
+        if (!ric) return;
+        const v = numericValue(header, row);
+        if (Number.isNaN(v)) return;
+        const meta = state.constByRic[ric] || {};
+        rows.push({ ric, sector: meta['GICS Sector Name'] || '–', rawValue: v });
+      });
+      if (!rows.length) {
+        labelEl.textContent = header + ' (no valid values)';
+        body.innerHTML = '<tr><td colspan="3" class="muted small">No firms with valid values for this variable.</td></tr>';
+        return;
+      }
+      const scoreByRic = new Map();
+      if (isBool) {
+        const oneIsGood = higherBetter !== false;
+        rows.forEach(item => {
+          const v1 = item.rawValue === 1;
+          scoreByRic.set(item.ric, (v1 === oneIsGood) ? 100 : 0);
+        });
+      } else {
+        const sorted = [...rows].sort((a, b) => a.rawValue - b.rawValue);
+        const n = sorted.length;
+        if (n === 1) {
+          scoreByRic.set(sorted[0].ric, 50);
+        } else {
+          sorted.forEach((item, i) => {
+            const t = i / (n - 1);
+            const score = (higherBetter === false ? (1 - t) : t) * 100;
+            scoreByRic.set(item.ric, Math.round(score * 10) / 10);
+          });
+        }
+      }
+      const bySector = {};
+      rows.forEach(r => {
+        const s = r.sector || '–';
+        if (!bySector[s]) bySector[s] = { sum: 0, count: 0 };
+        const sc = scoreByRic.get(r.ric);
+        if (sc != null) { bySector[s].sum += sc; bySector[s].count += 1; }
+      });
+      const sectorRows = Object.entries(bySector)
+        .map(([sector, o]) => ({ sector, avg: o.count ? o.sum / o.count : null, count: o.count }))
+        .filter(x => x.avg != null)
+        .sort((a, b) => b.avg - a.avg);
+      labelEl.textContent = header;
+      if (!sectorRows.length) {
+        body.innerHTML = '<tr><td colspan="3" class="muted small">No sector averages.</td></tr>';
+        return;
+      }
+      body.innerHTML = sectorRows.map(r => '<tr><td>' + escapeHtml(r.sector) + '</td><td><strong>' + (Math.round(r.avg * 10) / 10) + '</strong></td><td>' + r.count + '</td></tr>').join('');
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      const t = document.createElement('span');
+      t.textContent = s;
+      return t.innerHTML;
+    }
+
+    function computeVarPercentiles() {
+      state.varPercentiles = {};
+      state.nonEmptyVariables.forEach(header => {
+        const rows = state.esg.map(r => ({ ric: r.Instrument, v: numericValue(header, r) })).filter(x => x.ric && !Number.isNaN(x.v));
+        if (!rows.length) return;
+        const isBool = isBooleanVar(header);
+        const higherBetter = isHigherBetter(header);
+        if (isBool) {
+          const oneIsGood = higherBetter !== false;
+          rows.forEach(item => {
+            if (!state.varPercentiles[item.ric]) state.varPercentiles[item.ric] = {};
+            const v1 = item.v === 1;
+            state.varPercentiles[item.ric][header] = (v1 === oneIsGood) ? 100 : 0;
+          });
+        } else {
+          rows.sort((a, b) => a.v - b.v);
+          const n = rows.length;
+          if (n === 1) {
+            if (!state.varPercentiles[rows[0].ric]) state.varPercentiles[rows[0].ric] = {};
+            state.varPercentiles[rows[0].ric][header] = 50;
+          } else {
+            rows.forEach((item, i) => {
+              const t = i / (n - 1);
+              const score = (higherBetter === false ? (1 - t) : t) * 100;
+              if (!state.varPercentiles[item.ric]) state.varPercentiles[item.ric] = {};
+              state.varPercentiles[item.ric][header] = Math.round(score * 10) / 10;
+            });
+          }
+        }
+      });
+    }
+
+    function getCategoryHeaders(catKey) {
+      const codes = CATEGORY_VAR_CODES[catKey] || [];
+      const out = [];
+      codes.forEach(code => {
+        const h = resolveHeader(code);
+        if (h && state.nonEmptyVariables.has(h)) out.push(h);
+      });
+      return out;
+    }
+
+    function computeCategoryScores() {
+      const catKeys = GROUP_META.map(m => m.key);
+      const result = [];
+      state.esg.forEach(row => {
+        const ric = row.Instrument;
+        if (!ric) return;
+        if (!ricHasAnyData(ric)) return;
+        const meta = state.constByRic[ric] || {};
+        const name = meta['Company Common Name'] || ric;
+        const sector = meta['GICS Sector Name'] || '–';
+        const sectorWeights = MATERIALITY_WEIGHTS[sector] || null;
+        const scores = {};
+        const coverage = {};
+        catKeys.forEach(catKey => {
+          const headers = getCategoryHeaders(catKey);
+          const total = headers.length;
+          if (!total) { scores[catKey] = null; coverage[catKey] = { have: 0, total: 0 }; return; }
+          const pctByHeader = state.varPercentiles[ric] || {};
+          const values = headers.map(h => pctByHeader[h]).filter(v => v != null && !Number.isNaN(v));
+          coverage[catKey] = { have: values.length, total };
+          if (!values.length) { scores[catKey] = null; return; }
+          scores[catKey] = values.reduce((a, b) => a + b, 0) / values.length;
+        });
+        let overall = null;
+        let overallCoverage = { have: 0, total: catKeys.length };
+        if (state.categoryAggMode === 'weighted' && sectorWeights) {
+          let sum = 0, wSum = 0;
+          catKeys.forEach(catKey => {
+            const s = scores[catKey];
+            const w = sectorWeights[catKey] != null ? sectorWeights[catKey] : 1;
+            if (s != null && !Number.isNaN(s)) { sum += s * w; wSum += w; overallCoverage.have++; }
+          });
+          overall = wSum ? sum / wSum : null;
+        } else {
+          const vals = catKeys.map(k => scores[k]).filter(v => v != null && !Number.isNaN(v));
+          overallCoverage.have = vals.length;
+          overall = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+        }
+        result.push({ ric, name, sector, scores, coverage, overall, overallCoverage });
+      });
+      return result.sort((a, b) => {
+        const oa = a.overall != null ? a.overall : -1;
+        const ob = b.overall != null ? b.overall : -1;
+        if (ob !== oa) return ob - oa;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+    }
+
+    function renderCategoryScores() {
+      const subHeader = document.getElementById('categoryScoreSubHeader');
+      const body = document.getElementById('categoryScoreBody');
+      const catKeys = GROUP_META.map(m => m.key);
+      let headerCells = '<th style="width:26%;">Company</th><th style="width:14%;">Sector</th>' +
+        catKeys.map(k => {
+          const meta = GROUP_META.find(m => m.key === k);
+          return '<th class="small" style="width:5.2%;">' + (meta ? meta.label : k) + '</th>';
+        }).join('');
+      headerCells += '<th class="small" style="width:6%;"><strong>ESG score</strong></th>';
+      subHeader.innerHTML = headerCells;
+      const rows = computeCategoryScores();
+      const colCount = 2 + catKeys.length + 1;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="' + colCount + '" class="muted small">No data.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(r => {
+        const cells = [escapeHtml(r.name), escapeHtml(r.sector)];
+        catKeys.forEach(k => {
+          const v = r.scores[k];
+          const cov = r.coverage[k] || { have: 0, total: 0 };
+          const covTag = '<div class="small muted" style="font-size:0.68rem;opacity:0.7;">' + cov.have + '/' + cov.total + '</div>';
+          if (v != null) {
+            cells.push('<span>' + (Math.round(v * 10) / 10) + '</span>' + covTag);
+          } else {
+            cells.push('<span class="muted">–</span>' + covTag);
+          }
+        });
+        const o = r.overall;
+        const oc = r.overallCoverage || { have: 0, total: catKeys.length };
+        const ocTag = '<div class="small muted" style="font-size:0.68rem;opacity:0.7;">' + oc.have + '/' + oc.total + '</div>';
+        cells.push((o != null ? '<strong>' + (Math.round(o * 10) / 10) + '</strong>' : '<span class="muted">–</span>') + ocTag);
+        return '<tr><td>' + cells[0] + '</td><td>' + cells[1] + '</td>' + cells.slice(2).map(c => '<td>' + c + '</td>').join('') + '</tr>';
+      }).join('');
+    }
+
+    function renderMaterialityWeightsPanel() {
+      const panel = document.getElementById('materialityWeightsPanel');
+      const industries = Object.keys(MATERIALITY_WEIGHTS);
+      const catKeys = GROUP_META.map(m => m.key);
+      let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+      html += '<span class="small muted">Click any weight to edit it. Changes are applied immediately to scores below.</span>';
+      html += '<button type="button" class="weight-reset-btn" id="resetWeightsBtn">Reset to defaults</button>';
+      html += '</div>';
+      html += '<div style="overflow-x:auto;"><table class="small"><thead><tr><th style="min-width:120px;">Industry</th>' +
+        catKeys.map(k => '<th style="min-width:55px;">' + GROUP_META.find(m => m.key === k).label + '</th>').join('') +
+        '</tr></thead><tbody>';
+      industries.forEach(ind => {
+        const w = MATERIALITY_WEIGHTS[ind];
+        const dw = DEFAULT_MATERIALITY_WEIGHTS[ind];
+        html += '<tr><td>' + escapeHtml(ind) + '</td>' + catKeys.map(c => {
+          const val = w[c] != null ? w[c] : 1;
+          const def = dw[c] != null ? dw[c] : 1;
+          const changed = val !== def ? ' changed' : '';
+          return '<td><input type="number" class="weight-input' + changed + '" ' +
+            'data-industry="' + escapeHtml(ind) + '" data-cat="' + c + '" ' +
+            'value="' + val + '" min="0" max="10" step="0.1" /></td>';
+        }).join('') + '</tr>';
+      });
+      html += '</tbody></table></div>';
+      panel.innerHTML = html;
+
+      panel.querySelectorAll('.weight-input').forEach(input => {
+        input.addEventListener('change', onWeightChange);
+        input.addEventListener('keyup', e => { if (e.key === 'Enter') input.blur(); });
+      });
+
+      document.getElementById('resetWeightsBtn').addEventListener('click', () => {
+        Object.keys(DEFAULT_MATERIALITY_WEIGHTS).forEach(ind => {
+          Object.keys(DEFAULT_MATERIALITY_WEIGHTS[ind]).forEach(cat => {
+            MATERIALITY_WEIGHTS[ind][cat] = DEFAULT_MATERIALITY_WEIGHTS[ind][cat];
+          });
+        });
+        renderMaterialityWeightsPanel();
+        renderCategoryScores();
+      });
+    }
+
+    function onWeightChange(e) {
+      const input = e.target;
+      const ind = input.dataset.industry;
+      const cat = input.dataset.cat;
+      let val = parseFloat(input.value);
+      if (Number.isNaN(val) || val < 0) val = 0;
+      if (val > 10) val = 10;
+      val = Math.round(val * 10) / 10;
+      input.value = val;
+      MATERIALITY_WEIGHTS[ind][cat] = val;
+      const def = DEFAULT_MATERIALITY_WEIGHTS[ind]?.[cat] ?? 1;
+      input.classList.toggle('changed', val !== def);
+      renderCategoryScores();
+    }
+
+    // ------------------------------------------------------------------
+    // 5. Load CSVs and initialise
+    // ------------------------------------------------------------------
+
+    async function loadAll() {
+      try {
+        updateStatus('info', 'Loading CSV data from cac_constituents.csv, cac_esg_datapoints.csv and lseg_esg_variable_definitions.csv…');
+
+        const [constText, esgText, defText] = await Promise.all([
+          fetch('cac_constituents.csv').then(r => r.text()),
+          fetch('cac_esg_datapoints.csv').then(r => r.text()),
+          fetch('lseg_esg_variable_definitions.csv').then(r => r.text())
+        ]);
+
+        // Constituents
+        const constParsed = parseCsv(constText);
+        state.constituents = constParsed.rows;
+        state.constByRic = {};
+        state.constituents.forEach(r => {
+          const ric = r.RIC;
+          if (ric && String(ric).trim()) state.constByRic[String(ric).trim()] = r;
+        });
+
+        // ESG datapoints
+        const esgParsed = parseCsv(esgText);
+        state.esgHeaders = esgParsed.headers;
+        state.esg = esgParsed.rows;
+
+        // Build case-insensitive header lookup
+        state.headerByLower = {};
+        state.esgHeaders.forEach(h => {
+          if (!h) return;
+          state.headerByLower[String(h).toLowerCase()] = h;
+        });
+
+        // Definitions
+        const defParsed = parseCsv(defText);
+        state.definitions = {};
+        state.defByLower = {};
+        const defHeaders = defParsed.headers || [];
+        const norm = (s) => String(s).replace(/\s/g, '').replace(/_/g, '').toLowerCase();
+        const codeKey = defHeaders.find(h => norm(h) === norm('field_code')) || 'field_code';
+        const getDef = (r, key) => {
+          const k = defHeaders.find(h => norm(h) === norm(key)) || key;
+          return (r[k] ?? r[key] ?? r[key.replace(/_/g, ' ')] ?? '').toString().trim();
+        };
+        defParsed.rows.forEach(r => {
+          const code = (r[codeKey] ?? r.field_code ?? r['field_code'] ?? '').toString().trim();
+          if (!code) return;
+          const def = {
+            label: getDef(r, 'label'),
+            unit: getDef(r, 'unit'),
+            pillar: getDef(r, 'pillar'),
+            category: getDef(r, 'category'),
+            polarity: getDef(r, 'polarity'),
+            data_type: getDef(r, 'data_type'),
+            definition: getDef(r, 'definition')
+          };
+          state.definitions[code] = def;
+          state.defByLower[String(code).toLowerCase().trim()] = def;
+        });
+
+        // Compute non‑empty variables (drop those NA for all firms),
+        // and keep only numeric or Boolean variables
+        const nonEmpty = new Set();
+        const headers = state.esgHeaders.filter(h => h && h !== 'Instrument');
+        headers.forEach(h => {
+          if (!isNumericOrBooleanVar(h)) return;
+          const hasAny = state.esg.some(row => !isNullishValue(row[h]));
+          if (hasAny) nonEmpty.add(h);
+        });
+        state.nonEmptyVariables = nonEmpty;
+
+        computeVarPercentiles();
+        buildCompanySelect();
+        buildGroupTabs();
+        renderGroupTable();
+        renderRanking();
+        renderCategoryScores();
+        renderMaterialityWeightsPanel();
+        document.querySelectorAll('input[name="scoreMode"]').forEach(radio => {
+          radio.addEventListener('change', e => {
+            if (e.target.checked) {
+              state.scoreMode = e.target.value;
+              renderRanking();
+            }
+          });
+        });
+        document.querySelectorAll('input[name="categoryAggMode"]').forEach(radio => {
+          radio.addEventListener('change', e => {
+            if (e.target.checked) {
+              state.categoryAggMode = e.target.value;
+              renderCategoryScores();
+            }
+          });
+        });
+        document.getElementById('showWeightsBtn').addEventListener('click', () => {
+          const panel = document.getElementById('materialityWeightsPanel');
+          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        updateStatus('ok', '');
+      } catch (err) {
+        console.error(err);
+        updateStatus('error', 'Failed to load CSV files.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAll);
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,210 @@
+,Instrument,RIC,Company Common Name,GICS Sector Name
+0,AXAF.PA,AXAF.PA,AXA SA,Financials
+1,CVXC.PA,CVXC.PA,Carvolix,Health Care
+2,AUBT.PA,AUBT.PA,Aubay SA,Information Technology
+3,CLARI.PA,CLARI.PA,Clariane SE,Health Care
+4,MDM.PA,MDM.PA,Maisons du Monde SA,Consumer Discretionary
+5,COFA.PA,COFA.PA,Coface SA,Financials
+6,SOLB.BR,SOLB.BR,Solvay SA,Materials
+7,BOND.PA,BOND.PA,Bonduelle SA,Consumer Staples
+8,QDT.PA,QDT.PA,Quadient SA,Information Technology
+9,AVOM.PA,AVOM.PA,Avenir Telecom SA,Consumer Discretionary
+10,ATEME.PA,ATEME.PA,Ateme SA,Information Technology
+11,IPAR.PA,IPAR.PA,Interparfums SA,Consumer Staples
+12,AKE.PA,AKE.PA,Arkema SA,Materials
+13,LBIRD.PA,LBIRD.PA,Lumibird SA,Information Technology
+14,ELIOR.PA,ELIOR.PA,Elior Group SA,Consumer Discretionary
+15,MAAT.PA,MAAT.PA,Maat Pharma SA,Health Care
+16,SASY.PA,SASY.PA,Sanofi SA,Health Care
+17,ARAMI.PA,ARAMI.PA,Aramis Group SA,Consumer Discretionary
+18,NAE.PA,NAE.PA,North Atlantic Energies SA,Energy
+19,HRMS.PA,HRMS.PA,Hermes International SCA,Consumer Discretionary
+20,LDSV.PA,LDSV.PA,Linedata Services SA,Information Technology
+21,VLTZ.PA,VLTZ.PA,Graines Voltz SA,Consumer Discretionary
+22,TRIA.PA,TRIA.PA,Trigano SA,Consumer Discretionary
+23,EKI.PA,EKI.PA,Ekinops SA,Information Technology
+24,SPIE.PA,SPIE.PA,Spie SA,Industrials
+25,STLAM.PA,STLAM.PA,Stellantis NV,Consumer Discretionary
+26,LTEN.PA,LTEN.PA,Alten SA,Information Technology
+27,EGAB.PA,EGAB.PA,TotalEnergies EP Gabon,Energy
+28,STMPA.PA,STMPA.PA,STMicroelectronics NV,Information Technology
+29,IVAA.PA,IVAA.PA,Inventiva SA,Health Care
+30,COHE.PA,COHE.PA,Coheris SA,Information Technology
+31,LVMH.PA,LVMH.PA,LVMH Moet Hennessy Louis Vuitton SE,Consumer Discretionary
+32,ABEO.PA,ABEO.PA,Abeo SA,Consumer Discretionary
+33,DANO.PA,DANO.PA,Danone SA,Consumer Staples
+34,NACON.PA,NACON.PA,Nacon SAS,Consumer Discretionary
+35,AELIS.PA,AELIS.PA,Aelis Farma SA,Health Care
+36,INF.L,INF.L,Informa PLC,Communication Services
+37,CVO.PA,CVO.PA,Covivio SA,Real Estate
+38,VEIL.PA,VEIL.PA,Viel et Compagnie SA,Financials
+39,ENX.PA,ENX.PA,Euronext NV,Financials
+40,NANOB.PA,NANOB.PA,Nanobiotix SA,Health Care
+41,MT.AS,MT.AS,ArcelorMittal SA,Materials
+42,GNFT.PA,GNFT.PA,Genfit SA,Health Care
+43,IMTP.PA,IMTP.PA,Imerys SA,Materials
+44,SIGHT.PA,SIGHT.PA,Gensight Biologics SA,Health Care
+45,WLN.PA,WLN.PA,Worldline SA,Financials
+46,FGA.PA,FGA.PA,Figeac Aero SARL,Industrials
+47,SOGN.PA,SOGN.PA,Societe Generale SA,Financials
+48,EMEIS.PA,EMEIS.PA,Emeis SA,Health Care
+49,CCHE.PA,CCHE.PA,Seche Environnement SA,Industrials
+50,LOIM.PA,LOIM.PA,Klepierre SA,Real Estate
+51,PLVP.PA,PLVP.PA,Plastiques du Val de Loire SA,Materials
+52,IPH.PA,IPH.PA,Innate Pharma SA,Health Care
+53,AYV.PA,AYV.PA,Ayvens SA,Industrials
+54,LOCAL.PA,LOCAL.PA,Solocal Group SE,Communication Services
+55,LEGD.PA,LEGD.PA,Legrand SA,Industrials
+56,AIRP.PA,AIRP.PA,L'Air Liquide Societe Anonyme pour l'Etude et l'Exploitation des Procedes Georges Claude SA,Materials
+57,NEXI.PA,NEXI.PA,Nexity SA,Real Estate
+58,MEDCL.PA,MEDCL.PA,Medincell SA,Health Care
+59,ANTIN.PA,ANTIN.PA,Antin Infrastructure Partners SAS,Financials
+60,BICP.PA,BICP.PA,Societe BIC SA,Industrials
+61,FRVIA.PA,FRVIA.PA,Forvia SE,Consumer Discretionary
+62,ABVX.PA,ABVX.PA,Abivax SA,Health Care
+63,WLN_r.PA^C26,WLN_r.PA^C26,Worldline SA,Financials
+64,SAF.PA,SAF.PA,Safran SA,Industrials
+65,RUBF.PA,RUBF.PA,Rubis SCA,Utilities
+66,PERP.PA,PERP.PA,Pernod Ricard SA,Consumer Staples
+67,MWDP.PA,MWDP.PA,Wendel SE,Financials
+68,BOLL.PA,BOLL.PA,Bollore SE,Energy
+69,EQSE.PA,EQSE.PA,Equasens SA,Health Care
+70,URW.PA,URW.PA,Unibail-Rodamco-Westfield SE,Real Estate
+71,ALSO.PA,ALSO.PA,Alstom SA,Industrials
+72,RXL.PA,RXL.PA,Rexel SA,Industrials
+73,MANP.PA,MANP.PA,Manitou BF SA,Industrials
+74,APAM.AS,APAM.AS,Aperam SA,Materials
+75,PRC.PA,PRC.PA,Artmarket.com SA,Communication Services
+76,ELIS.PA,ELIS.PA,Elis SA,Industrials
+77,AIR.PA,AIR.PA,Airbus SE,Industrials
+78,WAVE.PA,WAVE.PA,Wavestone SA,Information Technology
+79,SESFd.PA,SESFd.PA,SES SA,Communication Services
+80,OREGE.PA,OREGE.PA,Orege SA,Industrials
+81,ATOS.PA,ATOS.PA,Atos SE,Information Technology
+82,FDJU.PA,FDJU.PA,FDJ United,Consumer Discretionary
+83,MERY.PA,MERY.PA,Mercialys SA,Real Estate
+84,PARRO.PA,PARRO.PA,Parrot SA,Information Technology
+85,GFCP.PA,GFCP.PA,Gecina SA,Real Estate
+86,PVAC.PA,PVAC.PA,Pierre et Vacances SA,Consumer Discretionary
+87,CBLP.PA,CBLP.PA,Mersen SA,Industrials
+88,RENA.PA,RENA.PA,Renault SA,Consumer Discretionary
+89,VIE.PA,VIE.PA,Veolia Environnement SA,Utilities
+90,SEFER.PA,SEFER.PA,Sergeferrari Group SA,Materials
+91,VMX.PA,VMX.PA,Verimatrix SA,Information Technology
+92,OREP.PA,OREP.PA,L'Oreal SA,Consumer Staples
+93,PEUG.PA,PEUG.PA,Peugeot Invest SA,Financials
+94,ENGIE.PA,ENGIE.PA,Engie SA,Utilities
+95,ISOS.PA,ISOS.PA,Ipsos SA,Communication Services
+96,ACCP.PA,ACCP.PA,Accor SA,Consumer Discretionary
+97,TFFP.PA,TFFP.PA,Television Francaise 1 SA,Communication Services
+98,ARGAN.PA,ARGAN.PA,Argan SA,Real Estate
+99,GLTN.PA,GLTN.PA,GL Events SA,Industrials
+100,WLNCS,,,
+101,DBG.PA,DBG.PA,Derichebourg SA,Industrials
+102,BOUY.PA,BOUY.PA,Bouygues SA,Industrials
+103,GFII.PA,GFII.PA,Lisi SA,Industrials
+104,VETO.PA,VETO.PA,Vetoquinol SA,Health Care
+105,EURA.PA,EURA.PA,Eurazeo SE,Financials
+106,ICAD.PA,ICAD.PA,Icade SA,Real Estate
+107,VIV.PA,VIV.PA,Vivendi SE,Communication Services
+108,EUFI.PA,EUFI.PA,Eurofins Scientific SE,Health Care
+109,ABS.PA,ABS.PA,AB Science SA,Health Care
+110,TRNG.PA,TRNG.PA,Transgene SA,Health Care
+111,DBV.PA,DBV.PA,Dbv Technologies SA,Health Care
+112,POXEL.PA,POXEL.PA,Poxel SA,Health Care
+113,RCOP.PA,RCOP.PA,Remy Cointreau SA,Consumer Staples
+114,BVI.PA,BVI.PA,Bureau Veritas SA,Industrials
+115,PLX.PA,PLX.PA,Pluxee NV,Financials
+116,GTT.PA,GTT.PA,Gaztransport et Technigaz SA,Energy
+117,BIOX.PA,BIOX.PA,Biomerieux SA,Health Care
+118,MICP.PA,MICP.PA,Compagnie Generale des Etablissements Michelin SCA,Consumer Discretionary
+119,MAUP.PA,MAUP.PA,Etablissements Maurel et Prom SA,Energy
+120,HIGH.PA,HIGH.PA,High Co SA,Communication Services
+121,ETL.PA,ETL.PA,Eutelsat Communications SA,Communication Services
+122,NEXS.PA,NEXS.PA,Nexans SA,Industrials
+123,EAPI.PA,EAPI.PA,Euroapi SA,Health Care
+124,VU.PA,VU.PA,Vusion SA,Information Technology
+125,ORAN.PA,ORAN.PA,Orange SA,Communication Services
+126,BNPP.PA,BNPP.PA,BNP Paribas SA,Financials
+127,PUBP.PA,PUBP.PA,Publicis Groupe SA,Communication Services
+128,JCQ.PA,JCQ.PA,Jacquet Metals SA,Industrials
+129,LAEP.PA,LAEP.PA,Latecoere SA,Industrials
+130,BITI.PA,BITI.PA,ABC Arbitrage SA,Financials
+131,VLTSA.PA,VLTSA.PA,Voltalia SA,Utilities
+132,ESLX.PA,ESLX.PA,Essilorluxottica SA,Health Care
+133,SEBF.PA,SEBF.PA,SEB SA,Consumer Discretionary
+134,XFAB.PA,XFAB.PA,X-Fab Silicon Foundries Europese Vennootschap,Information Technology
+135,LHYFE.PA,LHYFE.PA,Lhyfe SA,Energy
+136,ROBF.PA,ROBF.PA,Robertet SA,Materials
+137,GRBT.PA,GRBT.PA,Guerbet SA,Health Care
+138,CASP.PA,CASP.PA,Casino Guichard Perrachon SA,Consumer Staples
+139,WAGA.PA,WAGA.PA,Waga Energy SA,Energy
+140,GTCN.PA,GTCN.PA,Guillemot Corporation SA,Information Technology
+141,ASY.PA,ASY.PA,Assystem SA,Industrials
+142,UBIP.PA,UBIP.PA,Ubisoft Entertainment SA,Communication Services
+143,SCHN.PA,SCHN.PA,Schneider Electric SE,Industrials
+144,VIRI.PA,VIRI.PA,Viridien SA,Energy
+145,EXHO.PA,EXHO.PA,Sodexo SA,Consumer Discretionary
+146,BGBN.PA,BGBN.PA,Bigben Interactive SA,Consumer Discretionary
+147,FDEL.PA,FDEL.PA,La Francaise de l Energie SA,Energy
+148,VIRB.PA,VIRB.PA,Virbac SA,Health Care
+149,CARR.PA,CARR.PA,Carrefour SA,Consumer Staples
+150,LACR.PA,LACR.PA,Lacroix Group SA,Information Technology
+151,AKW.PA,AKW.PA,Akwel SA,Consumer Discretionary
+152,MHM.PA,MHM.PA,Myhotelmatch SA,Consumer Discretionary
+153,OSE.PA,OSE.PA,OSE Immunotherapeutics SA,Health Care
+154,EXENS.PA,EXENS.PA,Exosens SA,Industrials
+155,SWOR.PA,SWOR.PA,Sword Group SE,Information Technology
+156,SMCP.PA,SMCP.PA,SMCP SA,Consumer Discretionary
+157,DTNC.PA,DTNC.PA,Acteos SA,Information Technology
+158,VRLA.PA,VRLA.PA,Verallia SA,Materials
+159,IPN.PA,IPN.PA,Ipsen SA,Health Care
+160,FNAC.PA,FNAC.PA,Fnac Darty SA,Consumer Discretionary
+161,HDF.PA,HDF.PA,Hydrogene De France SA,Utilities
+162,OPM.PA,OPM.PA,Opmobility SE,Consumer Discretionary
+163,VCTP.PA,VCTP.PA,Vicat SA,Materials
+164,CDAF.PA,CDAF.PA,Compagnie des Alpes SA,Consumer Discretionary
+165,AMUN.PA,AMUN.PA,Amundi SA,Financials
+166,IMAF.PA,IMAF.PA,Altarea SCA,Real Estate
+167,TTEF.PA,TTEF.PA,TotalEnergies SE,Energy
+168,IDLA.PA,IDLA.PA,ID Logistics SAS,Industrials
+169,ADP.PA,ADP.PA,Aeroports de Paris SA,Industrials
+170,CHBE.PA,CHBE.PA,Beneteau SA,Consumer Discretionary
+171,EXA.PA,EXA.PA,Exail Technologies SA,Industrials
+172,MMTP.PA,MMTP.PA,Metropole Television SA,Communication Services
+173,KOF.PA,KOF.PA,Kaufman & Broad SA,Consumer Discretionary
+174,VANTI.PA,VANTI.PA,Vantiva SA,Information Technology
+175,SOIT.PA,SOIT.PA,Soitec SA,Information Technology
+176,ERMT.PA,ERMT.PA,Eramet SA,Materials
+177,TE.PA,TE.PA,Technip Energies NV,Energy
+178,ADOC.PA,ADOC.PA,Adocia SA,Health Care
+179,CAGR.PA,CAGR.PA,Credit Agricole SA,Financials
+180,PLNW.PA,PLNW.PA,Planisware SA,Information Technology
+181,TEPRF.PA,TEPRF.PA,Teleperformance SE,Industrials
+182,JCDX.PA,JCDX.PA,JCDecaux SE,Communication Services
+183,VLS.PA,VLS.PA,Valneva SE,Health Care
+184,MEMS.PA,MEMS.PA,Memscap SA,Information Technology
+185,GETP.PA,GETP.PA,Getlink SE,Industrials
+186,DAST.PA,DAST.PA,Dassault Systemes SE,Information Technology
+187,VLOF.PA,VLOF.PA,Valeo SE,Consumer Discretionary
+188,POMRY.PA,POMRY.PA,Maison Pommery & Associes SA,Consumer Staples
+189,SGEF.PA,SGEF.PA,Vinci SA,Industrials
+190,SOPR.PA,SOPR.PA,Sopra Steria Group SA,Information Technology
+191,ABNX.PA,ABNX.PA,Abionyx Pharma SA,Health Care
+192,EEPC.PA,EEPC.PA,Soc D Explosifs Produits Chimiques SA,Materials
+193,CAPP.PA,CAPP.PA,Capgemini SE,Information Technology
+194,SGOB.PA,SGOB.PA,Compagnie de Saint Gobain SA,Industrials
+195,EDEN.PA,EDEN.PA,Edenred SE,Financials
+196,AM.PA,AM.PA,Dassault Aviation SA,Industrials
+197,BATD.PA,BATD.PA,Bastide le Confort Medical SA,Health Care
+198,TCFP.PA,TCFP.PA,Thales SA,Industrials
+199,VLLP.PA,VLLP.PA,Vallourec SA,Energy
+200,AIRF.PA,AIRF.PA,Air France KLM SA,Industrials
+201,PRTP.PA,PRTP.PA,Kering SA,Consumer Discretionary
+202,S30.PA,S30.PA,Solutions 30 SE,Information Technology
+203,FOUG.PA,FOUG.PA,Eiffage SA,Industrials
+204,CARM.PA,CARM.PA,Carmila SA,Real Estate
+205,TFF.PA,TFF.PA,Tonnellerie Francois Freres SA,Materials
+206,SCOR.PA,SCOR.PA,Scor SE,Financials
+207,STDM.PA,STDM.PA,Sartorius Stedim Biotech SA,Health Care
+208,OVH.PA,OVH.PA,Ovh Groupe SA,Information Technology
