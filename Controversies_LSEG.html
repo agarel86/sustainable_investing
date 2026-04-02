@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ESG Controversies Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #020617;
+      --accent: #38bdf8;
+      --border: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.9);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #1d283a 0, #020617 45%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    main {
+      max-width: 1240px;
+      margin: 24px auto 32px auto;
+      padding: 0 16px 32px 16px;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    h1 { font-size: clamp(1.8rem, 1.4rem + 1vw, 2.1rem); }
+    h2 { font-size: 1.1rem; }
+
+    p { margin: 0; line-height: 1.5; }
+
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.6);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+    }
+
+    .layout {
+      display: block;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #1f2937 0, #020617 55%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: var(--shadow-soft);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: inline-block;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 9px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 7px 9px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    select:focus,
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px 14px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      align-items: flex-end;
+    }
+
+    button.primary {
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #22c55e, #22c55e 30%, #38bdf8);
+      color: #020617;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 7px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.45);
+      white-space: nowrap;
+    }
+
+    button.primary:disabled {
+      opacity: 0.4;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .status {
+      margin-top: 4px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      min-height: 0;
+    }
+
+    .status.info {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--muted);
+    }
+
+    .status.error {
+      border-color: rgba(248, 113, 113, 0.7);
+      background: rgba(30, 64, 175, 0.1);
+      color: #fecaca;
+    }
+
+    .status.ok {
+      border-color: rgba(74, 222, 128, 0.6);
+      background: rgba(21, 128, 61, 0.15);
+      color: #bbf7d0;
+    }
+
+    .table-wrapper {
+      margin-top: 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: radial-gradient(circle at top left, #020617 0, #020617 50%, #000 100%);
+      overflow: hidden;
+      max-height: 600px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    thead {
+      background: radial-gradient(circle at top left, #0f172a 0, #020617 60%);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    th, td {
+      padding: 7px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    th {
+      font-weight: 500;
+      color: #e5e7eb;
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) { background: rgba(15, 23, 42, 0.75); }
+    tbody tr:nth-child(odd) { background: rgba(2, 6, 23, 0.85); }
+    tbody tr:hover { background: rgba(30, 64, 175, 0.6); }
+
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      padding: 1px 5px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .chip strong {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .def-panel h3 {
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .def-panel p {
+      margin-top: 4px;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <div>
+        <h1>ESG Controversies Explorer</h1>
+        <p class="muted small" style="margin-top:6px;">
+          This page uses the <span class="code">controversies.csv</span> file (LSEG ESG data) to rank firms by how often they appear in a specific type of controversy. Pick a controversy type to see the ranking across all available years.
+        </p>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section>
+        <div class="card def-panel" id="definitionPanel">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
+            <h3>Controversy definition</h3>
+            <span class="chip"><strong>Source</strong>LSEG ESG controversies methodology</span>
+          </div>
+          <p class="small" id="definitionBody" style="margin-top:6px;">
+            Select a controversy type and click “Show ranking” to see the LSEG definition for that topic. The mapping follows
+            the Refinitiv (LSEG) definitions illustrated in Figures 18 and 19 of the course notes.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>1. Rank firms by controversy type</h2>
+            <span class="small muted">Pick a controversy type to see which firms have the most cases across all years.</span>
+          </div>
+
+          <div class="controls-grid">
+            <div>
+              <label for="typeSelect">Controversy type</label>
+              <select id="typeSelect" disabled>
+                <option>Loading types…</option>
+              </select>
+            </div>
+
+            <div style="min-width:130px;">
+              <button type="button" class="primary" id="typeApplyBtn" disabled>
+                Show ranking
+              </button>
+            </div>
+          </div>
+
+          <div id="typeStatus" class="status small"></div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:18%;">Rank</th>
+                  <th style="width:28%;">Company</th>
+                  <th style="width:18%;">RIC</th>
+                  <th style="width:14%;">Year</th>
+                  <th style="width:22%;">Controversy count</th>
+                </tr>
+              </thead>
+              <tbody id="typeTableBody">
+                <tr>
+                  <td colspan="5" class="muted small">Choose a controversy type and year, then click “Show ranking”.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const CONTROVERSY_DEFINITIONS = {
+      "Controversies Customer Health & Safety": {
+        label: "Customer Health & Safety Controversies",
+        description:
+          "Cases where a company's products or services are alleged to have harmed, or created an undue risk to, customer or end-user health and safety."
+      },
+      "Controversies Responsible R&D": {
+        label: "Responsible R&D Controversies",
+        description:
+          "Incidents related to unethical or irresponsible research and development practices, including unsafe testing or product trials."
+      },
+      "Controversies Privacy": {
+        label: "Privacy Controversies",
+        description:
+          "Breaches of customer or employee privacy, misuse of personal data, or failures to protect confidential information."
+      },
+      "Controversies Responsible Marketing": {
+        label: "Responsible Marketing Controversies",
+        description:
+          "Allegations of misleading, deceptive, or otherwise irresponsible marketing and advertising practices."
+      },
+      "Controversies Product Access": {
+        label: "Product Access Controversies",
+        description:
+          "Cases where a company is criticised for restricting access to essential products or services, for example through excessive pricing or unfair exclusion."
+      },
+      "Environmental Controversies Count": {
+        label: "Environmental Controversies",
+        description:
+          "Environmental incidents such as spills, pollution, illegal discharges, or serious breaches of environmental regulations."
+      },
+      "Diversity and Opportunity Controversies": {
+        label: "Diversity & Opportunity Controversies",
+        description:
+          "Allegations of discrimination or unequal opportunity in hiring, promotion, pay, or workplace treatment."
+      },
+      "Employees Health & Safety Controversies": {
+        label: "Employees Health & Safety Controversies",
+        description:
+          "Controversies involving workplace accidents, fatalities, unsafe conditions, or systemic failures in protecting employee health and safety."
+      },
+      "Child Labor Controversies": {
+        label: "Child Labour Controversies",
+        description:
+          "Incidents where a company or its suppliers are alleged to have used or tolerated child labour in their operations or value chain."
+      },
+      "Human Rights Controversies": {
+        label: "Human Rights Controversies",
+        description:
+          "Alleged violations of internationally recognised human rights, such as forced labour, community displacement, or suppression of freedom of association."
+      },
+      "Public Health Controversies": {
+        label: "Public Health Controversies",
+        description:
+          "Cases where a company’s products, services, or practices are alleged to have harmed public health."
+      },
+      "Tax Fraud Controversies": {
+        label: "Tax Fraud Controversies",
+        description:
+          "Investigations, charges, or allegations of tax fraud, aggressive tax evasion, or other serious breaches of tax law."
+      },
+      "Critical Countries Controversies": {
+        label: "Critical Countries Controversies",
+        description:
+          "Controversies linked to operating in, or doing business with, countries subject to sanctions or with severe human-rights concerns."
+      }
+    };
+
+    // RICs present in controversies data but not in cac_constituents.csv — use these names when missing
+    const RIC_NAME_FALLBACKS = {
+      "ORP.PA": "Orpea"
+    };
+
+    function getCompanyName(ric) {
+      if (!ric) return "";
+      return state.companyNameByRic[ric] || RIC_NAME_FALLBACKS[ric] || "";
+    }
+
+    function parseCsv(text, delimiter) {
+      const delim = delimiter || (text.indexOf(";") >= 0 ? ";" : ",");
+      const lines = text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .split("\n")
+        .filter((l) => l.trim().length > 0);
+      if (!lines.length) return { headers: [], rows: [] };
+
+      const split = (line) => {
+        const result = [];
+        let cur = "";
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === "\"") {
+            if (inQuotes && line[i + 1] === "\"") {
+              cur += "\"";
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (ch === delim && !inQuotes) {
+            result.push(cur);
+            cur = "";
+          } else {
+            cur += ch;
+          }
+        }
+        result.push(cur);
+        return result.map((s) => s.trim().replace(/^"|"$/g, ""));
+      };
+
+      const headers = split(lines[0]);
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = split(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = cols[idx] !== undefined ? cols[idx] : "";
+        });
+        rows.push(row);
+      }
+      return { headers, rows };
+    }
+
+    function escapeHtml(s) {
+      if (s === null || s === undefined) return "";
+      const t = document.createElement("span");
+      t.textContent = String(s);
+      return t.innerHTML;
+    }
+
+    function uniqueSorted(values) {
+      return Array.from(new Set(values)).sort();
+    }
+
+    const state = {
+      rows: [],
+      companies: [],
+      years: [],
+      controversyHeaders: [],
+      companyNameByRic: {}
+    };
+
+    async function loadCompanyNames() {
+      const map = {};
+      try {
+        const resp = await fetch("cac_constituents.csv");
+        if (!resp.ok) return map;
+        const text = await resp.text();
+        const parsed = parseCsv(text, ",");
+        if (!parsed.headers.length) return map;
+
+        const headers = parsed.headers;
+        let ricHeader = null;
+        let nameHeader = null;
+        headers.forEach((h) => {
+          const key = String(h || "").toLowerCase();
+          if (!ricHeader && key === "ric") ricHeader = h;
+          if (
+            !nameHeader &&
+            (key === "company common name" ||
+              key === "company" ||
+              key === "issuer name")
+          ) {
+            nameHeader = h;
+          }
+        });
+        if (!ricHeader || !nameHeader) return map;
+
+        parsed.rows.forEach((r) => {
+          const ric = r[ricHeader];
+          const name = r[nameHeader];
+          if (ric && name) {
+            map[String(ric)] = String(name);
+          }
+        });
+      } catch (e) {
+        console.error("Failed to load cac_constituents.csv", e);
+      }
+      return map;
+    }
+
+    function setDefinition(header) {
+      const panelText = document.getElementById("definitionBody");
+      const def = CONTROVERSY_DEFINITIONS[header];
+      if (!def) {
+        panelText.innerHTML =
+          'No specific definition stored for <span class="code">' +
+          escapeHtml(header) +
+          "</span>. Please refer to the LSEG documentation for details.";
+        return;
+      }
+      panelText.innerHTML =
+        "<strong>" +
+        escapeHtml(def.label) +
+        ".</strong> " +
+        escapeHtml(def.description);
+    }
+
+    async function loadDataset() {
+      const typeStatus = document.getElementById("typeStatus");
+      typeStatus.textContent = "Loading controversies.csv\u2026";
+      typeStatus.className = "status small info";
+
+      try {
+        const resp = await fetch("controversies.csv");
+        if (!resp.ok) {
+          typeStatus.textContent =
+            "Could not load controversies.csv. Place it in the same folder as this HTML file and serve via HTTP.";
+          typeStatus.className = "status small error";
+          return;
+        }
+        const text = await resp.text();
+        const parsed = parseCsv(text, ";");
+        if (!parsed.headers.length || !parsed.rows.length) {
+          typeStatus.textContent = "No data found in controversies.csv.";
+          typeStatus.className = "status small error";
+          return;
+        }
+
+        const headers = parsed.headers.slice();
+        headers[0] = "RIC";
+        headers[1] = "Date";
+
+        const rows = parsed.rows.map((r) => {
+          const ric = r[parsed.headers[0]];
+          const dateRaw = r[parsed.headers[1]];
+          const year = String(dateRaw || "").slice(-4);
+          const obj = { RIC: ric, Date: dateRaw, Year: year };
+          for (let i = 2; i < headers.length; i++) {
+            const h = headers[i];
+            obj[h] = r[parsed.headers[i]];
+          }
+          return obj;
+        });
+
+        state.rows = rows;
+        state.companies = uniqueSorted(rows.map((r) => r.RIC).filter(Boolean));
+        state.years = uniqueSorted(rows.map((r) => r.Year).filter(Boolean));
+        state.controversyHeaders = headers.slice(2);
+
+        state.companyNameByRic = await loadCompanyNames();
+
+        populateControls();
+        typeStatus.textContent = "Dataset loaded (" + rows.length + " rows, " + state.companies.length + " firms, years " + state.years[0] + "\u2013" + state.years[state.years.length - 1] + "). Pick a controversy type.";
+        typeStatus.className = "status small ok";
+      } catch (err) {
+        console.error(err);
+        typeStatus.textContent = "Failed to load controversies.csv: " + err.message;
+        typeStatus.className = "status small error";
+      }
+    }
+
+
+    function populateControls() {
+      const typeSelect = document.getElementById("typeSelect");
+
+      typeSelect.innerHTML = "";
+      state.controversyHeaders.forEach((h) => {
+        if (!h) return;
+        const opt = document.createElement("option");
+        opt.value = h;
+        opt.textContent = h;
+        typeSelect.appendChild(opt);
+      });
+      typeSelect.disabled = state.controversyHeaders.length === 0;
+
+      document.getElementById("typeApplyBtn").disabled = false;
+      if (state.controversyHeaders.length) {
+        setDefinition(state.controversyHeaders[0]);
+      }
+    }
+
+
+    function renderTypeRanking() {
+      const header = document.getElementById("typeSelect").value;
+      const body = document.getElementById("typeTableBody");
+      const status = document.getElementById("typeStatus");
+
+      let data = state.rows
+        .filter((r) => r.Year && r.Year.length === 4)
+        .map((r) => {
+          const raw = r[header];
+          const n = Number(raw || "0");
+          return {
+            ric: r.RIC,
+            year: r.Year,
+            value: Number.isNaN(n) ? 0 : n
+          };
+        });
+
+      data = data.filter((d) => d.value > 0);
+      data.sort((a, b) => {
+        const primary = b.value - a.value;
+        if (primary !== 0) return primary;
+        const nameA = getCompanyName(a.ric) || a.ric || "";
+        const nameB = getCompanyName(b.ric) || b.ric || "";
+        if (nameA !== nameB) return nameA.localeCompare(nameB);
+        return b.year.localeCompare(a.year);
+      });
+
+      if (!data.length) {
+        body.innerHTML =
+          '<tr><td colspan="5" class="muted small">No firms with non-zero controversies of this type.</td></tr>';
+        status.textContent = "";
+        status.className = "status small";
+        setDefinition(header);
+        return;
+      }
+
+      const shown = data;
+
+      body.innerHTML = shown
+        .map((row, idx) => {
+          const name = getCompanyName(row.ric);
+          return (
+            "<tr>" +
+            "<td>" + (idx + 1) + "</td>" +
+            "<td>" + escapeHtml(name) + "</td>" +
+            "<td><span class=\"code\">" + escapeHtml(row.ric) + "</span></td>" +
+            "<td>" + escapeHtml(row.year) + "</td>" +
+            "<td>" + row.value + "</td>" +
+            "</tr>"
+          );
+        })
+        .join("");
+
+      status.textContent =
+        shown.length + " entries (company-year) with non-zero \"" + header + "\" controversies.";
+      status.className = "status small ok";
+      setDefinition(header);
+    }
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadDataset();
+      document.getElementById("typeApplyBtn").addEventListener("click", renderTypeRanking);
+      document.getElementById("typeSelect").addEventListener("change", () => {
+        setDefinition(document.getElementById("typeSelect").value);
+        renderTypeRanking();
+      });
+    });
+  </script>
+</body>
+</html>
+
