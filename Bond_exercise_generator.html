@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bond Exercises - 20 Realistic Cases</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --panel: rgba(15, 23, 42, 0.96);
+      --border: rgba(148, 163, 184, 0.35);
+      --accent: #38bdf8;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #082f49 0, #020617 45%, #020617 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    h1 { margin: 0 0 4px; font-size: 1.4rem; }
+    h2 { margin: 0 0 8px; font-size: 1.04rem; }
+    p { margin: 0 0 8px; color: var(--muted); }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    select { width: min(640px, 100%); padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: rgba(2, 6, 23, 0.85); color: var(--text); }
+    .btn { border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.14); color: var(--accent); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+    .btn:hover { background: rgba(56, 189, 248, 0.24); }
+    .pill { display: inline-block; border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; font-size: 0.78rem; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid rgba(30, 41, 59, 0.9); text-align: left; }
+    th { color: #cbd5f5; font-weight: 600; }
+    .num { font-variant-numeric: tabular-nums; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.84rem; white-space: pre-wrap; line-height: 1.42; }
+    details { border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+    summary { cursor: pointer; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <h1>Corporate Bond Exercises - 20 Cases</h1>
+      <p>Pick one case, read instructions, solve it, then open full solution with words + calculations + timeline.</p>
+      <div class="row">
+        <select id="exerciseSelect"></select>
+        <button id="nextBtn" class="btn" type="button">Next Exercise</button>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <span class="pill" id="typePill">Type: -</span>
+        <span class="pill" id="marketPill">Market move: -</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Narrative</h2>
+      <p id="narrative"></p>
+    </section>
+
+    <section class="card">
+      <h2>Case Inputs</h2>
+      <table><tbody id="inputsBody"></tbody></table>
+    </section>
+
+    <section class="card">
+      <h2>Student Instructions</h2>
+      <ol id="instructions" style="margin:0 0 0 18px; color: var(--muted); line-height:1.5;"></ol>
+    </section>
+
+    <section class="card">
+      <h2>Cash-Flow Timeline (per bond)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Coupon cash flow</th>
+            <th>Principal repayment</th>
+            <th>Total cash flow</th>
+          </tr>
+        </thead>
+        <tbody id="timelineBody"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Solution File</h2>
+      <details>
+        <summary>Show full explanation and calculations</summary>
+        <div id="solutionText" class="mono" style="margin-top:10px;"></div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    function money(x) {
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(x);
+    }
+    function pct(x) { return (x * 100).toFixed(2) + "%"; }
+
+    function priceFromYield(face, couponRate, y, n) {
+      const c = face * couponRate;
+      let p = 0;
+      for (let t = 1; t <= n; t++) p += c / Math.pow(1 + y, t);
+      p += face / Math.pow(1 + y, n);
+      return p;
+    }
+
+    function yieldFromPrice(face, couponRate, price, n) {
+      let lo = 0.000001;
+      let hi = 0.40;
+      for (let i = 0; i < 140; i++) {
+        const mid = (lo + hi) / 2;
+        const pmid = priceFromYield(face, couponRate, mid, n);
+        if (pmid > price) lo = mid; else hi = mid;
+      }
+      return (lo + hi) / 2;
+    }
+
+    const CASES = [
+      { scope:"primary", issuer:"EDF GridLink", sector:"Utilities", face:1000, nBonds:300000, maturity:7, initCoupon:0.046, book:"oversub", couponAdj:-0.0030, yearsAfter:2, shock:+0.0060, q:"price" },
+      { scope:"secondary", issuer:"AeroRail Mobility", sector:"Industrials", face:1000, nBonds:220000, maturity:6, initCoupon:0.051, book:"undersub", couponAdj:+0.0040, yearsAfter:1, shock:+0.0120, q:"price" },
+      { scope:"secondary", issuer:"NovaCare Devices", sector:"Health Care", face:1000, nBonds:180000, maturity:8, initCoupon:0.043, book:"oversub", couponAdj:-0.0020, yearsAfter:3, shock:-0.0070, q:"price" },
+      { scope:"primary", issuer:"HexaData Cloud", sector:"Information Technology", face:1000, nBonds:250000, maturity:5, initCoupon:0.057, book:"undersub", couponAdj:+0.0050, yearsAfter:2, shock:+0.0100, q:"price" },
+      { scope:"secondary", issuer:"MetroFood Europe", sector:"Consumer Staples", face:1000, nBonds:160000, maturity:9, initCoupon:0.041, book:"balanced", couponAdj:0.0000, yearsAfter:1, shock:0.0000, q:"price" },
+      { scope:"secondary", issuer:"BluePort Shipping", sector:"Industrials", face:1000, nBonds:210000, maturity:7, initCoupon:0.054, book:"undersub", couponAdj:+0.0030, yearsAfter:3, shock:+0.0150, q:"price" },
+      { scope:"primary", issuer:"SunRetail Brands", sector:"Consumer Discretionary", face:1000, nBonds:140000, maturity:6, initCoupon:0.049, book:"oversub", couponAdj:-0.0025, yearsAfter:2, shock:-0.0050, q:"yield" },
+      { scope:"secondary", issuer:"TeleNord Networks", sector:"Communication Services", face:1000, nBonds:190000, maturity:8, initCoupon:0.047, book:"balanced", couponAdj:0.0000, yearsAfter:2, shock:+0.0080, q:"yield" },
+      { scope:"secondary", issuer:"TerraStone REIT", sector:"Real Estate", face:1000, nBonds:260000, maturity:10, initCoupon:0.059, book:"undersub", couponAdj:+0.0045, yearsAfter:3, shock:+0.0110, q:"yield" },
+      { scope:"primary", issuer:"Alpine Capital Lease", sector:"Financials", face:1000, nBonds:240000, maturity:5, initCoupon:0.052, book:"oversub", couponAdj:-0.0015, yearsAfter:1, shock:-0.0065, q:"yield" },
+      { scope:"secondary", issuer:"HydroRail Energy", sector:"Utilities", face:1000, nBonds:275000, maturity:7, initCoupon:0.045, book:"oversub", couponAdj:-0.0020, yearsAfter:2, shock:0.0000, q:"price" },
+      { scope:"primary", issuer:"Orion Packaging", sector:"Materials", face:1000, nBonds:155000, maturity:6, initCoupon:0.053, book:"undersub", couponAdj:+0.0035, yearsAfter:1, shock:+0.0090, q:"yield" },
+      { scope:"secondary", issuer:"Medaxis Pharma", sector:"Health Care", face:1000, nBonds:205000, maturity:9, initCoupon:0.044, book:"balanced", couponAdj:0.0000, yearsAfter:3, shock:-0.0040, q:"price" },
+      { scope:"secondary", issuer:"NeoSemicon Europe", sector:"Information Technology", face:1000, nBonds:185000, maturity:8, initCoupon:0.050, book:"oversub", couponAdj:-0.0025, yearsAfter:2, shock:+0.0130, q:"yield" },
+      { scope:"secondary", issuer:"UrbanTransit Group", sector:"Industrials", face:1000, nBonds:320000, maturity:10, initCoupon:0.056, book:"undersub", couponAdj:+0.0040, yearsAfter:3, shock:+0.0070, q:"price" },
+      { scope:"primary", issuer:"FreshMart Europe", sector:"Consumer Staples", face:1000, nBonds:170000, maturity:5, initCoupon:0.042, book:"oversub", couponAdj:-0.0010, yearsAfter:1, shock:-0.0030, q:"yield" },
+      { scope:"secondary", issuer:"VistaMedia Cable", sector:"Communication Services", face:1000, nBonds:145000, maturity:7, initCoupon:0.048, book:"balanced", couponAdj:0.0000, yearsAfter:2, shock:+0.0050, q:"price" },
+      { scope:"primary", issuer:"GreenBrick Properties", sector:"Real Estate", face:1000, nBonds:230000, maturity:9, initCoupon:0.058, book:"undersub", couponAdj:+0.0030, yearsAfter:2, shock:+0.0120, q:"yield" },
+      { scope:"secondary", issuer:"NorthSea Logistics", sector:"Industrials", face:1000, nBonds:200000, maturity:6, initCoupon:0.051, book:"oversub", couponAdj:-0.0020, yearsAfter:3, shock:-0.0060, q:"price" },
+      { scope:"primary", issuer:"Lumen Fiber Infra", sector:"Communication Services", face:1000, nBonds:215000, maturity:8, initCoupon:0.049, book:"balanced", couponAdj:0.0000, yearsAfter:1, shock:0.0000, q:"yield" }
+    ];
+
+    function buildCase(raw, idx) {
+      const finalCoupon = raw.initCoupon + raw.couponAdj;
+      const issueYield = finalCoupon;
+      const issuePrice = raw.face;
+      const principal = raw.face * raw.nBonds;
+      const annualCoupon = raw.face * finalCoupon;
+      const yearsAfter = raw.yearsAfter;
+      const remaining = raw.maturity - yearsAfter;
+      const newYield = Math.max(0.002, issueYield + raw.shock);
+      const newPrice = priceFromYield(raw.face, finalCoupon, newYield, remaining);
+      const bookTxt = raw.book === "oversub" ? "over-subscribed"
+        : raw.book === "undersub" ? "under-subscribed" : "balanced";
+
+      const scope = raw.scope || "secondary";
+      const moveTxt = raw.shock > 0 ? "yield revised up" : raw.shock < 0 ? "yield revised down" : "yield unchanged";
+      const typeTxt = scope === "primary"
+        ? "Primary issuance only"
+        : (raw.q === "price" ? "Price on secondary market" : "Yield on secondary market");
+
+      const narrative = scope === "primary"
+        ? ("Exercise " + (idx + 1) + ". " + raw.issuer + " (" + raw.sector + ") launched a new fixed-rate bond. " +
+          "Initial investor feedback was " + bookTxt + ". During bookbuilding, the final coupon moved from " +
+          pct(raw.initCoupon) + " to " + pct(finalCoupon) + ". The bond was issued at par. " +
+          "Focus only on issuance economics and demand interpretation.")
+        : ("Exercise " + (idx + 1) + ". " + raw.issuer + " (" + raw.sector + ") launched a new fixed-rate bond. " +
+          "Initial investor feedback was " + bookTxt + ". During bookbuilding, the final coupon moved from " +
+          pct(raw.initCoupon) + " to " + pct(finalCoupon) + ". The bond was issued at par. " +
+          "After " + yearsAfter + " year(s), market conditions changed (" + moveTxt + ").");
+
+      return { ...raw, scope, finalCoupon, issueYield, issuePrice, principal, annualCoupon, remaining, newYield, newPrice, moveTxt, typeTxt, narrative };
+    }
+
+    const EXERCISES = CASES.map(buildCase);
+
+    function makeTimeline(ex) {
+      const rows = [];
+      for (let y = 1; y <= ex.maturity; y++) {
+        const c = ex.annualCoupon;
+        const p = y === ex.maturity ? ex.face : 0;
+        rows.push("<tr><td>Year " + y + (y === ex.yearsAfter ? " (valuation right after this coupon)" : "") +
+          "</td><td class='num'>" + money(c) + "</td><td class='num'>" + money(p) + "</td><td class='num'>" + money(c + p) + "</td></tr>");
+      }
+      return rows.join("");
+    }
+
+    function solutionText(ex) {
+      const lines = [];
+
+      // --- Answer 1: coupon per bond + total annual payment ---
+      lines.push("1) ANNUAL COUPON PER BOND AND TOTAL ANNUAL COUPON PAYMENT");
+      lines.push("   - Bookbuilding outcome: " + ex.book + ".");
+      lines.push("   - Initial indicated coupon: " + pct(ex.initCoupon));
+      lines.push("   - Coupon adjustment from demand: " + (ex.couponAdj >= 0 ? "+" : "") + pct(ex.couponAdj));
+      lines.push("   - Final coupon at issuance: " + pct(ex.initCoupon) + " + (" + (ex.couponAdj >= 0 ? "+" : "") + pct(ex.couponAdj) + ") = " + pct(ex.finalCoupon));
+      lines.push("   - Annual coupon per bond = face x coupon = " + money(ex.face) + " x " + pct(ex.finalCoupon) + " = " + money(ex.annualCoupon));
+      lines.push("   - Total annual coupon payment = coupon per bond x number of bonds = " + money(ex.annualCoupon) + " x " + ex.nBonds.toLocaleString("en-US") + " = " + money(ex.annualCoupon * ex.nBonds));
+      lines.push("   - Total coupon cost over the bond's life = " + money(ex.annualCoupon * ex.nBonds) + " x " + ex.maturity + " years = " + money(ex.annualCoupon * ex.nBonds * ex.maturity));
+
+      // --- Answer 2: principal raised ---
+      lines.push("");
+      lines.push("2) TOTAL PRINCIPAL RAISED AT ISSUANCE");
+      lines.push("   - Number of bonds = " + ex.nBonds.toLocaleString("en-US"));
+      lines.push("   - Face value per bond = " + money(ex.face));
+      lines.push("   - Principal raised = face x number of bonds = " + money(ex.face) + " x " + ex.nBonds.toLocaleString("en-US") + " = " + money(ex.principal));
+
+      // --- Answer 3: issuance price + par justification ---
+      lines.push("");
+      lines.push("3) ISSUANCE PRICE PER BOND AND PAR PRICING");
+      lines.push("   - The bond was issued at par, meaning the issue price equals the face value.");
+      lines.push("   - Issue price per bond = face value = " + money(ex.face));
+      lines.push("   - Issue yield = coupon rate at issuance = " + pct(ex.issueYield));
+      lines.push("   - Why par pricing? When a bond is issued with a coupon rate equal to the market yield");
+      lines.push("     demanded by investors, the present value of its future cash flows exactly equals the");
+      lines.push("     face value. Since the final coupon (" + pct(ex.finalCoupon) + ") was set to match investor");
+      lines.push("     demand during bookbuilding, the bond prices at par (" + money(ex.face) + ").");
+
+      // --- Answer 4: demand signal + conditions ---
+      lines.push("");
+      lines.push("4) DEMAND SIGNAL AND ISSUANCE CONDITIONS");
+      if (ex.book === "oversub") {
+        lines.push("   - The book was over-subscribed: investor demand exceeded the number of bonds available.");
+        lines.push("   - When demand is strong, the issuer is in a favorable position: it can lower the coupon");
+        lines.push("     because investors are willing to accept a lower return to secure an allocation.");
+        lines.push("   - This is why the coupon decreased by " + pct(Math.abs(ex.couponAdj)) + " during bookbuilding");
+        lines.push("     (from " + pct(ex.initCoupon) + " to " + pct(ex.finalCoupon) + ").");
+        lines.push("   - Issuance conditions are FAVORABLE for the issuer: it pays less interest on its debt.");
+        lines.push("   - Cost saving vs. initial coupon: " + money(Math.abs(ex.couponAdj) * ex.face) + " per bond per year,");
+        lines.push("     i.e. " + money(Math.abs(ex.couponAdj) * ex.face * ex.nBonds) + " in total per year across all " + ex.nBonds.toLocaleString("en-US") + " bonds.");
+      } else if (ex.book === "undersub") {
+        lines.push("   - The book was under-subscribed: investor demand fell short of the number of bonds offered.");
+        lines.push("   - When demand is weak, the issuer must increase the coupon to attract enough investors,");
+        lines.push("     since the current terms are not sufficiently attractive.");
+        lines.push("   - This is why the coupon increased by " + pct(Math.abs(ex.couponAdj)) + " during bookbuilding");
+        lines.push("     (from " + pct(ex.initCoupon) + " to " + pct(ex.finalCoupon) + ").");
+        lines.push("   - Issuance conditions are UNFAVORABLE for the issuer: it pays more interest on its debt.");
+        lines.push("   - Extra cost vs. initial coupon: " + money(Math.abs(ex.couponAdj) * ex.face) + " per bond per year,");
+        lines.push("     i.e. " + money(Math.abs(ex.couponAdj) * ex.face * ex.nBonds) + " in total per year across all " + ex.nBonds.toLocaleString("en-US") + " bonds.");
+      } else {
+        lines.push("   - The book was balanced: investor demand roughly matched the number of bonds offered.");
+        lines.push("   - When demand is balanced, there is no pressure to adjust the coupon in either direction.");
+        lines.push("   - This is why the coupon remained unchanged at " + pct(ex.finalCoupon) + " during bookbuilding.");
+        lines.push("   - Issuance conditions are NEUTRAL for the issuer.");
+      }
+
+      if (ex.scope === "secondary") {
+        // --- Answer 5: secondary market price or yield ---
+        lines.push("");
+        lines.push("5) SECONDARY MARKET VALUATION (YEAR " + ex.yearsAfter + ")");
+        lines.push("   - Remaining maturity: N = total maturity - years elapsed = " + ex.maturity + " - " + ex.yearsAfter + " = " + ex.remaining + " years");
+        lines.push("   - Annual coupon per bond (fixed, does not change): " + money(ex.annualCoupon));
+        lines.push("   - Face value repaid at maturity: " + money(ex.face));
+        if (ex.q === "price") {
+          lines.push("   - New market yield provided: " + pct(ex.newYield));
+          lines.push("   - We discount remaining cash flows at the new yield to find the price:");
+          lines.push("     Price = Sum[t=1..N] {Coupon / (1+y)^t} + Face / (1+y)^N");
+          lines.push("   - Step-by-step discounting (y = " + ex.newYield.toFixed(4) + "):");
+          let sumCoupons = 0;
+          for (let t = 1; t <= ex.remaining; t++) {
+            const term = ex.annualCoupon / Math.pow(1 + ex.newYield, t);
+            sumCoupons += term;
+            lines.push("       t=" + t + ": " + money(ex.annualCoupon) + " / (1+" + ex.newYield.toFixed(4) + ")^" + t + " = " + money(ex.annualCoupon) + " / " + (Math.pow(1 + ex.newYield, t)).toFixed(4) + " = " + money(term));
+          }
+          const principalPv = ex.face / Math.pow(1 + ex.newYield, ex.remaining);
+          lines.push("       Principal PV: " + money(ex.face) + " / (1+" + ex.newYield.toFixed(4) + ")^" + ex.remaining + " = " + money(ex.face) + " / " + (Math.pow(1 + ex.newYield, ex.remaining)).toFixed(4) + " = " + money(principalPv));
+          lines.push("   - Sum of discounted coupons = " + money(sumCoupons));
+          lines.push("   - Price = Sum of discounted coupons + Principal PV = " + money(sumCoupons) + " + " + money(principalPv) + " = " + money(sumCoupons + principalPv));
+        } else {
+          lines.push("   - Observed market price provided: " + money(ex.newPrice));
+          lines.push("   - We must find the yield y that satisfies:");
+          lines.push("     " + money(ex.newPrice) + " = Sum[t=1..N] {Coupon / (1+y)^t} + Face / (1+y)^N");
+          lines.push("   - This equation cannot be solved algebraically; it requires numerical methods (e.g., bisection, Newton-Raphson, or a financial calculator/spreadsheet).");
+          const ySolved = yieldFromPrice(ex.face, ex.finalCoupon, ex.newPrice, ex.remaining);
+          lines.push("   - Numerical solution: y = " + pct(ySolved));
+          lines.push("   - Verification — pricing back with y = " + pct(ySolved) + ":");
+          let sumCheck = 0;
+          for (let t = 1; t <= ex.remaining; t++) {
+            const term = ex.annualCoupon / Math.pow(1 + ySolved, t);
+            sumCheck += term;
+            lines.push("       t=" + t + ": " + money(ex.annualCoupon) + " / (1+" + ySolved.toFixed(4) + ")^" + t + " = " + money(ex.annualCoupon) + " / " + (Math.pow(1 + ySolved, t)).toFixed(4) + " = " + money(term));
+          }
+          const pPv = ex.face / Math.pow(1 + ySolved, ex.remaining);
+          lines.push("       Principal PV: " + money(ex.face) + " / (1+" + ySolved.toFixed(4) + ")^" + ex.remaining + " = " + money(ex.face) + " / " + (Math.pow(1 + ySolved, ex.remaining)).toFixed(4) + " = " + money(pPv));
+          lines.push("   - Sum of discounted coupons = " + money(sumCheck));
+          lines.push("   - Check price = " + money(sumCheck) + " + " + money(pPv) + " = " + money(sumCheck + pPv) + " ≈ " + money(ex.newPrice) + " ✓");
+        }
+
+        // --- Answer 6: yield direction + price impact ---
+        lines.push("");
+        lines.push("6) YIELD DIRECTION AND PRICE IMPACT");
+        if (ex.shock > 0) {
+          lines.push("   - The yield revision is POSITIVE: the market yield increased from " + pct(ex.issueYield) + " to " + pct(ex.newYield) + " (+" + pct(ex.shock) + ").");
+          lines.push("   - Because bond prices and yields move in opposite directions (inverse relationship),");
+          lines.push("     a higher yield means a LOWER price.");
+          lines.push("   - Indeed, the new price " + money(ex.newPrice) + " is below the par value of " + money(ex.face) + ".");
+          lines.push("   - Intuition: newly issued bonds now offer a higher coupon than this bond. To compensate,");
+          lines.push("     this bond must trade at a discount so that its effective return matches the new market yield.");
+        } else if (ex.shock < 0) {
+          lines.push("   - The yield revision is NEGATIVE: the market yield decreased from " + pct(ex.issueYield) + " to " + pct(ex.newYield) + " (" + pct(ex.shock) + ").");
+          lines.push("   - Because bond prices and yields move in opposite directions (inverse relationship),");
+          lines.push("     a lower yield means a HIGHER price.");
+          lines.push("   - Indeed, the new price " + money(ex.newPrice) + " is above the par value of " + money(ex.face) + ".");
+          lines.push("   - Intuition: newly issued bonds now offer a lower coupon than this bond. This bond's");
+          lines.push("     higher coupon is more attractive, so investors bid its price up to a premium.");
+        } else {
+          lines.push("   - The yield revision is NEUTRAL: the market yield remained at " + pct(ex.issueYield) + ".");
+          lines.push("   - Since the yield has not changed, the price should remain close to par.");
+          lines.push("   - The new price is " + money(ex.newPrice) + ", which is indeed close to the face value of " + money(ex.face) + ".");
+        }
+        lines.push("   - The coupon on THIS issued bond is fixed at " + pct(ex.finalCoupon) + " and does not change after issuance.");
+
+        // --- Answer 7: next coupon ---
+        lines.push("");
+        lines.push("7) WHAT COULD CHANGE THE NEXT ISSUANCE COUPON");
+      } else {
+        // --- Primary: Answer 5 is next coupon ---
+        lines.push("");
+        lines.push("5) WHAT COULD CHANGE THE NEXT ISSUANCE COUPON");
+      }
+      lines.push("   - A LOWER coupon on a future issuance could result from:");
+      lines.push("     * Improved credit quality of the issuer (lower perceived default risk)");
+      lines.push("     * Declining market interest rates (e.g., central bank rate cuts)");
+      lines.push("     * Stronger investor demand for the issuer's bonds (over-subscription)");
+      lines.push("     * Improved sector outlook or favorable macroeconomic conditions");
+      lines.push("   - A HIGHER coupon on a future issuance could result from:");
+      lines.push("     * Deterioration of the issuer's credit quality (higher perceived default risk)");
+      lines.push("     * Rising market interest rates (e.g., central bank rate hikes)");
+      lines.push("     * Weaker investor demand (under-subscription)");
+      lines.push("     * Negative sector outlook or adverse macroeconomic conditions");
+
+      return lines.join("\n");
+    }
+
+    function renderExercise(i) {
+      const ex = EXERCISES[i];
+      document.getElementById("typePill").textContent = "Type: " + ex.typeTxt;
+      document.getElementById("marketPill").textContent = ex.scope === "secondary"
+        ? ("Market move: " + ex.moveTxt)
+        : "Market move: not required in this case";
+      document.getElementById("narrative").textContent = ex.narrative;
+
+      const inRows = [
+        ["Issuer", ex.issuer + " (" + ex.sector + ")"],
+        ["Face value per bond", money(ex.face)],
+        ["Number of bonds", ex.nBonds.toLocaleString("en-US")],
+        ["Maturity", ex.maturity + " years"],
+        ["Initial indicated coupon", pct(ex.initCoupon)],
+        ["Bookbuilding outcome", ex.book],
+        ["Coupon adjustment", (ex.couponAdj >= 0 ? "+" : "") + pct(ex.couponAdj)],
+        ["Final coupon at issuance", pct(ex.finalCoupon)],
+        ["Issue price per bond", money(ex.issuePrice)]
+      ];
+      if (ex.scope === "secondary") {
+        inRows.push(["Years after issuance", ex.yearsAfter + " year(s), right after coupon date"]);
+        inRows.push(ex.q === "price" ? ["Given new yield", pct(ex.newYield)] : ["Given new market price", money(ex.newPrice)]);
+      }
+      document.getElementById("inputsBody").innerHTML = inRows.map(r => "<tr><th>" + r[0] + "</th><td class='num'>" + r[1] + "</td></tr>").join("");
+
+      const demandText = ex.book === "oversub"
+        ? "over-subscription (strong demand)"
+        : ex.book === "undersub"
+          ? "under-subscription (weak demand)"
+          : "balanced demand";
+      const couponMoveText = ex.couponAdj > 0
+        ? "the coupon increased during bookbuilding"
+        : ex.couponAdj < 0
+          ? "the coupon decreased during bookbuilding"
+          : "the coupon stayed unchanged during bookbuilding";
+      const yieldMoveText = ex.shock > 0
+        ? "yield revision is positive (yield went up)"
+        : ex.shock < 0
+          ? "yield revision is negative (yield went down)"
+          : "yield revision is neutral (yield unchanged)";
+
+      const inst = [];
+      inst.push("From issuance data, compute annual coupon per bond and total annual coupon payment for all bonds.");
+      inst.push("Compute total principal raised at issuance (number of bonds x face value).");
+      inst.push("Compute issuance price per bond and justify par pricing (price = face value at issuance).");
+      inst.push("Using this case's demand signal (" + demandText + "), explain why " + couponMoveText + ". Classify issuance conditions as favorable or unfavorable for the issuer.");
+
+      if (ex.scope === "secondary") {
+        inst.push(ex.q === "price"
+          ? "After " + ex.yearsAfter + " year(s), compute secondary-market PRICE using the given yield and remaining cash flows. Show each discounted cash flow."
+          : "After " + ex.yearsAfter + " year(s), compute secondary-market YIELD from the given price and remaining cash flows. Verify by pricing back with the solved yield.");
+        inst.push("State clearly that " + yieldMoveText + ", then explain the price impact direction (inverse price-yield relation).");
+      }
+      inst.push("Explain what could make the next issuance coupon lower or higher for this issuer.");
+      document.getElementById("instructions").innerHTML = inst.map(x => "<li>" + x + "</li>").join("");
+
+      document.getElementById("timelineBody").innerHTML = makeTimeline(ex);
+      document.getElementById("solutionText").textContent = solutionText(ex);
+    }
+
+    const sel = document.getElementById("exerciseSelect");
+    EXERCISES.forEach((ex, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = "Exercise " + (i + 1) + " - " + ex.issuer + " (" + ex.typeTxt + ")";
+      sel.appendChild(opt);
+    });
+    sel.addEventListener("change", () => renderExercise(Number(sel.value)));
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      const next = (Number(sel.value) + 1) % EXERCISES.length;
+      sel.value = String(next);
+      renderExercise(next);
+    });
+    sel.value = "0";
+    renderExercise(0);
+  </script>
+</body>
+</html>
