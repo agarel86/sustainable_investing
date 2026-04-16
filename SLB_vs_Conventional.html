@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Conventional Bond vs Sustainability-Linked Bond — Interactive Comparison</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --panel: rgba(15, 23, 42, 0.96);
+      --border: rgba(148, 163, 184, 0.35);
+      --accent: #38bdf8;
+      --green: #34d399;
+      --red: #f87171;
+      --orange: #fbbf24;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --dim: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #082f49 0, #020617 45%, #020617 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    main { max-width: 1100px; margin: 0 auto; padding: 20px 16px; display: grid; gap: 14px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
+    h1 { margin: 0 0 4px; font-size: 1.35rem; }
+    h2 { margin: 0 0 10px; font-size: 1.05rem; color: var(--accent); }
+    h3 { margin: 14px 0 8px; font-size: 0.95rem; color: var(--text); }
+    p, li { margin: 0 0 6px; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+    .subtitle { color: var(--muted); font-size: 0.88rem; margin-bottom: 10px; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    @media (max-width: 700px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+    .input-group { margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+    .input-group .val { font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 2px; }
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+      background: rgba(56, 189, 248, 0.18); outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: 2px solid #0c4a6e;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: 2px solid #0c4a6e;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; margin: 8px 0; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid rgba(30, 41, 59, 0.9); text-align: left; }
+    th { color: #cbd5f5; font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.num { font-variant-numeric: tabular-nums; text-align: right; }
+    th.num { text-align: right; }
+    tr.highlight td { font-weight: 600; }
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    .warn { color: var(--orange); }
+
+    .scenario-box { border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .scenario-box h3 { margin-top: 0; }
+    .scenario-box.met { border-color: rgba(52, 211, 153, 0.35); }
+    .scenario-box.missed { border-color: rgba(248, 113, 113, 0.35); }
+    .scenario-box.conv { border-color: rgba(148, 163, 184, 0.25); }
+
+    .calc { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; color: var(--muted); padding: 10px; background: rgba(2, 6, 23, 0.6); border-radius: 8px; margin: 6px 0; }
+    .calc .hl { color: var(--text); font-weight: 600; }
+    .calc .g { color: var(--green); }
+    .calc .r { color: var(--red); }
+
+    .bar-container { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    .bar-label { font-size: 0.78rem; color: var(--muted); min-width: 110px; text-align: right; }
+    .bar-track { flex: 1; height: 22px; background: rgba(30, 41, 59, 0.7); border-radius: 4px; position: relative; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: #020617; min-width: fit-content; }
+
+    .tag { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 600; }
+    .tag.free { background: rgba(52, 211, 153, 0.18); color: var(--green); border: 1px solid rgba(52, 211, 153, 0.3); }
+    .tag.nofree { background: rgba(248, 113, 113, 0.18); color: var(--red); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    details { margin-top: 8px; }
+    summary { cursor: pointer; color: var(--accent); font-size: 0.88rem; font-weight: 500; }
+    summary:hover { text-decoration: underline; }
+
+    .timeline { display: flex; align-items: stretch; margin: 12px 0; gap: 0; }
+    .tl-year { flex: 1; text-align: center; font-size: 0.72rem; padding: 6px 2px; border-right: 1px solid rgba(30, 41, 59, 0.6); position: relative; }
+    .tl-year:last-child { border-right: none; }
+    .tl-year .yr { color: var(--dim); margin-bottom: 3px; }
+    .tl-year .cpn { font-weight: 600; font-size: 0.8rem; }
+    .tl-year.pre { background: rgba(56, 189, 248, 0.08); }
+    .tl-year.post-met { background: rgba(52, 211, 153, 0.08); }
+    .tl-year.post-missed { background: rgba(248, 113, 113, 0.08); }
+    .tl-obs { position: absolute; top: -2px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; color: var(--orange); font-weight: 700; }
+  </style>
+</head>
+<body>
+<main>
+
+  <section class="card">
+    <h1>Conventional Bond vs Sustainability-Linked Bond (SLB)</h1>
+    <p class="subtitle">Interactive comparison tool — adjust parameters below to explore how oversubscription discounts, target timing, KPI ambition, and step-up penalties affect issuer costs and bondholder returns. All calculations are shown in detail.</p>
+  </section>
+
+  <section class="card">
+    <h2>Bond Parameters</h2>
+    <div class="grid2">
+      <div>
+        <div class="input-group">
+          <label>Face value</label>
+          <div class="val" id="dFace">€500,000,000</div>
+          <input type="range" id="sFace" min="50" max="2000" step="50" value="500" />
+        </div>
+        <div class="input-group">
+          <label>Maturity (years)</label>
+          <div class="val" id="dMat">5</div>
+          <input type="range" id="sMat" min="2" max="15" step="1" value="5" />
+        </div>
+        <div class="input-group">
+          <label>Conventional bond coupon rate</label>
+          <div class="val" id="dCpn">3.50%</div>
+          <input type="range" id="sCpn" min="50" max="800" step="5" value="350" />
+        </div>
+      </div>
+      <div>
+        <div class="input-group">
+          <label>SLB coupon discount — greenium (bps) — from oversubscription</label>
+          <div class="val" id="dDisc">−15 bps → SLB coupon: 3.35%</div>
+          <input type="range" id="sDisc" min="0" max="50" step="1" value="15" />
+        </div>
+        <div class="input-group">
+          <label>SPT target observation date (end of year…)</label>
+          <div class="val" id="dObs">Year 3</div>
+          <input type="range" id="sObs" min="1" max="14" step="1" value="3" />
+        </div>
+        <div class="input-group">
+          <label>Coupon step-up if SPT missed (bps)</label>
+          <div class="val" id="dStep">+25 bps</div>
+          <input type="range" id="sStep" min="5" max="100" step="5" value="25" />
+        </div>
+        <div class="input-group">
+          <label>Estimated probability of missing the SPT</label>
+          <div class="val" id="dProb">25%</div>
+          <input type="range" id="sProb" min="0" max="100" step="1" value="25" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="summaryCard">
+    <h2>Summary Comparison</h2>
+    <table id="summaryTable"><thead></thead><tbody></tbody></table>
+    <div id="freeLunchTag" style="margin-top: 10px;"></div>
+  </section>
+
+  <section class="card">
+    <h2>Visual: Total Coupon Payments</h2>
+    <div id="bars"></div>
+  </section>
+
+  <section class="card">
+    <h2>Coupon Timeline</h2>
+    <div class="grid2">
+      <div>
+        <h3 style="color:var(--green);">SLB — Target Met</h3>
+        <div id="tlMet" class="timeline"></div>
+      </div>
+      <div>
+        <h3 style="color:var(--red);">SLB — Target Missed</h3>
+        <div id="tlMissed" class="timeline"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Detailed Calculations</h2>
+    <div class="grid3" id="scenarioBoxes"></div>
+  </section>
+
+  <section class="card">
+    <h2>Issuer: The "Free Lunch" Analysis</h2>
+    <div id="issuerBox"></div>
+  </section>
+
+  <section class="card">
+    <h2>Bondholder: Break-Even Probability</h2>
+    <p class="subtitle">The bondholder always earns less than conventional when the target is met (accepts the greenium discount in exchange for ESG credentials). But if the target is missed, the step-up may compensate. The question is: at what probability of missing does the bondholder's <em>expected</em> total return match the conventional bond?</p>
+    <div id="bondholderBox"></div>
+  </section>
+
+  <section class="card">
+    <h2>Sensitivity: Target Observation Date</h2>
+    <p class="subtitle">Shows how the "late target date" loophole (Haq & Dombrovskis, 2022) affects the penalty cost — the later the observation date, the fewer years of step-up payments, and the cheaper it is for the issuer to miss.</p>
+    <table id="sensTable"><thead></thead><tbody></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2>Key Takeaways</h2>
+    <div id="takeaways"></div>
+  </section>
+
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = (v, dec=0) => "€" + v.toLocaleString("en-US", {minimumFractionDigits: dec, maximumFractionDigits: dec});
+const pct = (v, dec=2) => v.toFixed(dec) + "%";
+const bps = v => (v >= 0 ? "+" : "") + v + " bps";
+
+function compute() {
+  const face    = +$("sFace").value * 1e6;
+  const mat     = +$("sMat").value;
+  const cpnBps  = +$("sCpn").value;
+  const discBps = +$("sDisc").value;
+  const obsYear = Math.min(+$("sObs").value, mat - 1);
+  $("sObs").max = mat - 1;
+  $("sObs").value = obsYear;
+  const stepBps = +$("sStep").value;
+  const probMiss = +$("sProb").value / 100;
+
+  const cpnRate    = cpnBps / 10000;
+  const slbRate    = (cpnBps - discBps) / 10000;
+  const steppedRate = (cpnBps - discBps + stepBps) / 10000;
+  const penaltyYears = mat - obsYear;
+  const preYears     = obsYear;
+
+  $("dFace").textContent = money(face);
+  $("dMat").textContent  = mat + " years";
+  $("dCpn").textContent  = pct(cpnRate * 100);
+  $("dDisc").textContent = "−" + discBps + " bps → SLB coupon: " + pct(slbRate * 100);
+  $("dObs").textContent  = "Year " + obsYear;
+  $("dStep").textContent = "+" + stepBps + " bps";
+  $("dProb").textContent = (probMiss * 100).toFixed(0) + "%";
+
+  const convAnnual = cpnRate * face;
+  const convTotal  = convAnnual * mat;
+
+  const slbAnnual   = slbRate * face;
+  const metTotal    = slbAnnual * mat;
+
+  const steppedAnnual = steppedRate * face;
+  const missedTotal   = slbAnnual * preYears + steppedAnnual * penaltyYears;
+
+  const savingMet    = convTotal - metTotal;
+  const savingMissed = convTotal - missedTotal;
+
+  const penaltyCost = (steppedAnnual - slbAnnual) * penaltyYears;
+  const greeniumBenefit = (convAnnual - slbAnnual) * mat;
+  const isFreeLunch = savingMissed > 0;
+
+  // --- Summary table ---
+  const sHead = `<tr><th></th><th class="num">Conventional</th><th class="num">SLB — Met</th><th class="num">SLB — Missed</th></tr>`;
+  const rows = [
+    ["Coupon rate", pct(cpnRate*100), pct(slbRate*100), pct(slbRate*100) + " → " + pct(steppedRate*100)],
+    ["Annual coupon (pre-obs.)", money(convAnnual), money(slbAnnual), money(slbAnnual)],
+    ["Annual coupon (post-obs.)", money(convAnnual), money(slbAnnual), money(steppedAnnual)],
+    ["Years at base rate", mat, mat, preYears],
+    ["Years at stepped-up rate", "—", "—", penaltyYears],
+    ["<strong>Total coupons (" + mat + "Y)</strong>", "<strong>" + money(convTotal) + "</strong>", "<strong>" + money(metTotal) + "</strong>", "<strong>" + money(missedTotal) + "</strong>"],
+    ["Saving vs conventional", "—", '<span class="pos">+' + money(savingMet) + "</span>",
+      savingMissed > 0 ? '<span class="pos">+' + money(savingMissed) + "</span>" :
+      savingMissed === 0 ? '<span class="warn">€0</span>' :
+      '<span class="neg">' + money(savingMissed) + "</span>"]
+  ];
+  $("summaryTable").querySelector("thead").innerHTML = sHead;
+  $("summaryTable").querySelector("tbody").innerHTML = rows.map((r, i) =>
+    `<tr${i === rows.length - 2 ? ' class="highlight"' : ''}><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`
+  ).join("");
+
+  $("freeLunchTag").innerHTML = isFreeLunch
+    ? `<span class="tag free">"Free lunch" confirmed</span> — Even if the issuer misses the SPT entirely, it still saves ${money(savingMissed)} vs the conventional bond. The greenium earned over ${mat} years (${money(greeniumBenefit)}) exceeds the step-up penalty paid over only ${penaltyYears} year${penaltyYears>1?"s":""} (${money(penaltyCost)}).`
+    : `<span class="tag nofree">No "free lunch"</span> — The step-up penalty (${money(penaltyCost)} over ${penaltyYears} year${penaltyYears>1?"s":""}) exceeds the greenium benefit (${money(greeniumBenefit)} over ${mat} years), so missing the target costs the issuer ${money(-savingMissed)} more than a conventional bond.`;
+
+  // --- Bars ---
+  const maxVal = Math.max(convTotal, metTotal, missedTotal) * 1.05;
+  $("bars").innerHTML = [
+    ["Conventional", convTotal, "#94a3b8"],
+    ["SLB — Met", metTotal, "#34d399"],
+    ["SLB — Missed", missedTotal, "#f87171"]
+  ].map(([label, val, color]) => `
+    <div class="bar-container">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(val/maxVal*100).toFixed(1)}%;background:${color};">${money(val)}</div>
+      </div>
+    </div>`).join("");
+
+  // --- Timelines ---
+  function buildTimeline(missed) {
+    let html = "";
+    for (let y = 1; y <= mat; y++) {
+      const isObs = (y === obsYear);
+      const isPre = (y <= obsYear);
+      let cls = isPre ? "pre" : (missed ? "post-missed" : "post-met");
+      const rate = (!missed || isPre) ? slbRate : steppedRate;
+      html += `<div class="tl-year ${cls}">
+        ${isObs ? '<div class="tl-obs">▼ OBS</div>' : ''}
+        <div class="yr">Yr ${y}</div>
+        <div class="cpn" style="color:${missed && !isPre ? 'var(--red)' : 'var(--text)'}">${pct(rate*100)}</div>
+        <div style="font-size:0.7rem;color:var(--dim)">${money(rate*face)}</div>
+      </div>`;
+    }
+    return html;
+  }
+  $("tlMet").innerHTML    = buildTimeline(false);
+  $("tlMissed").innerHTML = buildTimeline(true);
+
+  // --- Detailed calculations ---
+  $("scenarioBoxes").innerHTML = `
+    <div class="scenario-box conv">
+      <h3>Conventional Bond</h3>
+      <div class="calc"><span class="hl">Annual coupon</span>
+= coupon rate × face value
+= ${pct(cpnRate*100)} × ${money(face)}
+= <span class="hl">${money(convAnnual)}</span>
+
+<span class="hl">Total coupons over ${mat} years</span>
+= ${mat} × ${money(convAnnual)}
+= <span class="hl">${money(convTotal)}</span></div>
+    </div>
+    <div class="scenario-box met">
+      <h3 style="color:var(--green)">SLB — Target Met ✓</h3>
+      <div class="calc"><span class="hl">SLB coupon rate</span>
+= conventional − greenium
+= ${pct(cpnRate*100)} − ${discBps} bps
+= <span class="hl">${pct(slbRate*100)}</span>
+
+<span class="hl">Annual coupon</span>
+= ${pct(slbRate*100)} × ${money(face)}
+= <span class="hl">${money(slbAnnual)}</span>
+
+Target met → no step-up triggered.
+Coupon stays at ${pct(slbRate*100)} for all ${mat} years.
+
+<span class="hl">Total coupons over ${mat} years</span>
+= ${mat} × ${money(slbAnnual)}
+= <span class="g">${money(metTotal)}</span>
+
+<span class="hl">Saving vs conventional</span>
+= ${money(convTotal)} − ${money(metTotal)}
+= <span class="g">${money(savingMet)}</span></div>
+    </div>
+    <div class="scenario-box missed">
+      <h3 style="color:var(--red)">SLB — Target Missed ✗</h3>
+      <div class="calc"><span class="hl">Pre-observation (Years 1–${obsYear})</span>
+Coupon = ${pct(slbRate*100)} × ${money(face)} = ${money(slbAnnual)}/yr
+Subtotal = ${preYears} × ${money(slbAnnual)}
+         = <span class="hl">${money(slbAnnual * preYears)}</span>
+
+<span class="hl">Post-observation (Years ${obsYear+1}–${mat})</span>
+Step-up triggered: +${stepBps} bps
+New coupon rate = ${pct(slbRate*100)} + ${pct(stepBps/100)} = <span class="r">${pct(steppedRate*100)}</span>
+Annual coupon = ${pct(steppedRate*100)} × ${money(face)} = ${money(steppedAnnual)}/yr
+Subtotal = ${penaltyYears} × ${money(steppedAnnual)}
+         = <span class="hl">${money(steppedAnnual * penaltyYears)}</span>
+
+<span class="hl">Total coupons over ${mat} years</span>
+= ${money(slbAnnual * preYears)} + ${money(steppedAnnual * penaltyYears)}
+= <span class="r">${money(missedTotal)}</span>
+
+<span class="hl">Saving vs conventional</span>
+= ${money(convTotal)} − ${money(missedTotal)}
+= ${savingMissed >= 0
+  ? '<span class="g">' + money(savingMissed) + ' (issuer still saves)</span>'
+  : '<span class="r">' + money(savingMissed) + ' (issuer pays more)</span>'}
+
+<span class="hl">Penalty cost (incremental)</span>
+= (stepped coupon − base coupon) × penalty years
+= (${money(steppedAnnual)} − ${money(slbAnnual)}) × ${penaltyYears}
+= <span class="r">${money(penaltyCost)}</span>
+
+<span class="hl">Greenium benefit (full life)</span>
+= (conv coupon − SLB coupon) × maturity
+= (${money(convAnnual)} − ${money(slbAnnual)}) × ${mat}
+= <span class="g">${money(greeniumBenefit)}</span>
+
+${isFreeLunch
+  ? '<span class="g">Greenium (' + money(greeniumBenefit) + ') > Penalty (' + money(penaltyCost) + ')\n→ "Free lunch": issuer profits even when failing</span>'
+  : '<span class="r">Penalty (' + money(penaltyCost) + ') > Greenium (' + money(greeniumBenefit) + ')\n→ No free lunch: failure costs the issuer</span>'}</div>
+    </div>`;
+
+  // --- Issuer: Free Lunch ---
+  $("issuerBox").innerHTML = `
+    <div class="calc"><span class="hl">If target MET → issuer saves the full greenium:</span>
+Issuer coupon cost   = ${money(metTotal)}
+Conventional cost    = ${money(convTotal)}
+Saving               = ${money(convTotal)} − ${money(metTotal)} = <span class="g">${money(savingMet)}</span>
+
+<span class="hl">If target MISSED → does the greenium still outweigh the penalty?</span>
+Issuer coupon cost   = ${money(missedTotal)}
+Conventional cost    = ${money(convTotal)}
+Net                  = ${money(convTotal)} − ${money(missedTotal)} = ${savingMissed >= 0
+  ? '<span class="g">' + money(savingMissed) + ' saving</span>'
+  : '<span class="r">−' + money(-savingMissed) + ' extra cost</span>'}
+
+<span class="hl">Decomposition:</span>
+Greenium benefit = (conv − SLB coupon) × maturity
+                 = (${money(convAnnual)} − ${money(slbAnnual)}) × ${mat}
+                 = <span class="g">${money(greeniumBenefit)}</span> earned over full ${mat} years
+
+Penalty cost     = step-up × penalty years
+                 = (${money(steppedAnnual)} − ${money(slbAnnual)}) × ${penaltyYears}
+                 = <span class="r">${money(penaltyCost)}</span> paid over ${penaltyYears} year${penaltyYears>1?'s':''}
+
+Net if missed    = greenium − penalty
+                 = ${money(greeniumBenefit)} − ${money(penaltyCost)}
+                 = ${savingMissed >= 0
+  ? '<span class="g">' + money(savingMissed) + '</span>'
+  : '<span class="r">−' + money(-savingMissed) + '</span>'}
+
+${isFreeLunch
+  ? `<span class="g">═══ "FREE LUNCH" CONFIRMED ═══</span>
+<span class="g">The issuer saves money vs conventional in BOTH scenarios:</span>
+  Met:    <span class="g">+${money(savingMet)}</span>
+  Missed: <span class="g">+${money(savingMissed)}</span>
+The greenium earned over ${mat} years exceeds the penalty
+paid over only ${penaltyYears} year${penaltyYears>1?'s':''}. The issuer has no financial incentive
+to meet its sustainability target (Kölbel & Lambillon, 2022).`
+  : `<span class="r">═══ NO FREE LUNCH ═══</span>
+<span class="r">If the issuer misses, it pays ${money(-savingMissed)} more than conventional.</span>
+  Met:    <span class="g">+${money(savingMet)} saving</span>
+  Missed: <span class="r">−${money(-savingMissed)} extra cost</span>
+The penalty (${penaltyYears} yr${penaltyYears>1?'s':''} × +${stepBps} bps) outweighs the greenium
+(${mat} yrs × −${discBps} bps). The SLB creates a real incentive.`}</div>`;
+
+  // --- Bondholder: Break-Even Probability ---
+  const bhLossMet  = savingMet;
+  const bhGainMiss = missedTotal - convTotal;
+  const stepUpExtra = missedTotal - metTotal;
+  let bhBreakeven = stepUpExtra > 0 ? bhLossMet / stepUpExtra : Infinity;
+  if (bhBreakeven > 1) bhBreakeven = Infinity;
+  if (bhBreakeven < 0) bhBreakeven = 0;
+
+  const bhExpected = (1 - probMiss) * metTotal + probMiss * missedTotal;
+  const bhDiff = bhExpected - convTotal;
+  const bhHappy = bhDiff >= 0;
+
+  $("bondholderBox").innerHTML = `
+    <div class="calc"><span class="hl">The bondholder's two scenarios:</span>
+
+If target MET (probability ${pct((1-probMiss)*100,0)}):
+  Coupons received = ${money(metTotal)}
+  vs conventional  = ${money(convTotal)}
+  Shortfall        = <span class="r">−${money(bhLossMet)}</span> (accepts lower coupon for ESG credentials)
+
+If target MISSED (probability ${pct(probMiss*100,0)}):
+  Coupons received = ${money(missedTotal)}
+  vs conventional  = ${money(convTotal)}
+  Gain             = ${bhGainMiss >= 0
+    ? '<span class="g">+' + money(bhGainMiss) + '</span> (step-up more than compensates)'
+    : '<span class="r">' + money(bhGainMiss) + '</span> (step-up does not fully compensate)'}
+
+<span class="hl">Expected total coupons for the bondholder:</span>
+E[coupons] = P(met) × coupons_met + P(miss) × coupons_missed
+           = ${pct((1-probMiss)*100,0)} × ${money(metTotal)} + ${pct(probMiss*100,0)} × ${money(missedTotal)}
+           = ${money((1-probMiss)*metTotal)} + ${money(probMiss*missedTotal)}
+           = <span class="hl">${money(bhExpected)}</span>
+
+vs conventional  = ${money(convTotal)}
+Difference       = ${money(bhExpected)} − ${money(convTotal)}
+                 = ${bhHappy
+    ? '<span class="g">+' + money(bhDiff) + ' → bondholder at least breaks even ✓</span>'
+    : '<span class="r">' + money(bhDiff) + ' → bondholder loses vs conventional ✗</span>'}
+
+<span class="hl">Break-even probability of missing the SPT:</span>
+The bondholder breaks even when E[coupons] = conventional total.
+Solving: P(miss) × (coupons_missed − coupons_met) = coupons_conv − coupons_met
+
+P(miss)* = (conv − met) / (missed − met)
+         = ${money(bhLossMet)} / ${money(stepUpExtra)}
+         = <span class="hl">${bhBreakeven === Infinity ? "∞ (impossible — step-up never compensates)" : pct(bhBreakeven*100, 1)}</span>
+
+${bhBreakeven === Infinity
+  ? `<span class="r">The step-up is zero or the missed scenario still pays less\nthan conventional, so no probability of missing can make\nthe bondholder whole.</span>`
+  : bhBreakeven <= 0
+    ? `<span class="g">The bondholder always breaks even regardless of probability.</span>`
+    : `Current P(miss) = ${pct(probMiss*100,0)} vs break-even = ${pct(bhBreakeven*100,1)}
+${probMiss >= bhBreakeven
+  ? '<span class="g">P(miss) ≥ P(miss)* → the bondholder expects to at least break even ✓</span>'
+  : '<span class="r">P(miss) < P(miss)* → the bondholder expects to lose vs conventional ✗</span>'}
+
+In other words, the bondholder needs to believe there is at
+least a <span class="hl">${pct(bhBreakeven*100,1)}</span> chance the issuer will fail for the SLB
+to be financially equivalent to the conventional bond.${bhBreakeven > 0.5 ? '\n\n<span class="warn">Note: break-even requires P(miss) > 50%, meaning the bondholder\nneeds to expect the issuer will likely FAIL. This is an unusual\nbasis for an investment decision.</span>' : ''}`}</div>`;
+
+
+  // --- Sensitivity table ---
+  let sensHead = `<tr><th>Obs. date</th><th class="num">Penalty years</th><th class="num">Total penalty</th><th class="num">Greenium benefit</th><th class="num">Net (missed)</th><th>Free lunch?</th></tr>`;
+  let sensRows = "";
+  for (let obs = 1; obs < mat; obs++) {
+    const py = mat - obs;
+    const pen = (stepBps / 10000) * face * py;
+    const grn = (discBps / 10000) * face * mat;
+    const net = grn - pen;
+    const isCurrent = (obs === obsYear);
+    sensRows += `<tr${isCurrent ? ' style="background:rgba(56,189,248,0.08);font-weight:600"' : ''}>
+      <td>End Yr ${obs}${isCurrent ? " ◄" : ""}</td>
+      <td class="num">${py}</td>
+      <td class="num neg">${money(pen)}</td>
+      <td class="num pos">${money(grn)}</td>
+      <td class="num ${net >= 0 ? 'pos' : 'neg'}">${net >= 0 ? '+' : ''}${money(net)}</td>
+      <td>${net >= 0 ? '<span class="pos">Yes</span>' : '<span class="neg">No</span>'}</td>
+    </tr>`;
+  }
+  $("sensTable").querySelector("thead").innerHTML = sensHead;
+  $("sensTable").querySelector("tbody").innerHTML = sensRows;
+
+  // --- Takeaways ---
+  const takeaways = [];
+  if (isFreeLunch) {
+    takeaways.push(`<strong class="pos">"Free lunch" for the issuer:</strong> With a ${discBps} bps greenium over ${mat} years and only a ${stepBps} bps step-up over ${penaltyYears} penalty year${penaltyYears > 1 ? 's' : ''}, the issuer saves money <em>even if it completely fails</em> its sustainability target. This is the core problem identified by Kölbel & Lambillon (2022).`);
+  } else {
+    takeaways.push(`<strong class="neg">No free lunch:</strong> The penalty is large enough (or the observation date early enough) that failing the SPT costs the issuer more than a conventional bond. This is what well-designed SLBs should achieve.`);
+  }
+
+  if (obsYear >= mat - 1) {
+    takeaways.push(`<strong class="warn">Late target date loophole:</strong> The observation date is at Year ${obsYear} of a ${mat}-year bond, leaving only ${penaltyYears} year of penalty. This is the structural weakness identified by Haq & Dombrovskis (2022) — the financial consequence of failure is minimized.`);
+  } else if (obsYear <= Math.floor(mat / 3)) {
+    takeaways.push(`<strong class="pos">Early target date:</strong> Setting the observation at Year ${obsYear} maximizes penalty exposure (${penaltyYears} years of step-up), making the SLB credible.`);
+  }
+
+  if (stepBps <= 25) {
+    takeaways.push(`<strong class="warn">Standard step-up (${stepBps} bps):</strong> Over 70% of SLBs use a ~25 bps step-up. De Mariz et al. (2024) recommend larger, tailored step-ups to make penalties meaningful.`);
+  }
+
+  if (bhBreakeven !== Infinity && bhBreakeven > 0) {
+    takeaways.push(`<strong>Bondholder break-even:</strong> The bondholder needs at least a <strong>${pct(bhBreakeven*100,1)}</strong> probability of the issuer failing to financially match the conventional bond. ${probMiss >= bhBreakeven
+      ? `At the current P(miss) = ${pct(probMiss*100,0)}, the bondholder expects to <strong class="pos">at least break even</strong>.`
+      : `At the current P(miss) = ${pct(probMiss*100,0)}, the bondholder expects to <strong class="neg">lose</strong> vs conventional.`}`);
+  }
+
+  if (isFreeLunch && bhBreakeven !== Infinity && probMiss >= bhBreakeven) {
+    takeaways.push(`<strong class="warn">Misaligned incentives:</strong> The issuer profits even by failing, and the bondholder's expected return only matches conventional <em>because</em> failure is likely enough. The SLB is financially attractive to both parties, yet neither has a genuine incentive to achieve the sustainability target.`);
+  }
+
+  $("takeaways").innerHTML = "<ul>" + takeaways.map(t => `<li>${t}</li>`).join("") + "</ul>";
+}
+
+["sFace","sMat","sCpn","sDisc","sObs","sStep","sProb"].forEach(id => {
+  $(id).addEventListener("input", compute);
+});
+
+compute();
+</script>
+</body>
+</html>
