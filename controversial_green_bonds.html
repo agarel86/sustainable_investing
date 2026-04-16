@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>When "Green" Gets Complicated — Controversial Green Bond Cases</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --text: #1A1A18;
+  --muted: #6B6960;
+  --accent: #1B6B4A;
+  --danger: #B8352B;
+  --danger-light: #FCEEED;
+  --amber: #9A6B1A;
+  --amber-light: #FFF8E8;
+  --purple: #5B3EA3;
+  --purple-light: #F0ECF9;
+  --brown: #7A5230;
+  --brown-light: #F9F0E6;
+  --border: #DDD9D0;
+  --tag-bg: #EDEBE6;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; line-height:1.65; }
+.container { max-width:860px; margin:0 auto; padding:0 24px; }
+
+header { padding:56px 0 40px; text-align:center; }
+header h1 { font-family:'Instrument Serif',serif; font-size:clamp(30px,5vw,48px); font-weight:400; line-height:1.15; margin-bottom:14px; letter-spacing:-0.5px; }
+header h1 em { font-style:italic; color:var(--danger); }
+header p { font-size:16px; color:var(--muted); max-width:620px; margin:0 auto; line-height:1.6; }
+
+/* SELECTOR ROW */
+.selector { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:36px; }
+.sel-btn { display:flex; align-items:center; gap:10px; padding:10px 18px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; transition:all .2s; user-select:none; }
+.sel-btn:hover { border-color:#aaa; }
+.sel-btn.active { border-color:var(--text); box-shadow:0 2px 12px rgba(0,0,0,.08); }
+.sel-btn .sel-logo { width:32px; height:32px; border-radius:8px; background:var(--tag-bg); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+.sel-btn .sel-logo img { width:26px; height:26px; object-fit:contain; }
+.sel-btn .sel-text { text-align:left; }
+.sel-btn .sel-name { font-size:14px; font-weight:600; line-height:1.2; }
+.sel-btn .sel-problem { font-size:11px; font-weight:600; border-radius:100px; padding:2px 8px; margin-top:3px; display:inline-block; }
+
+/* CENTRAL FRAME */
+.frame { background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; margin-bottom:64px; animation:fadeIn .35s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.frame-top { padding:32px 36px 24px; border-bottom:1px solid var(--border); }
+.frame-top .ft-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+.frame-top .ft-logo { width:52px; height:52px; border-radius:12px; background:var(--tag-bg); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+.frame-top .ft-logo img { width:40px; height:40px; object-fit:contain; }
+.frame-top h2 { font-family:'Instrument Serif',serif; font-size:26px; font-weight:400; line-height:1.2; }
+.frame-top .ft-type { font-size:13px; color:var(--muted); }
+.problem-box { padding:14px 18px; border-radius:10px; margin-bottom:0; }
+.problem-box h4 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
+.problem-box p { font-size:14px; line-height:1.5; }
+
+.frame-body { padding:28px 36px 36px; }
+
+.facts-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border-radius:10px; overflow:hidden; margin-bottom:28px; }
+.fact-cell { background:var(--surface); padding:12px 16px; }
+.fact-cell .fact-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:2px; }
+.fact-cell .fact-value { font-size:14px; font-weight:500; }
+
+.frame-body h3 { font-family:'Instrument Serif',serif; font-size:20px; font-weight:400; margin:24px 0 10px; }
+.frame-body h3:first-child { margin-top:0; }
+.frame-body p { font-size:14.5px; line-height:1.7; color:#333; margin-bottom:12px; }
+.links-section { margin-top:28px; }
+.links-section a { display:inline-block; font-size:13px; font-weight:600; color:var(--accent); text-decoration:none; padding:6px 14px; border:1.5px solid var(--accent); border-radius:8px; margin:0 8px 8px 0; transition:all .15s; }
+.links-section a:hover { background:var(--accent); color:#fff; }
+
+@media(max-width:600px) {
+  .selector { gap:8px; }
+  .sel-btn { padding:8px 12px; }
+  .frame-top, .frame-body { padding-left:20px; padding-right:20px; }
+  .facts-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>When <em>"Green"</em> Gets Complicated</h1>
+  <p>Four controversial green bond issuances that expose the limits of the green label. Select a case to explore.</p>
+</header>
+<div class="selector" id="selector"></div>
+<div class="frame" id="frame"></div>
+</div>
+
+<script>
+const COLORS = {
+  "lock-in":{ label:"Fossil fuel lock-in", c:"var(--amber)", bg:"var(--amber-light)" },
+  entity:{ label:"Entity vs. project problem", c:"var(--danger)", bg:"var(--danger-light)" },
+  context:{ label:"Green project, brown context", c:"var(--purple)", bg:"var(--purple-light)" },
+  sovereign:{ label:"Petro-state credibility", c:"var(--brown)", bg:"var(--brown-light)" }
+};
+
+const CASES = [
+  {
+    id:"repsol", name:"Repsol", type:"Spanish oil & gas major",
+    logo:"https://logo.clearbit.com/repsol.com",
+    problem:"lock-in",
+    problemQ:"Does improving the efficiency of fossil fuel infrastructure count as \u2018green\u2019 \u2014 or does it lock in decades of continued emissions by extending asset lifetimes?",
+    facts:{ "Amount":"\u20ac500 million","Maturity":"5 years (2022)","Coupon":"0.50%","Date":"May 2017","Standard":"ICMA GBP","External review":"Vigeo-Eiris (SPO)","Use of proceeds":"312 energy-efficiency projects across refining operations","Claimed impact":"~1.2 Mt CO\u2082 avoided/year by 2020" },
+    story:[
+      "In May 2017, Repsol became the first oil company to issue a green bond \u2014 a \u20ac500 million, 5-year bond to finance 312 energy-efficiency projects across its refineries. The bond claimed approximately 1.2 million tonnes of avoided CO\u2082 per year by 2020 and received a second-party opinion from Vigeo-Eiris.",
+      "The Climate Bonds Initiative refused to include the bond in its database. Bloomberg and Solactive subsequently excluded it from their green bond indices. The CBI\u2019s reasoning: improving the efficiency of oil refineries extends the operational lifetime of fossil-fuel assets, indirectly increasing long-term cumulative emissions. The improvements were \u201cincremental\u201d \u2014 they made a brown activity slightly less brown, but did not transform it.",
+      "Repsol never issued another green bond. It pivoted to sustainability-linked bonds in 2021. The case became foundational: the market rejected an issuance not because proceeds were misallocated, but because the type of activity was incompatible with climate goals \u2014 even though the ICMA GBP technically permitted it."
+    ],
+    links:[
+      {t:"Seven Pillars Institute: The Repsol scandal and greenwashing in green bonds", u:"https://sevenpillarsinstitute.org/green-bonds-without-greenwashing/"},
+      {t:"Reclaim Finance: Green bonds \u2014 watch out, it could be a trap", u:"https://reclaimfinance.org/site/en/our-fights/green-bonds-watch-out-it-could-be-a-trap/"},
+      {t:"Wikipedia: Green bond controversy \u2014 Repsol case", u:"https://en.wikipedia.org/wiki/Green_bond"}
+    ]
+  },
+  {
+    id:"southern", name:"Southern Company", type:"US electric utility (coal-dominant)",
+    logo:"https://logo.clearbit.com/southerncompany.com",
+    problem:"entity",
+    problemQ:"Under the ICMA GBP, only the use of proceeds is assessed \u2014 the issuer\u2019s broader activities are irrelevant. Is a green bond from one of America\u2019s largest coal-burning utilities still \u2018green\u2019?",
+    facts:{ "Amount":"$3.5bn+ (4 issuances)","Maturity":"2 to 10 years","Coupon":"Various","Date":"2015\u20132021","Standard":"ICMA GBP","External review":"Sustainalytics (SPO)","Use of proceeds":"Wind and solar projects in the US (12 projects funded)","Verified impact":"48,800+ GWh carbon-free electricity; 34.6 Mt CO\u2082 offset" },
+    story:[
+      "In November 2015, Southern Power \u2014 a subsidiary of Southern Company \u2014 issued its first $1 billion green bond, becoming the first investment-grade US utility to do so. Between 2015 and 2021, the subsidiary issued over $3.5 billion in green bonds funding 12 wind and solar projects.",
+      "The use of proceeds was genuine and verifiable: 48,800+ GWh of carbon-free electricity and 34.6 million metric tons of CO\u2082 offset. The controversy was about the issuer. At the time of the first green bond, three of Southern Company\u2019s coal-fired plants were among the largest greenhouse gas emitters in the United States. The company had no public 2\u00b0C-aligned strategy, did not report to the CDP, and was simultaneously investing in a new coal gasification plant (Kemper).",
+      "Critics argued that green bonds from one subsidiary financed a marginal renewable programme while the parent\u2019s core business remained overwhelmingly fossil-fuel-dependent. The case crystallises the \u201centity vs. project\u201d question: the green bond assessment stops at the ring-fenced proceeds. Everything else the company does is invisible."
+    ],
+    links:[
+      {t:"Energy & Policy Institute: Southern\u2019s carbon pledge misleads investors", u:"https://energyandpolicy.org/southern-company-carbon-misleads-investors/"},
+      {t:"Energy & Policy Institute: Southern extends coal plants, abandons net zero", u:"https://energyandpolicy.org/southern-company-extends-life-of-coal-plants-to-power-data-centers-appears-to-abandon-net-zero-goal/"},
+      {t:"Tax Justice Network: How \u2018greenlaundering\u2019 conceals fossil fuel financing", u:"https://taxjustice.net/2024/09/11/how-greenlaundering-conceals-the-full-scale-of-fossil-fuel-financing/"}
+    ]
+  },
+  {
+    id:"hkaa", name:"HK Airport Authority", type:"Hong Kong statutory body",
+    logo:"https://logo.clearbit.com/hongkongairport.com",
+    problem:"context",
+    problemQ:"Can you green-label the infrastructure of a massively carbon-intensive expansion? No green bond framework requires a net-emissions test \u2014 only the financed projects are assessed, not their purpose.",
+    facts:{ "Amount":"$1bn green tranche (of $4bn total)","Maturity":"5 years (2027)","Coupon":"1.75%","Date":"January 2022","Standard":"ICMA GBP / HKQAA","External review":"Sustainalytics (framework); HKQAA (certification)","Use of proceeds":"Green buildings, clean ground transport, energy efficiency \u2014 all within third-runway expansion","Context":"Airport emits as much annually as 3 coal plants combined" },
+    story:[
+      "In January 2022, the Hong Kong Airport Authority raised $4 billion in a four-tranche bond, of which $1 billion was a 5-year green tranche. Proceeds were earmarked for green buildings, clean ground transportation, and energy efficiency \u2014 all linked to the airport\u2019s third-runway expansion.",
+      "Reclaim Finance denounced the bond as \u201cpure high-flying greenwashing.\u201d The airport already emitted as much annually as three coal plants combined. The expansion was equivalent to building an entirely new airport. The project threatened the last Chinese white dolphins in Hong Kong\u2019s waters \u2014 a CITES Annex I species. The green bond financed the greening of a massively carbon-intensive expansion: making new infrastructure more efficient while its primary purpose was to increase air traffic and emissions.",
+      "Eleven of the 22 banks involved were Net-Zero Banking Alliance members. The green tranche was 2.3x oversubscribed, 60% bought by \u201cgreen investors.\u201d HKAA returned in 2023 with another $1bn green tranche. The case exposes a fundamental gap: no framework requires a net-emissions test."
+    ],
+    links:[
+      {t:"Reclaim Finance: High-flying greenwashing", u:"https://reclaimfinance.org/site/en/2022/01/04/high-flying-greenwashing-around-a-new-green-bond/"},
+      {t:"Reclaim Finance: How banks painted an airport green", u:"https://reclaimfinance.org/site/en/2022/01/12/how-banks-painted-an-airport-green/"},
+      {t:"SCMP: Greenwashing concerns raised", u:"https://www.scmp.com/business/article/3162333/sustainable-finance-greenwashing-concerns-raised-hong-kong-airport-floats"}
+    ]
+  }
+];
+
+let current = 0;
+const selEl = document.getElementById('selector');
+const frameEl = document.getElementById('frame');
+
+CASES.forEach((c, i) => {
+  const col = COLORS[c.problem];
+  const btn = document.createElement('div');
+  btn.className = 'sel-btn' + (i===0?' active':'');
+  btn.dataset.idx = i;
+  btn.innerHTML = `
+    <div class="sel-logo"><img src="${c.logo}" alt="${c.name}" onerror="this.parentNode.textContent='\uD83C\uDFE2'"></div>
+    <div class="sel-text">
+      <div class="sel-name">${c.name}</div>
+      <span class="sel-problem" style="background:${col.bg};color:${col.c}">${col.label}</span>
+    </div>`;
+  btn.onclick = () => {
+    current = i;
+    document.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  };
+  selEl.appendChild(btn);
+});
+
+function render() {
+  const c = CASES[current];
+  const col = COLORS[c.problem];
+  const factsHtml = Object.entries(c.facts).map(([k,v]) => `<div class="fact-cell"><div class="fact-label">${k}</div><div class="fact-value">${v}</div></div>`).join('');
+  const storyHtml = c.story.map(p => `<p>${p}</p>`).join('');
+  const linksHtml = c.links.map(l => `<a href="${l.u}" target="_blank" rel="noopener">${l.t} \u2197</a>`).join('');
+
+  frameEl.style.animation = 'none';
+  frameEl.offsetHeight;
+  frameEl.style.animation = 'fadeIn .35s ease';
+
+  frameEl.innerHTML = `
+    <div class="frame-top">
+      <div class="ft-row">
+        <div class="ft-logo"><img src="${c.logo}" alt="${c.name}" onerror="this.parentNode.textContent='\uD83C\uDFE2'"></div>
+        <div>
+          <h2>${c.name}</h2>
+          <span class="ft-type">${c.type}</span>
+        </div>
+      </div>
+      <div class="problem-box" style="background:${col.bg}">
+        <h4 style="color:${col.c}">${col.label}</h4>
+        <p style="color:${col.c}">${c.problemQ}</p>
+      </div>
+    </div>
+    <div class="frame-body">
+      <h3>Bond characteristics</h3>
+      <div class="facts-grid">${factsHtml}</div>
+      <h3>The story</h3>
+      ${storyHtml}
+      <div class="links-section">
+        <h3>Go deeper</h3>
+        ${linksHtml}
+      </div>
+    </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
