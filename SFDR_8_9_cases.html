@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESG Fund Explorer — Course Taxonomy Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1117;--card:#1a1d27;--card-hover:#22263a;--accent:#4ade80;--accent2:#22d3ee;--accent3:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--dim:#475569;--art9:#10b981;--art8:#3b82f6;--border:#2d3348;--perf:#3b82f6;--virt:#a855f7;--impact:#10b981;--pos:#4ade80;--neg:#f87171;--integ:#60a5fa;--stew:#f59e0b;--thematic:#e879f9}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+.container{max-width:1360px;margin:0 auto;padding:20px}
+
+/* HEADER */
+header{text-align:center;padding:40px 20px 30px;position:relative}
+header h1{font-family:'DM Serif Display',serif;font-size:2.4rem;color:#fff;margin-bottom:8px}
+header p{color:var(--muted);font-size:0.95rem;max-width:700px;margin:0 auto}
+.framework-bar{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.fw-chip{padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600;letter-spacing:0.3px}
+.fw-strat{background:rgba(74,222,128,0.12);color:var(--accent);border:1px solid rgba(74,222,128,0.25)}
+.fw-obj{background:rgba(59,130,246,0.12);color:var(--accent2);border:1px solid rgba(59,130,246,0.25)}
+
+/* FILTERS */
+.filters{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:24px 0}
+.filter-btn{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-size:0.82rem;font-weight:500;transition:all .2s}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:rgba(74,222,128,0.12);border-color:var(--accent);color:var(--accent)}
+
+/* FUND GRID */
+.fund-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:30px}
+.fund-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.fund-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.fund-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent),0 8px 30px rgba(74,222,128,0.15)}
+.fund-card .sfdr-badge{position:absolute;top:12px;right:12px;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;letter-spacing:0.5px}
+.sfdr-9{background:rgba(16,185,129,0.15);color:var(--art9);border:1px solid rgba(16,185,129,0.3)}
+.sfdr-8{background:rgba(59,130,246,0.15);color:var(--art8);border:1px solid rgba(59,130,246,0.3)}
+.fund-card h3{font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:4px;padding-right:70px}
+.fund-card .manager{font-size:0.78rem;color:var(--muted);margin-bottom:10px}
+.strat-tags{display:flex;gap:5px;flex-wrap:wrap}
+.strat-tag{padding:2px 8px;border-radius:4px;font-size:0.68rem;font-weight:600}
+.tag-pos{background:rgba(74,222,128,0.12);color:var(--pos)}
+.tag-neg{background:rgba(248,113,113,0.12);color:var(--neg)}
+.tag-integ{background:rgba(96,165,250,0.12);color:var(--integ)}
+.tag-stew{background:rgba(245,158,11,0.12);color:var(--stew)}
+.tag-thematic{background:rgba(232,121,249,0.12);color:var(--thematic)}
+.tag-perf{background:rgba(59,130,246,0.1);color:var(--perf)}
+.tag-virt{background:rgba(168,85,247,0.1);color:var(--virt)}
+.tag-impact{background:rgba(16,185,129,0.1);color:var(--impact)}
+
+/* DETAIL PANEL */
+.detail-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:0;margin-top:10px;display:none;animation:slideUp .3s ease}
+.detail-panel.visible{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.detail-header{padding:28px 32px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px}
+.detail-header h2{font-family:'DM Serif Display',serif;font-size:1.8rem;color:#fff}
+.detail-header .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.detail-header .meta span{font-size:0.78rem;color:var(--muted);background:rgba(255,255,255,0.04);padding:3px 10px;border-radius:6px;border:1px solid var(--border)}
+.detail-body{padding:28px 32px}
+
+.section{margin-bottom:28px}
+.section-title{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px}
+
+.mapping-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.mapping-grid{grid-template-columns:1fr}}
+.mapping-box{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:16px}
+.mapping-box h4{font-size:0.82rem;font-weight:700;color:var(--accent2);margin-bottom:8px}
+.mapping-box .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.mapping-box p{font-size:0.84rem;color:var(--muted);line-height:1.5}
+
+.quote-box{background:rgba(74,222,128,0.04);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:12px}
+.quote-box p{font-size:0.88rem;color:var(--text);font-style:italic;line-height:1.6}
+.quote-box .src{font-size:0.72rem;color:var(--muted);font-style:normal;margin-top:6px}
+
+.holdings-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:0.82rem}
+.holdings-table th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border)}
+.holdings-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text)}
+.holdings-table tr:hover td{background:rgba(255,255,255,0.02)}
+
+.sector-bars{margin-top:8px}
+.sector-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.sector-bar-label{width:160px;font-size:0.78rem;color:var(--muted);text-align:right;flex-shrink:0}
+.sector-bar-track{flex:1;height:18px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden;position:relative}
+.sector-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.sector-bar-val{font-size:0.72rem;color:var(--text);font-weight:600;width:45px;flex-shrink:0}
+
+.excl-list{display:flex;gap:6px;flex-wrap:wrap}
+.excl-chip{padding:3px 10px;border-radius:4px;font-size:0.72rem;background:rgba(248,113,113,0.08);color:var(--neg);border:1px solid rgba(248,113,113,0.15)}
+
+.links-grid{display:flex;gap:8px;flex-wrap:wrap}
+.doc-link{padding:6px 14px;border-radius:6px;font-size:0.78rem;background:rgba(59,130,246,0.08);color:var(--accent2);border:1px solid rgba(59,130,246,0.2);text-decoration:none;transition:all .2s}
+.doc-link:hover{background:rgba(59,130,246,0.18);border-color:var(--accent2)}
+
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.info-item{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:12px}
+.info-item .label{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px}
+.info-item .value{font-size:0.95rem;color:#fff;font-weight:600}
+
+footer{text-align:center;padding:40px 20px;color:var(--dim);font-size:0.75rem;border-top:1px solid var(--border);margin-top:40px}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>Sustainable Fund Explorer</h1>
+  <p>12 real SFDR funds — select one to see raw stated objectives, holdings, sector composition, and how it maps to course categories</p>
+  <div class="framework-bar">
+    <span class="fw-chip fw-strat">Strategies: Positive Screening · Negative Screening · ESG Integration · ESG Stewardship · (+Thematic)</span>
+    <span class="fw-chip fw-obj">Objectives: Performance · Virtuous Return · Impact</span>
+  </div>
+</header>
+
+<div class="filters">
+  <button class="filter-btn active" data-filter="all">All 12 Funds</button>
+  <button class="filter-btn" data-filter="9">Article 9 only</button>
+  <button class="filter-btn" data-filter="8">Article 8 only</button>
+  <button class="filter-btn" data-filter="active">Active only</button>
+  <button class="filter-btn" data-filter="passive">Passive only</button>
+</div>
+
+<div class="fund-grid" id="fundGrid"></div>
+<div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<footer>
+  Educational tool — data from official KIDs, prospectuses, factsheets (2025–2026). Holdings change over time. Not investment advice.<br>
+  Compiled for course use. All fund data is factual and sourced from public documents.
+</footer>
+
+<script>
+const funds = [
+  {
+    id:1,name:"Nordea 1 – Global Climate & Environment Fund",isin:"LU0348926287",sfdr:9,manager:"Nordea AM",
+    aum:"€7,393M",holdings_n:54,active:true,
+    universe:"Global equities — companies providing climate & environmental solutions (renewable energy, resource efficiency, emission control, water/waste management). MSCI World is the reference but the fund is unconstrained thematically.",
+    benchmark:"MSCI World NR (comparison only)",
+    vehicle:"UCITS SICAV, Luxembourg",
+    raw_objective:"To provide shareholders with investment growth in the long term and create positive environmental impact. The management team focuses on companies that develop climate and environment-friendly solutions, such as renewable energy and resource efficiency, and that appear to offer superior growth prospects and investment characteristics.",
+    raw_esg:"The fund drives the transition to a Green Economy by investing in listed companies that provide meaningful solutions to meet pressing climate and environmental challenges. Commits to ≥85% sustainable investments at all times. Paris-aligned Fossil Fuel Policy. PAB exclusions and other sector/value-based exclusions. Engagement is key to improve practices.",
+    strategies:["Positive Screening","Negative Screening","ESG Stewardship","Thematic (Climate)"],
+    objectives:["Impact","Performance"],
+    strat_rationale:"Primary: Positive screening — selects only climate/environment solution providers. Negative screening (Paris-aligned fossil fuel exclusions, PAB exclusions, Nordea exclusion list). ESG Stewardship: Nordea states 'engagement is key to encourage companies to improve their practices and climate/decarbonization agenda' — the fund actively engages with portfolio companies on ESG issues under Nordea's Engagement Policy. Thematic overlay: entire mandate is climate/environment solutions.",
+    obj_rationale:"Dual: 'create positive environmental impact' (Impact) AND 'investment growth / superior growth prospects' (Performance). GHG intensity 53% lower than benchmark — evidence of real environmental outcome targeting.",
+    top_holdings:[
+      {n:"Broadcom",w:3.54,s:"Info Tech",c:"US"},
+      {n:"Emerson Electric",w:3.29,s:"Industrials",c:"US"},
+      {n:"Waste Management",w:3.28,s:"Industrials",c:"US"},
+      {n:"Linde",w:3.20,s:"Materials",c:"US"},
+      {n:"Regal Rexnord",w:3.06,s:"Industrials",c:"US"},
+      {n:"Schneider Electric",w:3.03,s:"Industrials",c:"FR"},
+      {n:"Air Liquide",w:2.90,s:"Materials",c:"FR"},
+      {n:"ASML Holding",w:2.62,s:"Info Tech",c:"NL"},
+      {n:"IDEX",w:2.61,s:"Industrials",c:"US"},
+      {n:"GFL Environmental",w:2.48,s:"Industrials",c:"CA"}
+    ],
+    sectors:[{n:"Industrials",v:40},{n:"Info Tech",v:18},{n:"Materials",v:14},{n:"Healthcare",v:8},{n:"Utilities",v:5},{n:"Energy",v:0},{n:"Financials",v:0}],
+    exclusions:["Fossil fuels (Paris-Aligned)","Controversial weapons","Tobacco","UN Global Compact violators","Nordea exclusion list"],
+    esg_metrics:{ghg_fund:"103.8 tCO₂e/M€",ghg_bench:"219.0 tCO₂e/M€",esg_rating:"AA (vs A benchmark)",min_sust:"85%"},
+    links:[
+      {t:"Factsheet (PDF)",u:"https://www.nordea.lu/documents/monthly-report---fact-sheet/MR_N1_GCLIMEF_BP_EUR_eng_INT.pdf"},
+      {t:"Fund Page (Nordea.lu)",u:"https://www.nordea.lu/en/professional/fund/climate-expertise/"},
+      {t:"SFDR Disclosures",u:"https://www.nordea.lu/SustainabilityRelatedDisclosures"},
+      {t:"Prospectus (via Wealins)",u:"https://wealins.com/funds/lu0348926287/"},
+      {t:"Morningstar",u:"https://www.morningstar.co.uk/uk/funds/snapshot/snapshot.aspx?id=F000001AKN"}
+    ]
+  },
+  {
+    id:2,name:"Pictet – Global Environmental Opportunities",isin:"LU0503631714",sfdr:9,manager:"Pictet AM",
+    aum:"~€4B",holdings_n:50,active:true,
+    universe:"Global equities — companies with low environmental footprint contributing to solving 9 environmental challenges (climate change, biodiversity, freshwater, ocean acidification, land use, ozone, aerosol, chemicals, nitrogen). Uses Planetary Boundaries framework.",
+    benchmark:"MSCI AC World (reference only, unconstrained)",
+    vehicle:"UCITS SICAV, Luxembourg",
+    raw_objective:"To increase the value of your investment while seeking to achieve a positive environmental and/or social impact. The Fund invests mainly in companies with a low environmental footprint that contribute to solving global environmental challenges by providing products & services in the environmental value chain.",
+    raw_esg:"Only companies making a substantial 'active' contribution to solving environmental challenges are selected. Measured by strategic importance of environmentally-related products/services and R&D quality. Planetary Boundaries framework screens out companies with too-great footprint. 9 environmental challenges assessed.",
+    strategies:["Positive Screening","Negative Screening","ESG Integration","ESG Stewardship","Thematic (Environment/Biodiversity)"],
+    objectives:["Impact","Performance"],
+    strat_rationale:"Positive screening via Planetary Boundaries framework — companies must actively contribute to solving environmental challenges. Negative screening: companies exceeding planetary boundary thresholds excluded, plus Pictet RI Policy exclusions. ESG Integration: Towards Sustainability label and SFDR disclosures confirm ESG factors are integrated into the investment process, with focus on issues most material to financial performance. ESG Stewardship: Pictet AM engages proactively with investee companies (399 companies engaged in 2024, 3,720 shareholder meetings voted) and publishes voting records. Broader than climate alone — covers biodiversity, water, pollution.",
+    obj_rationale:"Dual: 'achieve positive environmental impact' (Impact) AND 'increase value of investment' / companies believed to 'outperform broader market over the long term' (Performance). Growth-oriented thesis: environmental solution companies = secular growth.",
+    top_holdings:[
+      {n:"Waste Connections",w:3.7,s:"Industrials",c:"US"},
+      {n:"Republic Services",w:3.6,s:"Industrials",c:"US"},
+      {n:"Synopsys",w:3.5,s:"Info Tech",c:"US"},
+      {n:"Waste Management",w:3.4,s:"Industrials",c:"US"},
+      {n:"WSP Global",w:3.3,s:"Industrials",c:"CA"},
+      {n:"Thermo Fisher Scientific",w:3.3,s:"Healthcare",c:"US"},
+      {n:"Cadence Design Systems",w:3.2,s:"Info Tech",c:"US"},
+      {n:"Agilent Technologies",w:3.1,s:"Healthcare",c:"US"},
+      {n:"Carrier Global",w:3.0,s:"Industrials",c:"US"}
+    ],
+    sectors:[{n:"Industrials",v:35},{n:"Info Tech",v:16},{n:"Healthcare",v:12},{n:"Materials",v:8},{n:"Utilities",v:5},{n:"Energy",v:0},{n:"Financials",v:2}],
+    exclusions:["Fossil fuel energy","Companies exceeding Planetary Boundary thresholds","Pictet RI Policy exclusions"],
+    esg_metrics:{esg_rating:"AA",min_sust:"Art.9 — sustainable investment objective"},
+    links:[
+      {t:"Strategy Page",u:"https://am.pictet.com/us/en/strategies/global-environmental-opportunities"},
+      {t:"SFDR & RI Policy",u:"https://am.pictet.com/us/en/legal-documents-and-notes/sustainable-finance-regulation"},
+      {t:"Towards Sustainability Label",u:"https://towardssustainability.be/products/pictet-global-environmental-opportunities"},
+      {t:"FundCalibre Elite Analysis",u:"https://www.fundcalibre.com/elite-funds/pictet-global-environmental-opportunities/"}
+    ]
+  },
+  {
+    id:3,name:"RobecoSAM Sustainable Water Equities",isin:"LU2146190835 / LU2146192534",sfdr:9,manager:"Robeco",
+    aum:"~€2B",holdings_n:"50-60",active:true,
+    universe:"Global equities — companies in the water value chain: water infrastructure, distribution, collection/treatment of wastewater, water-efficient technologies, analytical equipment. Must advance specific UN SDGs (3, 6, 9, 11, 12, 14, 15).",
+    benchmark:"MSCI World Index",
+    vehicle:"UCITS SICAV, Luxembourg (Robeco Capital Growth Funds)",
+    raw_objective:"Sustainable investment objective (Art.9 SFDR). Contributes to water infrastructure, distribution of tap water, collection and treatment of wastewater. Focuses on companies supplying the water value chain or offering more water-efficient products/technologies. Invests in companies advancing UN SDGs. Objective: achieve a better return than the index.",
+    raw_esg:"Proprietary Robeco SDG Framework — only companies with positive SDG scores selected. Theme-specific sustainability assessment. Norms-based screening. Active ownership and engagement. Exclusion of negative SDG contributors.",
+    strategies:["Positive Screening","Negative Screening","ESG Integration","ESG Stewardship","Thematic (Water)"],
+    objectives:["Virtuous Return","Impact","Performance"],
+    strat_rationale:"Positive screening: only companies with positive SDG scores via Robeco SDG Framework. Negative screening: excludes negative SDG contributors + norms-based exclusions. ESG Integration: Robeco states 'financially material ESG factors are integrated in the bottom-up fundamental investment analysis to assess existing and potential ESG risks and opportunities.' ESG Stewardship: the fund applies proxy voting per Robeco's voting policy and engages with flagged issuers — Robeco has one of the strongest active ownership programmes in the industry. Narrow thematic focus on water value chain.",
+    obj_rationale:"Triple: Virtuous Return (invest in virtuous water-SDG players), Impact (real-world water infrastructure outcomes), Performance (stated: 'better return than the index'). The SDG framework bridges virtuous selection and real-world impact measurement.",
+    top_holdings:[
+      {n:"Agilent Technologies",w:4.2,s:"Healthcare/Analytical",c:"US"},
+      {n:"Veolia Environnement",w:3.9,s:"Utilities/Water",c:"FR"},
+      {n:"Xylem Inc",w:3.5,s:"Industrials/Water Tech",c:"US"},
+      {n:"Waters Corp",w:3.2,s:"Healthcare/Analytical",c:"US"},
+      {n:"Danaher",w:2.8,s:"Healthcare",c:"US"},
+      {n:"UK water utilities",w:2.5,s:"Utilities",c:"UK"}
+    ],
+    sectors:[{n:"Industrials",v:30},{n:"Healthcare/Analytical",v:22},{n:"Utilities",v:20},{n:"Materials/Construction",v:15},{n:"Consumer",v:5},{n:"Energy",v:0}],
+    exclusions:["Companies with negative SDG scores","Norms-based exclusions","Non-water sectors (inherently absent)"],
+    esg_metrics:{sdg_alignment:"SDGs 3, 6, 9, 11, 12, 14, 15",label:"Towards Sustainability"},
+    links:[
+      {t:"Fund Page (Robeco)",u:"https://www.robeco.com/en-int/products/funds/isin-lu2146192534/robeco-sustainable-water-i-usd"},
+      {t:"Thematic Overview",u:"https://www.robeco.com/en-int/thematic-investing/sustainable-water"},
+      {t:"Morningstar",u:"https://www.morningstar.co.uk/uk/funds/snapshot/snapshot.aspx?id=F000015ULA"}
+    ]
+  },
+  {
+    id:4,name:"Mirova Global Sustainable Equity Fund",isin:"LU0914729966",sfdr:9,manager:"Mirova (Natixis IM)",
+    aum:"~€6B (all classes)",holdings_n:48,active:true,
+    universe:"Global equities — large-cap companies whose activities contribute to sustainable development themes (demographic, governance, technological, environmental transitions). Multi-thematic: not narrow. Min 90% sustainable investments.",
+    benchmark:"MSCI World NR EUR",
+    vehicle:"UCITS SICAV, Luxembourg (Mirova Funds)",
+    raw_objective:"Outperform the MSCI World index through investments in companies whose activities are linked to sustainable development themes. Classified Article 9 with minimum 90% sustainable investments. Seeking portfolio alignment with a 2°C maximum global warming scenario.",
+    raw_esg:"Dual objective: outperform in financial performance AND sustainability impact. Proprietary ESG + impact assessment (not reliant on third-party ratings alone). Carbon Impact Analytics (CIA) with Carbone 4 — measures induced + avoided emissions. Portfolio warming pathway alignment (1.5°C-5°C).",
+    strategies:["Positive Screening","Negative Screening","ESG Integration","ESG Stewardship"],
+    objectives:["Performance","Impact"],
+    strat_rationale:"Positive screening: 90% minimum sustainable investments — companies selected for positive sustainability contribution. Negative screening: explicit exclusion of Energy (0%), Communication Services (0%), tobacco, controversial weapons, and companies below sustainability threshold. ESG Integration: Mirova's proprietary sustainability research evaluates the financial consequences of ESG criteria — 'sustainability process helps increase returns and limit downside risk.' ESG Stewardship: Mirova conducted 24 engagements with 18 companies in 2024, voted 100% of meetings (689 items, 40% against management), and publishes a dedicated engagement and voting report. No thematic narrowing — multi-thematic across all transitions.",
+    obj_rationale:"Explicitly dual: Performance ('outperform MSCI World') AND Impact ('sustainability impact'; 2°C alignment; CIA measures real emissions). Mirova uniquely claims outperformance as primary financial objective while maintaining genuine impact measurement via proprietary Carbon Impact Analytics.",
+    top_holdings:[
+      {n:"Microsoft",w:6.18,s:"Technology",c:"US"},
+      {n:"NVIDIA",w:5.69,s:"Technology",c:"US"},
+      {n:"Mastercard",w:4.67,s:"Financial Services",c:"US"},
+      {n:"Ecolab",w:4.03,s:"Basic Materials",c:"US"},
+      {n:"Iberdrola",w:3.84,s:"Utilities",c:"ES"},
+      {n:"Roper Technologies",w:3.22,s:"Industrials",c:"US"},
+      {n:"Waste Management",w:2.80,s:"Industrials",c:"US"},
+      {n:"TJX Companies",w:2.75,s:"Consumer Cyclical",c:"US"},
+      {n:"Eli Lilly",w:2.75,s:"Healthcare",c:"US"},
+      {n:"TSMC",w:2.70,s:"Technology",c:"TW"}
+    ],
+    sectors:[{n:"Technology",v:34},{n:"Healthcare",v:18},{n:"Industrials",v:12},{n:"Financial Services",v:10},{n:"Utilities",v:8},{n:"Consumer Cyclical",v:9},{n:"Basic Materials",v:8},{n:"Energy",v:0},{n:"Comm Services",v:0}],
+    exclusions:["Energy sector (0%)","Communication Services (0%)","Real Estate (0%)","Tobacco","Controversial weapons","Companies below sustainability threshold"],
+    esg_metrics:{min_sust:"90%",climate:"2°C alignment target",methodology:"Carbon Impact Analytics (CIA) with Carbone 4",label:"Label ISR + Towards Sustainability"},
+    links:[
+      {t:"Factsheet (PDF)",u:"https://www.im.natixis.com/content/dam/natixis/products/international/fund-documents/intl/en/FFS_Mirova%20Global%20Sustainable%20Equity_RA(EUR)_LU0914729966_en_20241130.pdf"},
+      {t:"Fund Page (Natixis)",u:"https://www.im.natixis.com/en-sg/investments/equities/mirova-global-sustainable-equity-fund"},
+      {t:"SFDR Positioning",u:"https://www.mirova.com/en/sfdr-us"},
+      {t:"Impact Methodology",u:"https://www.mirova.com/en/research/demonstrating-impact"},
+      {t:"Towards Sustainability",u:"https://towardssustainability.be/products/mirova-global-sustainable-equity-fund"}
+    ]
+  },
+  {
+    id:5,name:"Triodos Global Equities Impact Fund",isin:"LU0278271951 / LU0785617266",sfdr:9,manager:"Triodos IM",
+    aum:"~€800M",holdings_n:"40-50",active:true,
+    universe:"Global equities — large-cap companies in developed markets contributing to Triodos 5 transition themes: food, resource, energy, societal, wellbeing transitions. Must comply with strict Triodos minimum sustainability standards.",
+    benchmark:"MSCI World Index",
+    vehicle:"UCITS SICAV, Luxembourg (Triodos SICAV I)",
+    raw_objective:"Maximise positive impact in alignment with the investment policy and generate long-term capital growth. Invests ≥67% in large-cap equities worldwide complying with sustainable investment strategy.",
+    raw_esg:"Positively screens for companies with positive impact via 5 transition themes. Strict Triodos minimum standards exclude many sectors. Votes at ALL shareholder meetings. Integrated financial + sustainability analysis. Impact measurement and reporting.",
+    strategies:["Positive Screening","Negative Screening","ESG Integration","ESG Stewardship"],
+    objectives:["Impact","Performance"],
+    strat_rationale:"Primary: Positive screening for companies contributing to 5 transition themes. Strong Negative screening: Triodos minimum standards exclude fossil fuels, weapons, tobacco, gambling, nuclear, most mega-cap tech. ESG Integration: Triodos applies 'integrated financial + sustainability analysis' — sustainability factors are embedded in the financial analysis process, not kept separate. ESG Stewardship: votes at ALL shareholder meetings (unusual commitment), with systematic engagement on ESG issues.",
+    obj_rationale:"Impact is primary (stated: 'maximise positive impact' — literally the fund name). Performance is secondary ('generate long-term capital growth'). The fund openly acknowledges performance consequences of its restrictions (e.g., limited Magnificent Seven exposure causing underperformance in tech-driven markets).",
+    top_holdings:[
+      {n:"Nvidia",w:3.5,s:"Technology",c:"US"},
+      {n:"Vestas Wind Systems",w:3.0,s:"Industrials/Wind",c:"DK"},
+      {n:"Edwards Lifesciences",w:2.8,s:"Healthcare",c:"US"},
+      {n:"First Solar",w:2.5,s:"Clean Energy",c:"US"},
+      {n:"Enphase Energy",w:2.3,s:"Clean Energy",c:"US"},
+      {n:"Carlisle",w:2.2,s:"Industrials",c:"US"}
+    ],
+    sectors:[{n:"Industrials",v:28},{n:"Healthcare",v:20},{n:"Clean Energy",v:15},{n:"Technology",v:12},{n:"Consumer Staples",v:10},{n:"Utilities",v:8},{n:"Energy (fossil)",v:0},{n:"Financials",v:3}],
+    exclusions:["Fossil fuels","Weapons","Tobacco","Gambling","Nuclear energy","Animal testing (beyond regulatory)","Most mega-cap tech (fails Triodos standards)","Genetic engineering concerns"],
+    esg_metrics:{transition_themes:"Food, Resource, Energy, Societal, Wellbeing",voting:"Votes at ALL shareholder meetings",label:"Art.9 — sustainable investment objective"},
+    links:[
+      {t:"Fund Page (UK)",u:"https://www.triodos.co.uk/impact-investments/global-equities-impact-fund/LU0785617266"},
+      {t:"Full Holdings List",u:"https://www.triodos.co.uk/what-the-global-equities-impact-fund-invests-in"},
+      {t:"SFDR & EU Taxonomy",u:"https://www.triodos-im.com/SFDR-and-EU-Taxonomy"},
+      {t:"Q4 2024 Update",u:"https://www.triodos.co.uk/articles/2025/triodos-global-equities-impact-fund-investor-update-q4-2024"}
+    ]
+  },
+  {
+    id:6,name:"Guinness Sustainable Energy Fund",isin:"IE00B3CMS880",sfdr:9,manager:"Guinness Global Investors",
+    aum:"~€500M",holdings_n:30,active:true,
+    universe:"Global equities — ~250 companies in sustainable energy: solar, wind, hydro, geothermal, biofuels/biomass, energy storage, energy efficiency, electrification. Exclusively clean energy value chain.",
+    benchmark:"None (fully unconstrained, no benchmark adherence)",
+    vehicle:"UCITS, Ireland (Guinness AM Funds PLC)",
+    raw_objective:"Provide long-term capital appreciation by investing in companies that contribute towards reduced global carbon emissions. Invests in companies engaged in generation/storage of sustainable energy, and electrification/efficiency of energy demand. Art.9(2) SFDR.",
+    raw_esg:"4 sub-sectors: Displacement, Electrification, Installation, Generation. Excludes all oil/gas/coal extraction. Aligned with IFC 9 Operating Principles of Impact Investment. SDG-aligned. ~30 equally-weighted positions — no single stock dominance.",
+    strategies:["Positive Screening","Negative Screening","ESG Integration","ESG Stewardship","Thematic (Clean Energy)"],
+    objectives:["Impact","Performance"],
+    strat_rationale:"Positive screening: only sustainable energy companies from proprietary 250-name universe. Negative screening: explicit exclusion of all fossil fuel extraction. ESG Integration: Guinness applies ESG analysis using SASB framework and proprietary methodology alongside financial analysis — Impact Report states ESG 'improves our ability to achieve our investment objectives.' ESG Stewardship: Guinness engages proactively with investee companies (engagement framework: Disclosure, Target Setting, Incentivisation), participates in Climate Action 100+ and CDP Non-Disclosure Campaign, and exercises proxy voting on all holdings. Narrow Thematic focus: clean energy only (4 sub-themes).",
+    obj_rationale:"Impact ('contribute towards reduced global carbon emissions'; IFC Impact Principles alignment) AND Performance ('long-term capital appreciation'). Equal-weight construction prevents cap-weighted drift toward largest (not necessarily most impactful) names.",
+    top_holdings:[
+      {n:"~30 equally-weighted positions",w:3.3,s:"Various clean energy",c:"Global"},
+      {n:"Companies in solar, wind, EV, storage, efficiency",w:null,s:"Sustainable Energy",c:"Global"}
+    ],
+    sectors:[{n:"Clean Energy Generation",v:30},{n:"Energy Efficiency/Displacement",v:25},{n:"Electrification/EV",v:25},{n:"Installation/Equipment",v:20},{n:"Fossil fuels",v:0}],
+    exclusions:["Oil extraction","Natural gas extraction","Coal extraction","All non-sustainable-energy sectors absent"],
+    esg_metrics:{impact_framework:"IFC 9 Operating Principles of Impact Investment",portfolio:"~30 equal-weight positions",sdg_aligned:true},
+    links:[
+      {t:"Fund Page",u:"https://www.guinnessgi.com/funds/guinness-sustainable-energy-fund"},
+      {t:"Factsheet (PDF)",u:"https://www.guinnessgi.com/sites/default/files/factsheets/guinness-sustainable-energy-fund-en.pdf"},
+      {t:"ETF Version",u:"https://www.guinnessgi.com/funds/guinness-sustainable-energy-ucits-etf"},
+      {t:"Fund EcoMarket Profile",u:"https://www.fundecomarket.co.uk/view-fund/1319/"}
+    ]
+  },
+  {
+    id:7,name:"Nordea 1 – Global Sustainable Stars Equity Fund",isin:"LU0985320562",sfdr:8,manager:"Nordea AM",
+    aum:"~€5B",holdings_n:"60-80",active:true,
+    universe:"Global equities — all sectors, all market caps. MSCI World universe filtered through Nordea STARS ESG methodology. Style-agnostic, no sector constraints beyond exclusions.",
+    benchmark:"MSCI World Index",
+    vehicle:"UCITS SICAV, Luxembourg (Nordea 1)",
+    raw_objective:"Companies meeting higher ESG standards will be more successful over the long term. STARS approach uses proprietary ESG score evaluating E, S, G KPIs + SDG alignment. Result: portfolio with 60-80 holdings, limited style biases, considerably higher ESG profile than benchmark.",
+    raw_esg:"ESG integration throughout investment process — from idea generation to engagement. 360° collaboration between ESG analysts and portfolio managers. Paris-Aligned Fossil Fuel Policy. WACI ~40% lower than benchmark. Net Zero 2050 commitment.",
+    strategies:["ESG Integration","ESG Stewardship"],
+    objectives:["Performance"],
+    strat_rationale:"ESG Integration is primary: ESG embedded in fundamental analysis to find better risk-adjusted opportunities. STARS scores sit alongside financial metrics. ESG Stewardship secondary: engagement, dialogues. NOT positive/negative screening in the traditional sense — ESG improves analysis rather than filtering the universe.",
+    obj_rationale:"The fund states that 'companies meeting higher ESG standards will be more successful over the long term' — this is an explicit claim that ESG quality drives financial returns. We classify this as Performance because the fund's own thesis is that ESG integration generates alpha. The fund does not claim impact or virtuous return — it frames ESG as a return-enhancing tool.",
+    top_holdings:[{n:"60-80 broadly diversified global positions",w:null,s:"All sectors (ESG-tilted)",c:"Global"}],
+    sectors:[{n:"Technology",v:22},{n:"Healthcare",v:16},{n:"Financials",v:14},{n:"Industrials",v:12},{n:"Consumer",v:10},{n:"Materials",v:6},{n:"Utilities",v:4},{n:"Energy (reduced)",v:2}],
+    exclusions:["Non-transitioning fossil fuels (Paris-Aligned)","Nordea exclusion list","Norms-based exclusions"],
+    esg_metrics:{waci_reduction:"~40% vs benchmark",esg_profile:"Considerably higher than MSCI World",net_zero:"Managed for Net Zero 2050",labels:"ISR + LuxFLAG ESG + Towards Sustainability"},
+    links:[
+      {t:"STARS Offering Page",u:"https://www.nordea.fr/fr/professional/fund/nordea-stars-offering/"},
+      {t:"Towards Sustainability",u:"https://towardssustainability.be/products/nordea-1-global-stars-equity-fund"},
+      {t:"Endowus Fund Profile",u:"https://endowus.com/investment-funds-list/nordea-am-global-stars-equity-fund-LU0985320562"}
+    ]
+  },
+  {
+    id:8,name:"iShares MSCI World ESG Enhanced CTB UCITS ETF",isin:"IE00BG11HV38",sfdr:8,manager:"BlackRock",
+    aum:"~€8B",holdings_n:"~1400",active:false,
+    universe:"Global developed market equities — full MSCI World universe, then ESG-optimized + CTB-constrained. Very broad exposure (~1400 names) with systematic ESG tilt.",
+    benchmark:"MSCI World ESG Enhanced CTB Index",
+    vehicle:"UCITS ETF, Ireland (iShares)",
+    raw_objective:"Achieve a return reflecting the MSCI World ESG Enhanced CTB Index. The index maximizes exposure to issuers with better ESG ratings while meeting EU Climate Transition Benchmark minimum requirements.",
+    raw_esg:"Constrained optimization: maximize ESG scores within tracking error budget. Sector exclusions (weapons, coal, tobacco, unconventional O&G). CTB decarbonization requirements. MSCI ESG data. BlackRock Aladdin ESG analytics.",
+    strategies:["ESG Integration","Negative Screening"],
+    objectives:["Performance"],
+    strat_rationale:"ESG Integration (passive): systematic ESG score optimization within broad market exposure. Negative Screening: removes specific harmful sectors. This is NOT positive screening — it doesn't select ESG leaders, it tilts weights toward higher ESG scores.",
+    obj_rationale:"The fund states it aims to 'reflect the return of the MSCI World ESG Enhanced CTB Index' — it claims index-tracking, not ESG outperformance. We classify this as 'Performance' because the ESG optimization and CTB constraints are designed to maintain market-like returns while systematically tilting toward lower ESG risk. The fund itself does not claim any virtuous return or impact objective.",
+    top_holdings:[{n:"~1400 holdings — similar to MSCI World but ESG-tilted",w:null,s:"All sectors",c:"Global developed"}],
+    sectors:[{n:"Technology",v:24},{n:"Financials",v:15},{n:"Healthcare",v:12},{n:"Consumer Disc.",v:11},{n:"Industrials",v:10},{n:"Comm Services",v:7},{n:"Consumer Staples",v:7},{n:"Energy (reduced)",v:3},{n:"Utilities",v:3},{n:"Materials",v:4},{n:"Real Estate",v:3}],
+    exclusions:["Controversial weapons","Conventional weapons","Nuclear weapons","Civilian firearms","Thermal coal","Tobacco","Unconventional O&G","UN GC violators","MSCI ESG Red flags"],
+    esg_metrics:{approach:"Constrained ESG optimization",ctb:"EU Climate Transition Benchmark compliant",data_provider:"MSCI ESG Research"},
+    links:[
+      {t:"Fund Page (UK)",u:"https://www.ishares.com/uk/individual/en/products/307558/ishares-msci-world-esg-enhanced-ucits-etf"},
+      {t:"Fund Page (CH)",u:"https://www.ishares.com/ch/individual/en/products/307557/ishares-msci-world-esg-enhanced-ucits-etf"}
+    ]
+  },
+  {
+    id:9,name:"BNP Paribas Easy MSCI World SRI PAB 5% Capped ETF",isin:"LU1615092217",sfdr:8,manager:"BNP Paribas AM",
+    aum:"~€4B",holdings_n:"~322",active:false,
+    universe:"Global developed market equities — MSCI World parent universe filtered through SRI Best-in-Class + Paris-Aligned Benchmark. Only ESG leaders per sector remain (~322 vs ~1400 in MSCI World).",
+    benchmark:"MSCI World SRI S-Series PAB 5% Capped NR",
+    vehicle:"UCITS ETF, Luxembourg",
+    raw_objective:"Replicate the MSCI World SRI S-Series PAB 5% Capped Index. Best-in-Class: identifies ESG leaders per sector. Conforms to EU Paris-Aligned Benchmark: ≥50% carbon intensity reduction, 7% annual decarbonization. 5% cap per issuer.",
+    raw_esg:"SRI selection: only companies with top MSCI ESG ratings (AA, AAA) included. Exclusions for weapons, tobacco, nuclear, fossil fuels, UN GC violations, severe controversies. PAB climate alignment overlay.",
+    strategies:["Positive Screening","Negative Screening"],
+    objectives:["Virtuous Return","Performance"],
+    strat_rationale:"Primary: Positive Screening (SRI Best-in-Class selects only ESG leaders per sector — this fundamentally changes the universe, not just weights). Also Negative Screening: PAB exclusions + sector exclusions. Combination of both screening types.",
+    obj_rationale:"The fund states it replicates an SRI Best-in-Class index — it does not explicitly claim outperformance or impact. We classify this as 'Virtuous Return' because the SRI methodology deliberately concentrates on ESG leaders (the 'virtuous players'), creating a portfolio whose returns depend on those virtuous companies outperforming. The PAB overlay we interpret as adding a Performance dimension (climate risk management). The fund itself makes no impact claim.",
+    top_holdings:[{n:"~322 SRI-selected holdings",w:null,s:"ESG leaders per sector",c:"Global developed"}],
+    sectors:[{n:"Technology",v:32},{n:"Financials",v:14},{n:"Healthcare",v:12},{n:"Industrials",v:12},{n:"Consumer",v:10},{n:"Comm Services",v:5},{n:"Utilities",v:3},{n:"Energy",v:0}],
+    exclusions:["Fossil fuels (PAB)","Tobacco","Controversial weapons","Nuclear power","UN GC violators","Severe ESG controversies","ESG laggards (Best-in-Class filter)"],
+    esg_metrics:{esg_rating:"AA",carbon:"≥50% carbon reduction vs parent",pab:"Paris-Aligned Benchmark compliant",labels:"ISR + FNG-Label + Towards Sustainability"},
+    links:[
+      {t:"BNP Paribas AM Sustainability",u:"https://www.bnpparibas-am.com/en/sustainability/"},
+      {t:"ETF Range Overview (PDF)",u:"https://docfinder.bnpparibas-am.com/api/files/0e2e0d61-76c7-4aef-9659-b4dc3634f6fc"}
+    ]
+  },
+  {
+    id:10,name:"iShares MSCI World ESG Screened UCITS ETF",isin:"IE00BFNM3J75",sfdr:8,manager:"BlackRock",
+    aum:"~€4B",holdings_n:"~1400",active:false,
+    universe:"Global developed market equities — essentially MSCI World minus excluded companies. Broadest, most market-like ESG fund. Designed as a 'drop-in replacement' for vanilla MSCI World with basic ESG exclusions.",
+    benchmark:"MSCI World ESG Screened Index",
+    vehicle:"UCITS ETF, Ireland (iShares)",
+    raw_objective:"Achieve a return reflecting the MSCI World ESG Screened Index. The index excludes companies engaged in certain activities inconsistent with ESG criteria from the MSCI World parent index.",
+    raw_esg:"Pure exclusionary screening. No positive selection. No ESG optimization. No thematic focus. No engagement. Removes: controversial/nuclear weapons, civilian firearms, tobacco, thermal coal, oil sands, UN GC violators. Revenue thresholds apply.",
+    strategies:["Negative Screening"],
+    objectives:["Performance"],
+    strat_rationale:"Pure Negative Screening — the simplest ESG approach. No positive selection, no integration, no stewardship. Just removes bad actors from the broad market. The remaining portfolio closely resembles MSCI World. This is the 'minimum viable ESG product'.",
+    obj_rationale:"The fund itself only claims to track an index that excludes certain sectors — it makes no ESG performance, virtuous return, or impact claim whatsoever. We classify this as 'Performance' in our framework because the only implicit logic is that removing controversial exposures may reduce tail risk. This is the most minimal ESG intervention possible.",
+    top_holdings:[{n:"~1400 holdings — near-identical to MSCI World minus exclusions",w:null,s:"All sectors (slight energy reduction)",c:"Global developed"}],
+    sectors:[{n:"Technology",v:24},{n:"Financials",v:16},{n:"Healthcare",v:12},{n:"Consumer Disc.",v:11},{n:"Industrials",v:10},{n:"Comm Services",v:8},{n:"Consumer Staples",v:7},{n:"Energy (slightly reduced)",v:4},{n:"Utilities",v:3},{n:"Materials",v:4}],
+    exclusions:["Controversial weapons (>0%)","Nuclear weapons (>0%)","Civilian firearms (>5%)","Tobacco producers (>0%)","Thermal coal (>5%)","Oil sands (>5%)","UN Global Compact violators"],
+    esg_metrics:{approach:"Pure exclusionary — minimum ESG intervention",similarity:"Very close to MSCI World returns"},
+    links:[
+      {t:"Fund Page (UK)",u:"https://www.ishares.com/uk/individual/en/products/305419/ishares-msci-world-esg-screened-ucits-etf"}
+    ]
+  },
+  {
+    id:11,name:"Amundi MSCI World SRI Climate Net Zero Ambition PAB ETF",isin:"IE000Y77LGG9 / IE000004V778",sfdr:8,manager:"Amundi",
+    aum:"~€9B (all classes)",holdings_n:"~297",active:false,
+    universe:"Global developed market equities — MSCI World filtered through SRI methodology + PAB climate reweighting. More concentrated than MSCI World (~297 names) due to Best-in-Class ESG selection. Very popular with European retail (low TER: 0.18%).",
+    benchmark:"MSCI World SRI Filtered PAB Index",
+    vehicle:"UCITS ETF, Ireland",
+    raw_objective:"Replicate the MSCI World SRI Filtered PAB Index. Exposure to companies with outstanding ESG ratings. Excludes companies with negative social/environmental impacts. Reweights for Paris-Aligned Benchmark climate requirements.",
+    raw_esg:"SRI Best-in-Class selection (top ESG-rated per sector). PAB: ≥50% carbon reduction, 7%/year decarbonization. Exclusions for fossil fuels, weapons, tobacco, controversies, UN GC violations.",
+    strategies:["Positive Screening","Negative Screening"],
+    objectives:["Virtuous Return","Performance"],
+    strat_rationale:"Combines Positive Screening (SRI Best-in-Class: selects only ESG leaders) with Negative Screening (PAB exclusions, sector exclusions). Very similar mechanism to BNP Paribas SRI PAB (#9). Both screening types are material — the fund is defined by what it includes AND what it excludes.",
+    obj_rationale:"The fund states it replicates an SRI + PAB index — it claims index-tracking of ESG leaders with climate alignment. We classify this as 'Virtuous Return' for the same reason as BNP Paribas (#9): the SRI methodology selects only ESG leaders, so returns depend on the performance of these 'virtuous' companies. The fund itself does not claim impact or outperformance — just index replication. Very popular for cost-conscious ESG investors (TER 0.18%).",
+    top_holdings:[
+      {n:"ASML",w:5.0,s:"Technology",c:"NL"},
+      {n:"NVIDIA",w:4.5,s:"Technology",c:"US"},
+      {n:"Lam Research",w:2.8,s:"Technology",c:"US"},
+      {n:"Applied Materials",w:2.5,s:"Technology",c:"US"},
+      {n:"Home Depot",w:2.4,s:"Consumer Cyclical",c:"US"},
+      {n:"Intel",w:2.2,s:"Technology",c:"US"},
+      {n:"Shopify",w:2.1,s:"Technology",c:"CA"},
+      {n:"Texas Instruments",w:2.0,s:"Technology",c:"US"},
+      {n:"Walt Disney",w:1.9,s:"Comm Services",c:"US"},
+      {n:"Analog Devices",w:1.8,s:"Technology",c:"US"}
+    ],
+    sectors:[{n:"Technology",v:35},{n:"Financials",v:14},{n:"Industrials",v:12},{n:"Healthcare",v:11},{n:"Consumer Cyclical",v:8},{n:"Comm Services",v:6},{n:"Real Estate",v:5},{n:"Consumer Defensive",v:3},{n:"Basic Materials",v:3},{n:"Utilities",v:3},{n:"Energy",v:0}],
+    exclusions:["Fossil fuels (PAB)","Tobacco","Controversial weapons","Nuclear weapons","UN GC violators","Severe ESG controversies","ESG laggards (SRI filter)"],
+    esg_metrics:{ter:"0.18% (Acc) / 0.19% (Dist)",replication:"Physical (full)",carbon:"≥50% carbon reduction + 7%/yr decarbonization"},
+    links:[
+      {t:"Fund Page (Amundi)",u:"https://www.amundietf.lu/en/professional/products/equity/amundi-msci-world-sri-climate-net-zero-ambition-pab-ucits-etf-acc/ie000y77lgg9"}
+    ]
+  },
+  {
+    id:12,name:"Nordea 1 – European Sustainable Stars Equity Fund",isin:"LU0090344473",sfdr:8,manager:"Nordea AM",
+    aum:"~€4B",holdings_n:"40-60",active:true,
+    universe:"European equities — companies leading in ESG solutions within Europe. MSCI Europe universe filtered through STARS ESG methodology. Style-agnostic.",
+    benchmark:"MSCI Europe Index",
+    vehicle:"UCITS SICAV, Luxembourg (Nordea 1)",
+    raw_objective:"Comprehensive integration of ESG principles throughout portfolio construction, active ownership, and extensive ESG reporting. Invests in companies leading in ESG solutions within Europe using STARS approach and proprietary ESG score evaluating E, S, G KPIs + SDG alignment.",
+    raw_esg:"360° collaboration between ESG analysts and portfolio managers. Company dialogues, engagement campaigns, field trips, systematic voting. Paris-Aligned Fossil Fuel Policy. Won MainStreet Partners 2024 'Best ESG European Equity Fund' — specifically for active ownership depth.",
+    strategies:["ESG Stewardship","ESG Integration"],
+    objectives:["Performance","Virtuous Return"],
+    strat_rationale:"ESG Stewardship is the distinguishing feature: 360° collaboration, field trips, engagement campaigns, systematic voting go far beyond what most Art.8 funds do (award-winning for this). ESG Integration secondary: STARS scoring embedded in fundamental analysis.",
+    obj_rationale:"The fund states it seeks 'comprehensive integration of ESG principles' and invests in 'companies that lead in ESG solutions' — it claims both ESG-enhanced alpha and a preference for ESG leaders. We classify this as Performance (ESG improves stock picking) + Virtuous Return (stated preference for ESG leaders). The fund does not claim real-world impact — its objectives are financial returns via ESG-quality companies.",
+    top_holdings:[{n:"40-60 European ESG leaders",w:null,s:"All European sectors (ESG-tilted)",c:"Europe"}],
+    sectors:[{n:"Industrials",v:18},{n:"Healthcare",v:16},{n:"Financials",v:14},{n:"Technology",v:12},{n:"Consumer Disc.",v:10},{n:"Consumer Staples",v:8},{n:"Materials",v:6},{n:"Utilities",v:5},{n:"Energy (reduced)",v:2}],
+    exclusions:["Non-transitioning fossil fuels","Nordea exclusion list","Norms-based exclusions"],
+    esg_metrics:{award:"MainStreet Partners ESG Champions 2024 — Best ESG European Equity Fund",labels:"ISR + LuxFLAG ESG + Towards Sustainability",ownership:"360° ESG collaboration + field trips"},
+    links:[
+      {t:"STARS Offering Page",u:"https://www.nordea.fr/fr/professional/fund/nordea-stars-offering/"},
+      {t:"Towards Sustainability",u:"https://towardssustainability.be/products/nordea-1-european-stars-equity-fund"},
+      {t:"Award Announcement",u:"https://www.nordea.lu/en/professional/news/press-releases/nordea-asset-management-recognized-for-best-esg-european-equity-fund-at-mainstreet-esg-champions-2024-awards/"}
+    ]
+  }
+];
+
+const stratColors={
+  "Positive Screening":"tag-pos","Negative Screening":"tag-neg","ESG Integration":"tag-integ",
+  "ESG Stewardship":"tag-stew","Thematic (Climate)":"tag-thematic","Thematic (Environment/Biodiversity)":"tag-thematic",
+  "Thematic (Water)":"tag-thematic","Thematic (Clean Energy)":"tag-thematic"
+};
+const objColors={"Performance":"tag-perf","Virtuous Return":"tag-virt","Impact":"tag-impact"};
+const sectorColors=["#4ade80","#22d3ee","#a78bfa","#f59e0b","#fb923c","#f87171","#818cf8","#34d399","#e879f9","#38bdf8","#94a3b8"];
+
+let selectedFund=null;
+let currentFilter="all";
+
+function renderGrid(){
+  const grid=document.getElementById('fundGrid');
+  grid.innerHTML='';
+  funds.filter(f=>{
+    if(currentFilter==="all") return true;
+    if(currentFilter==="9"||currentFilter==="8") return f.sfdr==parseInt(currentFilter);
+    if(currentFilter==="active") return f.active;
+    if(currentFilter==="passive") return !f.active;
+    return true;
+  }).forEach(f=>{
+    const card=document.createElement('div');
+    card.className='fund-card'+(selectedFund===f.id?' selected':'');
+    card.onclick=()=>selectFund(f.id);
+    card.innerHTML=`
+      <span class="sfdr-badge sfdr-${f.sfdr}">Art. ${f.sfdr}</span>
+      <h3>${f.name}</h3>
+      <div class="manager">${f.manager} · <span style="color:${f.active?'var(--accent)':'var(--accent2)'};font-weight:600">${f.active?'Active':'Passive'}</span> · ${f.holdings_n} holdings</div>
+      <div class="strat-tags">
+        ${f.strategies.map(s=>`<span class="strat-tag ${stratColors[s]||'tag-pos'}">${s}</span>`).join('')}
+        ${f.objectives.map(o=>`<span class="strat-tag ${objColors[o]||'tag-perf'}">→ ${o}</span>`).join('')}
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function selectFund(id){
+  selectedFund=id;
+  renderGrid();
+  const f=funds.find(x=>x.id===id);
+  const panel=document.getElementById('detailPanel');
+  panel.className='detail-panel visible';
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+
+  const holdingsHTML=f.top_holdings.length>1&&f.top_holdings[0].w?
+    `<table class="holdings-table"><thead><tr><th>Name</th><th>Weight</th><th>Sector</th><th>Country</th></tr></thead><tbody>
+    ${f.top_holdings.filter(h=>h.w).map(h=>`<tr><td style="color:#fff;font-weight:500">${h.n}</td><td>${h.w}%</td><td>${h.s}</td><td>${h.c}</td></tr>`).join('')}
+    </tbody></table>`
+    :`<p style="color:var(--muted);font-size:0.84rem">${f.top_holdings.map(h=>h.n).join('; ')}</p>`;
+
+  const sectorsHTML=f.sectors.map((s,i)=>{
+    const col=sectorColors[i%sectorColors.length];
+    return `<div class="sector-bar-row">
+      <span class="sector-bar-label">${s.n}</span>
+      <div class="sector-bar-track"><div class="sector-bar-fill" style="width:${s.v*2.2}%;background:${col}"></div></div>
+      <span class="sector-bar-val">${s.v}%</span>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML=`
+  <div class="detail-header">
+    <div>
+      <h2>${f.name}</h2>
+      <div class="meta">
+        <span class="sfdr-badge sfdr-${f.sfdr}" style="position:static">Article ${f.sfdr}</span>
+        <span>ISIN: ${f.isin}</span>
+        <span>${f.manager}</span>
+        <span>AUM: ${f.aum}</span>
+        <span>${f.active?'Actively managed':'Passive / Index-tracking'}</span>
+      </div>
+    </div>
+  </div>
+  <div class="detail-body">
+
+    <div class="section">
+      <div class="section-title">📄 What the Fund States — Investment Objective (from KID / Prospectus)</div>
+      <div class="quote-box"><p>${f.raw_objective}</p><div class="src">Source: fund KID / prospectus / official factsheet — verbatim or close paraphrase of the fund's own language</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📄 What the Fund States — ESG Approach (from SFDR disclosures)</div>
+      <div class="quote-box"><p>${f.raw_esg}</p><div class="src">Source: fund SFDR disclosures / factsheet / official literature — the fund's own description of its ESG process</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" style="color:var(--accent3)">⚠ Course Analysis (our interpretation — not the fund's own wording)</div>
+      <div style="background:rgba(245,158,11,0.06);border:1px dashed rgba(245,158,11,0.3);border-radius:10px;padding:18px;margin-bottom:8px">
+        <p style="font-size:0.78rem;color:var(--accent3);margin-bottom:14px;font-weight:600">Below is how we classify this fund using our course framework. This is analytical interpretation for teaching purposes. The fund itself does not use these categories.</p>
+        <div class="mapping-grid">
+          <div class="mapping-box" style="border-color:rgba(245,158,11,0.2)">
+            <h4 style="color:var(--accent3)">→ Investment Strategy (our classification)</h4>
+            <div class="tags">${f.strategies.map(s=>`<span class="strat-tag ${stratColors[s]||'tag-pos'}">${s}</span>`).join('')}</div>
+            <p>${f.strat_rationale}</p>
+          </div>
+          <div class="mapping-box" style="border-color:rgba(245,158,11,0.2)">
+            <h4 style="color:var(--accent3)">→ Objective (our classification)</h4>
+            <div class="tags">${f.objectives.map(o=>`<span class="strat-tag ${objColors[o]||'tag-perf'}">${o}</span>`).join('')}</div>
+            <p>${f.obj_rationale}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Investment Universe & Benchmark</div>
+      <div class="info-grid">
+        <div class="info-item" style="border-color:${f.active?'rgba(74,222,128,0.3)':'rgba(96,165,250,0.3)'}">
+          <div class="label">Management Style</div>
+          <div class="value" style="color:${f.active?'var(--accent)':'var(--accent2)'}">${f.active?'🟢 Active':'🔵 Passive / Index-tracking'}</div>
+        </div>
+        <div class="info-item"><div class="label">Universe</div><div class="value" style="font-size:0.82rem;font-weight:400;color:var(--text)">${f.universe}</div></div>
+        <div class="info-item"><div class="label">Benchmark Index</div><div class="value" style="font-size:0.85rem">${f.benchmark}</div></div>
+        <div class="info-item"><div class="label">Vehicle</div><div class="value" style="font-size:0.82rem">${f.vehicle}</div></div>
+        <div class="info-item"><div class="label">Holdings</div><div class="value">${f.holdings_n}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Top Holdings</div>
+      ${holdingsHTML}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Sector / Industry Composition</div>
+      <div class="sector-bars">${sectorsHTML}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Exclusions (Sectors / Activities Dropped)</div>
+      <div class="excl-list">${f.exclusions.map(e=>`<span class="excl-chip">✕ ${e}</span>`).join('')}</div>
+    </div>
+
+    ${f.esg_metrics?`<div class="section">
+      <div class="section-title">ESG Metrics & Labels</div>
+      <div class="info-grid">
+        ${Object.entries(f.esg_metrics).map(([k,v])=>`<div class="info-item"><div class="label">${k.replace(/_/g,' ')}</div><div class="value" style="font-size:0.82rem">${v}</div></div>`).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="section">
+      <div class="section-title">Key Documents & Links</div>
+      <div class="links-grid">
+        ${f.links.map(l=>`<a href="${l.u}" target="_blank" rel="noopener" class="doc-link">${l.t} ↗</a>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter=btn.dataset.filter;
+    selectedFund=null;
+    document.getElementById('detailPanel').className='detail-panel';
+    renderGrid();
+  });
+});
+
+renderGrid();
+</script>
+</body>
+</html>
