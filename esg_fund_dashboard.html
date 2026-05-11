@@ -186,7 +186,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="scroll-x">
         <table class="tbl" id="riskTable"></table>
       </div>
-      <p style="font-size:.7rem;color:var(--text3);margin-top:8px;line-height:1.5">* EURO STOXX NR: Performance computed from monthly index levels. Volatility estimated from monthly returns (annualised ×√12) — fund volatilities are from the data provider using daily returns, so they are not strictly comparable. Sharpe Ratio not shown for the benchmark: fund Sharpe ratios are computed by the data provider using a risk-free rate deduction that we cannot replicate from available data.</p>
+      <p style="font-size:.7rem;color:var(--text3);margin-top:8px;line-height:1.5">* All Sharpe Ratios (funds and benchmark) are computed assuming a risk-free rate of 0%. EURO STOXX NR performance and volatility are estimated from monthly index levels (annualised ×√12). Fund volatilities are from the data provider using daily returns, so benchmark and fund volatility figures are not strictly comparable in methodology.</p>
     </div>
     <div class="grid-2">
       <div class="card">
@@ -205,7 +205,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">Sharpe Ratio — All Funds (1Y)</div>
+        <div class="card-title">Sharpe Ratio — All Funds vs Benchmark (1Y, Rf=0%)</div>
         <div class="chart-wrap"><canvas id="globalSharpeChart"></canvas></div>
       </div>
       <div class="card">
@@ -235,10 +235,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
   <!-- FUND PROFILES -->
   <div class="section" id="sec-profiles">
-    <div class="card" style="border-left:3px solid var(--amber);margin-bottom:20px">
-      <div class="card-title" style="color:var(--amber)">⚠ SFDR Classification Note</div>
-      <p style="font-size:.82rem;color:var(--text2);line-height:1.7">All funds below are actively managed and benchmarked against the EURO STOXX Net Return EUR. Seven out of eight are classified <b style="color:var(--green)">SFDR Article 9</b> (sustainable investment objective). However, <b style="color:var(--amber)">BNP Paribas Funds Euro Equity (LU0545089723) is classified SFDR Article 8</b> (promotes ESG characteristics), not Article 9. It uses a "Responsible Investment filter" but does not pursue a sustainable investment objective per se. Additionally, its official benchmark is the <b>MSCI EMU (NR)</b>, not EURO STOXX NR — although the data provider maps it to the EURO STOXX NR in this dataset. Users should note this distinction.</p>
-    </div>
     <div id="profileCards"></div>
   </div>
 </div>
@@ -341,8 +337,8 @@ function calcBMStats(months){
   const annVol=monthlyVol*Math.sqrt(12)*100;
   const cumRet=((slice[slice.length-1]/slice[0])-1);
   const annRet=(Math.pow(1+cumRet,12/months)-1)*100;
-  const sharpe=null; // Cannot compute — fund Sharpes use a risk-free rate we don't have
-  return {vol:annVol, sharpe, perf:cumRet*100};
+  const sharpe=annVol>0 ? annRet/annVol : null; // Rf = 0% assumed
+  return {vol:annVol, sharpe, perf:cumRet*100, annRet};
 }
 const BM_STATS = {
   '1Y': calcBMStats(12),
@@ -554,8 +550,8 @@ function buildRiskTable(period='1Y'){
   const bms = BM_STATS[period] || {};
   const bmMetricMap = {
     'Performance': bms.perf,
-    'Volatility (Std Dev)': bms.vol, // monthly-based estimate
-    'Sharpe Ratio': null, // cannot compute: fund Sharpes use Rf we don't have
+    'Volatility (Std Dev)': bms.vol,
+    'Sharpe Ratio': bms.sharpe, // Rf = 0%
     'Alpha': null, 'Beta': null, 'Max Drawdown': null,
     'Information Ratio': null, 'Tracking Error': null, 'R²': null
   };
@@ -611,7 +607,16 @@ function buildScatter(period='1Y'){
       pointRadius:8,pointHoverRadius:11
     };
   });
-  // BM point removed: BM vol computed from monthly index levels ≠ fund vol from daily returns (data provider)
+  // BM point
+  const bmStats=BM_STATS[period];
+  if(bmStats && bmStats.vol!=null && bmStats.annRet!=null){
+    datasets.push({
+      label:'EURO STOXX NR',
+      data:[{x:bmStats.vol,y:bmStats.annRet}],
+      backgroundColor:BM_COLOR,
+      pointRadius:10,pointHoverRadius:13,pointStyle:'rectRot'
+    });
+  }
   scatterInstance=new Chart(ctx,{
     type:'scatter',
     data:{datasets},
@@ -665,9 +670,10 @@ buildDrawdownChart();
 // ============ GLOBAL SHARPE & VOL CHARTS ============
 function buildGlobalSharpeVol(){
   const fundsOnly=FUNDS.map(f=>fundLabel(f));
-  const sharpeVals=FUNDS.map(f=>f.sharpe_1Y);
-  const sharpeColors=COLORS.map(c=>c+'cc');
-  const sharpeBorders=[...COLORS];
+  const sharpeLabels=[...fundsOnly,'EURO STOXX NR'];
+  const sharpeVals=[...FUNDS.map(f=>f.sharpe_1Y), BM_STATS['1Y'].sharpe];
+  const sharpeColors=[...COLORS.map(c=>c+'cc'),'rgba(71,85,105,.8)'];
+  const sharpeBorders=[...COLORS,'#475569'];
 
   // Vol chart: keep BM but note methodology difference
   const volLabels=[...fundsOnly,'EURO STOXX NR *'];
@@ -678,11 +684,11 @@ function buildGlobalSharpeVol(){
   const ctxS=document.getElementById('globalSharpeChart').getContext('2d');
   new Chart(ctxS,{
     type:'bar',
-    data:{labels:fundsOnly,datasets:[{data:sharpeVals,backgroundColor:sharpeColors,borderColor:sharpeBorders,borderWidth:1,borderRadius:6,borderSkipped:false}]},
+    data:{labels:sharpeLabels,datasets:[{data:sharpeVals,backgroundColor:sharpeColors,borderColor:sharpeBorders,borderWidth:1,borderRadius:6,borderSkipped:false}]},
     options:{
       indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw!=null?'Sharpe: '+c.raw.toFixed(3):'n/a'}},
-        subtitle:{display:true,text:'Fund Sharpe ratios from data provider (includes risk-free rate deduction). BM excluded: methodology not replicable.',color:'#64748b',font:{size:9},padding:{bottom:4}}},
+        subtitle:{display:true,text:'All Sharpe ratios assume a risk-free rate of 0%. BM Sharpe computed from monthly index levels.',color:'#64748b',font:{size:9},padding:{bottom:4}}},
       scales:{
         x:{ticks:{color:'#64748b'},grid:{color:'rgba(42,53,80,.4)'}},
         y:{ticks:{color:'#e2e8f0',font:{size:10}},grid:{display:false}}
@@ -697,7 +703,7 @@ function buildGlobalSharpeVol(){
     options:{
       indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw!=null?'Vol: '+c.raw.toFixed(2)+'%':'n/a'}},
-        subtitle:{display:true,text:'* BM volatility estimated from monthly index levels; fund volatility from data provider (daily returns). Not strictly comparable.',color:'#64748b',font:{size:9},padding:{bottom:4}}},
+        subtitle:{display:true,text:'* BM volatility estimated from monthly index levels (×√12); fund volatility from data provider (daily returns). Not strictly comparable.',color:'#64748b',font:{size:9},padding:{bottom:4}}},
       scales:{
         x:{ticks:{color:'#64748b',callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}},
         y:{ticks:{color:'#e2e8f0',font:{size:10}},grid:{display:false}}
@@ -816,10 +822,8 @@ function buildCompareDetail(idx){
           ${dualCell(f.vol_3Y, BM_STATS['3Y']?.vol, '%', true)}
           ${dualCell(f.vol_5Y, BM_STATS['5Y']?.vol, '%', true)}
         </tr>
-        <tr><td style="font-weight:600">Sharpe Ratio **</td>
-          <td class="num"><div style="font-weight:600">${f.sharpe_1Y!=null?fmt(f.sharpe_1Y,3):'<span class="na">n/a</span>'}</div></td>
-          <td class="num"><div style="font-weight:600">${f.sharpe_3Y!=null?fmt(f.sharpe_3Y,3):'<span class="na">n/a</span>'}</div></td>
-          <td class="num"><div style="font-weight:600">${f.sharpe_5Y!=null?fmt(f.sharpe_5Y,3):'<span class="na">n/a</span>'}</div></td>
+        <tr><td style="font-weight:600">Sharpe Ratio (Rf=0%)</td>
+          ${(function(){const periods=['1Y','3Y','5Y'];return periods.map(p=>{const fv=f['sharpe_'+p];const bv=BM_STATS[p]?BM_STATS[p].sharpe:null;const fStr=fv!=null?fmt(fv,3):'<span class="na">n/a</span>';const bStr=bv!=null?fmt(bv,3):'<span class="na">n/a</span>';return '<td class="num"><div style="font-weight:600">'+fStr+'</div><div style="font-size:.7rem;color:var(--text3);margin-top:1px">BM: '+bStr+'</div></td>';}).join('');})()}
         </tr>
         <tr><td style="font-weight:600">Alpha</td>
           <td class="num">${fmtPct(f.alpha_1Y)}</td>
@@ -854,7 +858,7 @@ function buildCompareDetail(idx){
       </tbody>
     </table></div>
   </div>`;
-  html+=`<p style="font-size:.68rem;color:var(--text3);margin:-10px 0 14px 0;line-height:1.5">* BM volatility estimated from monthly index levels (×√12); fund volatility from data provider (daily returns) — not strictly comparable.<br>** Sharpe Ratio: from data provider, includes risk-free rate deduction. BM Sharpe not shown as the risk-free rate used is unknown.</p>`;
+  html+=`<p style="font-size:.68rem;color:var(--text3);margin:-10px 0 14px 0;line-height:1.5">* BM volatility estimated from monthly index levels (×√12); fund volatility from data provider (daily returns) — not strictly comparable.<br>All Sharpe Ratios assume a risk-free rate of 0%.</p>`;
 
   // Charts: cumulated returns + sharpe + vol
   html+=`<div class="card">
@@ -863,7 +867,7 @@ function buildCompareDetail(idx){
   </div>`;
   html+=`<div class="grid-2">
     <div class="card">
-      <div class="card-title">Sharpe Ratio — Fund Only (no BM)</div>
+      <div class="card-title">Sharpe Ratio — Fund vs Benchmark (Rf=0%)</div>
       <div class="chart-wrap" style="height:280px"><canvas id="compareSharpeChart"></canvas></div>
     </div>
     <div class="card">
@@ -919,7 +923,8 @@ function buildCompareDetail(idx){
     data:{
       labels:riskPeriods,
       datasets:[
-        {label:fundLabel(f),data:fundSharpe,backgroundColor:COLORS[idx]+'cc',borderColor:COLORS[idx],borderWidth:1,borderRadius:6}
+        {label:fundLabel(f),data:fundSharpe,backgroundColor:COLORS[idx]+'cc',borderColor:COLORS[idx],borderWidth:1,borderRadius:6},
+        {label:'EURO STOXX NR',data:bmSharpe,backgroundColor:'rgba(71,85,105,.6)',borderColor:'#475569',borderWidth:1,borderRadius:6}
       ]
     },
     options:{
