@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESG Fund Analytics — EURO STOXX NR Benchmark</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0e17;--surface:#111827;--surface2:#1a2235;--surface3:#222d42;
+--border:#2a3550;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+--accent:#6366f1;--accent2:#818cf8;--green:#10b981;--red:#ef4444;
+--amber:#f59e0b;--cyan:#06b6d4;
+--radius:10px;
+}
+html{font-size:14px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* Layout */
+.header{padding:28px 32px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
+.header h1 span{color:var(--accent2);font-weight:400}
+.header .subtitle{color:var(--text2);font-size:.85rem}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.badge-esg{background:rgba(16,185,129,.15);color:var(--green)}
+
+.container{max-width:1400px;margin:0 auto;padding:20px 24px 60px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border-radius:var(--radius);padding:4px;border:1px solid var(--border);overflow-x:auto}
+.tab{padding:10px 20px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:500;color:var(--text2);transition:all .2s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--accent);color:#fff}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-title{font-size:.78rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px;background:var(--accent)}
+
+/* Fund selector */
+.fund-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.fund-chip{padding:8px 16px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:.78rem;font-weight:500;color:var(--text2);transition:all .2s;user-select:none}
+.fund-chip:hover{border-color:var(--accent);color:var(--text)}
+.fund-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.fund-chip .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.tbl th{text-align:left;padding:10px 12px;color:var(--text2);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--surface)}
+.tbl td{padding:9px 12px;border-bottom:1px solid rgba(42,53,80,.5)}
+.tbl tr:hover td{background:rgba(99,102,241,.04)}
+.tbl .num{text-align:right;font-family:'JetBrains Mono',monospace;font-size:.78rem}
+.tbl .pos{color:var(--green)}.tbl .neg{color:var(--red)}
+.tbl .na{color:var(--text3);font-style:italic}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* Chart container */
+.chart-wrap{position:relative;height:360px;margin-top:8px}
+.chart-wrap canvas{width:100%!important;height:100%!important}
+
+/* Metric blocks */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.metric-box{background:var(--surface2);border-radius:8px;padding:12px;text-align:center}
+.metric-box .label{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.metric-box .value{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
+
+/* Holdings bar */
+.holding-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.78rem}
+.holding-bar .bar-bg{flex:1;height:18px;background:var(--surface2);border-radius:4px;overflow:hidden;max-width:200px}
+.holding-bar .bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.holding-bar .name{min-width:200px;color:var(--text2)}
+.holding-bar .pct{font-family:'JetBrains Mono',monospace;min-width:50px;text-align:right}
+
+/* Compare dual cells */
+.tbl td .na{color:var(--text3);font-style:italic}
+.tbl tr:nth-child(even){background:rgba(42,53,80,.08)}
+
+/* Sections */
+.section{display:none}
+.section.active{display:block}
+
+/* Period toggle */
+.period-toggle{display:flex;gap:4px;background:var(--surface2);border-radius:6px;padding:3px;margin-bottom:14px}
+.period-btn{padding:6px 14px;border-radius:5px;cursor:pointer;font-size:.75rem;font-weight:500;color:var(--text3);transition:all .15s}
+.period-btn:hover{color:var(--text)}
+.period-btn.active{background:var(--surface3);color:var(--text)}
+
+/* Fund info */
+.fund-info{display:grid;grid-template-columns:auto 1fr;gap:6px 20px;font-size:.82rem;margin-bottom:16px}
+.fund-info dt{color:var(--text3);font-weight:500}
+.fund-info dd{color:var(--text)}
+
+/* Scroll */
+.scroll-x{overflow-x:auto}
+
+/* Animation */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{animation:fadeIn .3s ease}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>ESG Equity Analytics <span>Dashboard</span></h1>
+    <div class="subtitle">Active Mutual Funds • Benchmark: EURO STOXX Net Return EUR <span class="badge badge-esg">ESG</span></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs" id="mainTabs">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="performance">Performance</div>
+    <div class="tab" data-tab="risk">Risk & Ratios</div>
+    <div class="tab" data-tab="compare">Fund vs Benchmark</div>
+    <div class="tab" data-tab="holdings">Holdings</div>
+    <div class="tab" data-tab="profiles">Fund Profiles</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="section active" id="sec-overview">
+    <div class="card">
+      <div class="card-title">Fund Universe — Summary Metrics (to Last Month End)</div>
+      <div class="scroll-x">
+        <table class="tbl" id="overviewTable"></table>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">EURO STOXX NR — Monthly Index Level</div>
+        <div class="chart-wrap"><canvas id="bmChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">EURO STOXX NR — Calendar Year Returns (%)</div>
+        <div class="chart-wrap"><canvas id="bmYearlyChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div class="section" id="sec-performance">
+    <div class="card">
+      <div class="card-title">Cumulative Performance (%)</div>
+      <div class="period-toggle" id="perfPeriodToggle">
+        <div class="period-btn" data-p="1m">1M</div>
+        <div class="period-btn" data-p="3m">3M</div>
+        <div class="period-btn" data-p="6m">6M</div>
+        <div class="period-btn active" data-p="1y">1Y</div>
+        <div class="period-btn" data-p="3y">3Y</div>
+        <div class="period-btn" data-p="5y">5Y</div>
+        <div class="period-btn" data-p="10y">10Y</div>
+        <div class="period-btn" data-p="ytd">YTD</div>
+        <div class="period-btn" data-p="inception">Incept.</div>
+      </div>
+      <div class="chart-wrap"><canvas id="perfBarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Relative Performance vs Benchmark (%)</div>
+      <div class="period-toggle" id="relPeriodToggle">
+        <div class="period-btn active" data-p="1y">1Y</div>
+        <div class="period-btn" data-p="3y">3Y</div>
+        <div class="period-btn" data-p="5y">5Y</div>
+        <div class="period-btn" data-p="10y">10Y</div>
+      </div>
+      <div class="chart-wrap"><canvas id="relPerfChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- RISK & RATIOS -->
+  <div class="section" id="sec-risk">
+    <div class="card">
+      <div class="card-title">Risk & Return Metrics</div>
+      <div class="period-toggle" id="riskPeriodToggle">
+        <div class="period-btn active" data-p="1Y">1 Year</div>
+        <div class="period-btn" data-p="3Y">3 Years</div>
+        <div class="period-btn" data-p="5Y">5 Years</div>
+        <div class="period-btn" data-p="10Y">10 Years</div>
+      </div>
+      <div class="scroll-x">
+        <table class="tbl" id="riskTable"></table>
+      </div>
+      <p style="font-size:.7rem;color:var(--text3);margin-top:8px;line-height:1.5">* EURO STOXX NR: Performance computed from monthly index levels. Volatility estimated from monthly returns (annualised ×√12) — fund volatilities are from the data provider using daily returns, so they are not strictly comparable. Sharpe Ratio not shown for the benchmark: fund Sharpe ratios are computed by the data provider using a risk-free rate deduction that we cannot replicate from available data.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Risk-Return Scatter (Annualised)</div>
+        <div class="period-toggle" id="scatterPeriodToggle">
+          <div class="period-btn active" data-p="1Y">1Y</div>
+          <div class="period-btn" data-p="3Y">3Y</div>
+          <div class="period-btn" data-p="5Y">5Y</div>
+        </div>
+        <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Max Drawdown Comparison (%)</div>
+        <div class="chart-wrap"><canvas id="drawdownChart"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Sharpe Ratio — All Funds (1Y)</div>
+        <div class="chart-wrap"><canvas id="globalSharpeChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Annualised Volatility — All Funds vs Benchmark (1Y)</div>
+        <div class="chart-wrap"><canvas id="globalVolChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="section" id="sec-compare">
+    <div class="card">
+      <div class="card-title">Select Fund to Compare</div>
+      <div class="fund-selector" id="compareFundSelector"></div>
+    </div>
+    <div id="compareContent"></div>
+  </div>
+
+  <!-- HOLDINGS -->
+  <div class="section" id="sec-holdings">
+    <div class="card">
+      <div class="card-title">Select Fund</div>
+      <div class="fund-selector" id="holdingsFundSelector"></div>
+    </div>
+    <div id="holdingsContent"></div>
+  </div>
+
+  <!-- FUND PROFILES -->
+  <div class="section" id="sec-profiles">
+    <div class="card" style="border-left:3px solid var(--amber);margin-bottom:20px">
+      <div class="card-title" style="color:var(--amber)">⚠ SFDR Classification Note</div>
+      <p style="font-size:.82rem;color:var(--text2);line-height:1.7">All funds below are actively managed and benchmarked against the EURO STOXX Net Return EUR. Seven out of eight are classified <b style="color:var(--green)">SFDR Article 9</b> (sustainable investment objective). However, <b style="color:var(--amber)">BNP Paribas Funds Euro Equity (LU0545089723) is classified SFDR Article 8</b> (promotes ESG characteristics), not Article 9. It uses a "Responsible Investment filter" but does not pursue a sustainable investment objective per se. Additionally, its official benchmark is the <b>MSCI EMU (NR)</b>, not EURO STOXX NR — although the data provider maps it to the EURO STOXX NR in this dataset. Users should note this distinction.</p>
+    </div>
+    <div id="profileCards"></div>
+  </div>
+</div>
+
+<script>
+// ============ DATA ============
+const DATA = {"funds": [{"id": "LP60037956", "isin": "FR0010784835", "company": "Rothschild & Co Asset Management SCS", "geo": "EuroZone", "domicile": "FRA", "launch": "2009-08-28", "ter": 1.83, "manager": "Anthony Bailly, Ludivine de Quincerot", "objective": "R-co 4Change Net Zero Equity Euro has the management objective of obtaining, over a recommended investment period of at least 5 years, a performance net of management fees higher than that of the Euro Stoxx DR (C) index, by being permanently invested and exposed to at least 90% of its net assets in equities, mainly equities issued in one or more countries of the euro zone. The sub-fund implements ", "perf_1Y": 13.1357, "alpha_1Y": -0.6085, "beta_1Y": 1.1355, "sharpe_1Y": 0.1998, "vol_1Y": 14.5395, "maxdd_1Y": -10.3169, "ir_1Y": -0.2592, "te_1Y": 1.6724, "r2_1Y": 0.8608, "relperf_1Y": -6.0408, "perf_3Y": 34.6593, "alpha_3Y": -0.0914, "beta_3Y": 1.0241, "sharpe_3Y": 0.1628, "vol_3Y": 12.2528, "maxdd_3Y": -10.3169, "ir_3Y": -0.0433, "te_3Y": 1.7488, "r2_3Y": 0.7584, "relperf_3Y": -3.7189, "perf_5Y": -1.2498, "alpha_5Y": null, "beta_5Y": null, "sharpe_5Y": null, "vol_5Y": null, "maxdd_5Y": null, "ir_5Y": null, "te_5Y": null, "r2_5Y": null, "relperf_5Y": 0.1809, "perf_10Y": -3.9087, "alpha_10Y": null, "beta_10Y": null, "sharpe_10Y": null, "vol_10Y": null, "maxdd_10Y": null, "ir_10Y": null, "te_10Y": null, "r2_10Y": null, "relperf_10Y": 0.1809, "ytd": -0.4348, "inception": 42.7576, "best_3m": null, "worst_3m": null, "perf_1m": 6.6283, "perf_3m": -1.9766, "perf_6m": 2.5553}, {"id": "LP68084236", "isin": "LU0545089723", "company": "Bnp Paribas Asset Management Europe SAS", "geo": "EuroZone", "domicile": "LUX", "launch": "2010-11-03", "ter": 1.77, "manager": "Gilles Guibout, Jean-Marc Maringe", "objective": "The Fund seeks to achieve long term capital growth measured in Euro by investing mainly in large, medium and small capitalisation companies domiciled in the Eurozone using a Responsible Investment filter. The fund invests essentially in equities issued by companies domiciled or carrying out a main part of their economic activity in the Eurozone, up to one third of its assets in money market instru", "perf_1Y": 11.9881, "alpha_1Y": -0.7013, "beta_1Y": 1.1415, "sharpe_1Y": 0.1802, "vol_1Y": 14.6582, "maxdd_1Y": -9.6073, "ir_1Y": -0.3205, "te_1Y": 1.6175, "r2_1Y": 0.8714, "relperf_1Y": -7.1883, "perf_3Y": 29.4163, "alpha_3Y": -0.2307, "beta_3Y": 1.0682, "sharpe_3Y": 0.128, "vol_3Y": 12.7182, "maxdd_3Y": -10.1895, "ir_3Y": -0.1072, "te_3Y": 1.7356, "r2_3Y": 0.7784, "relperf_3Y": -8.9619, "perf_5Y": 29.5886, "alpha_5Y": -0.6416, "beta_5Y": 1.1634, "sharpe_5Y": 0.0621, "vol_5Y": 15.0279, "maxdd_5Y": -25.4669, "ir_5Y": -0.2695, "te_5Y": 1.9062, "r2_5Y": 0.8221, "relperf_5Y": -46.7857, "perf_10Y": 99.8815, "alpha_10Y": -0.2794, "beta_10Y": 1.1198, "sharpe_10Y": 0.1164, "vol_10Y": 15.1948, "maxdd_10Y": -25.4669, "ir_10Y": -0.1128, "te_10Y": 1.7275, "r2_10Y": 0.8547, "relperf_10Y": -52.6417, "ytd": 2.173, "inception": 152.97, "best_3m": 13.0284, "worst_3m": -12.1199, "perf_1m": 7.4183, "perf_3m": -0.3192, "perf_6m": 3.8891}, {"id": "LP68240557", "isin": "FR0011560192", "company": "Fideas Capital SAS", "geo": "Europe", "domicile": "FRA", "launch": "2013-12-06", "ter": 1.38, "manager": "Pierre Filippi, Thibault Soler", "objective": "The Fund's objective is to outperform the EURO STOXX Net Total Return Index (dividends reinvested) over its recommended investment period of 5 years, by implementing a so-called Multi Smart Beta allocation, which exposes the Fund to several baskets of equities, each aiming to represent a performance factor.", "perf_1Y": 16.9975, "alpha_1Y": -0.0924, "beta_1Y": 0.9525, "sharpe_1Y": 0.3282, "vol_1Y": 11.9442, "maxdd_1Y": -7.2383, "ir_1Y": -0.1644, "te_1Y": 0.9355, "r2_1Y": 0.9296, "relperf_1Y": -2.179, "perf_3Y": 33.6919, "alpha_3Y": -0.035, "beta_3Y": 0.9072, "sharpe_3Y": 0.1897, "vol_3Y": 10.1992, "maxdd_3Y": -7.2383, "ir_3Y": -0.0863, "te_3Y": 1.109, "r2_3Y": 0.8673, "relperf_3Y": -4.6863, "perf_5Y": 48.9236, "alpha_5Y": -0.208, "beta_5Y": 0.9055, "sharpe_5Y": 0.1542, "vol_5Y": 11.2469, "maxdd_5Y": -16.0953, "ir_5Y": -0.2461, "te_5Y": 1.1459, "r2_5Y": 0.885, "relperf_5Y": -27.4507, "perf_10Y": 105.6793, "alpha_10Y": -0.1208, "beta_10Y": 0.9288, "sharpe_10Y": 0.1512, "vol_10Y": 12.1941, "maxdd_10Y": -20.5889, "ir_10Y": -0.1531, "te_10Y": 1.1172, "r2_10Y": 0.9055, "relperf_10Y": -46.8439, "ytd": 5.1748, "inception": 134.787, "best_3m": 12.7789, "worst_3m": -10.6049, "perf_1m": 5.9982, "perf_3m": 2.8396, "perf_6m": 7.3773}, {"id": "LP68356476", "isin": "FR0013079761", "company": "Montpensier Arbevel SAS", "geo": "EuroZone", "domicile": "FRA", "launch": "2016-02-09", "ter": 1.56, "manager": "Gilles Sion, Stephane Nieres Tavernier", "objective": "The SICAV's management objective is to seek medium- and long-term asset performance by outperforming the Euro Stoxx index over a recommended investment period of more than 5 years, through an active, discretionary portfolio that incorporates ESG criteria into the process of selecting and analyzing the securities in the portfolio. The SICAV's performance is compared a posteriori with the Euro Stoxx", "perf_1Y": 10.3901, "alpha_1Y": -0.7091, "beta_1Y": 1.0549, "sharpe_1Y": 0.167, "vol_1Y": 13.306, "maxdd_1Y": -12.3845, "ir_1Y": -0.4966, "te_1Y": 1.2852, "r2_1Y": 0.8947, "relperf_1Y": -8.7863, "perf_3Y": 19.3551, "alpha_3Y": -0.4627, "beta_3Y": 1.0793, "sharpe_3Y": 0.0664, "vol_3Y": 12.6569, "maxdd_3Y": -23.5473, "ir_3Y": -0.2423, "te_3Y": 1.6953, "r2_3Y": 0.7908, "relperf_3Y": -19.0231, "perf_5Y": 24.4353, "alpha_5Y": -0.6985, "beta_5Y": 1.1497, "sharpe_5Y": 0.0476, "vol_5Y": 14.7082, "maxdd_5Y": -23.5473, "ir_5Y": -0.3316, "te_5Y": 1.7531, "r2_5Y": 0.8421, "relperf_5Y": -51.9391, "perf_10Y": 75.9334, "alpha_10Y": -0.3824, "beta_10Y": 1.1151, "sharpe_10Y": 0.0927, "vol_10Y": 15.1097, "maxdd_10Y": -23.5473, "ir_10Y": -0.1775, "te_10Y": 1.6971, "r2_10Y": 0.8577, "relperf_10Y": -76.5897, "ytd": -0.4947, "inception": 136.616, "best_3m": 14.0197, "worst_3m": -16.4293, "perf_1m": 5.6519, "perf_3m": -2.0972, "perf_6m": 1.1088}, {"id": "LP68529581", "isin": "LU1907595398", "company": "DNCA Finance SCS", "geo": "EuroZone", "domicile": "LUX", "launch": "2018-12-17", "ter": 1.89, "manager": "Florent Eyroulet, Lea Dunand-Chatellet, Romain Avice", "objective": "The Fund seeks to outperform of the following index denominated in Euro: Euro Stoxx NR calculated with dividends net of withholding taxes reinvested, over the recommend investment term. The Fund's philosophy is to focus on companies that have a strong social and/or environmental impact. The Fund may at any time invest in: Equities of issuers having their registered office in the Euro zone: from 65", "perf_1Y": 4.3014, "alpha_1Y": -1.3139, "beta_1Y": 1.157, "sharpe_1Y": 0.0426, "vol_1Y": 14.3452, "maxdd_1Y": -10.3905, "ir_1Y": -0.8202, "te_1Y": 1.3545, "r2_1Y": 0.9151, "relperf_1Y": -14.875, "perf_3Y": 9.0041, "alpha_3Y": -0.6686, "beta_3Y": 1.0089, "sharpe_3Y": -0.0024, "vol_3Y": 11.9848, "maxdd_3Y": -10.3905, "ir_3Y": -0.3914, "te_3Y": 1.6935, "r2_3Y": 0.7644, "relperf_3Y": -29.3741, "perf_5Y": 12.081, "alpha_5Y": -0.8241, "beta_5Y": 1.0875, "sharpe_5Y": 0.0064, "vol_5Y": 14.436, "maxdd_5Y": -24.4277, "ir_5Y": -0.3654, "te_5Y": 2.0678, "r2_5Y": 0.7625, "relperf_5Y": -64.2933, "perf_10Y": null, "alpha_10Y": null, "beta_10Y": null, "sharpe_10Y": null, "vol_10Y": null, "maxdd_10Y": null, "ir_10Y": null, "te_10Y": null, "r2_10Y": null, "relperf_10Y": null, "ytd": -0.5182, "inception": 63.19, "best_3m": null, "worst_3m": null, "perf_1m": 6.3058, "perf_3m": -1.5742, "perf_6m": -0.0551}, {"id": "LP68645065", "isin": "LU2254337392", "company": "DNCA Finance SCS", "geo": "EuroZone", "domicile": "LUX", "launch": "2021-02-09", "ter": 1.97, "manager": "Florent Eyroulet, Lea Dunand-Chatellet, Romain Avice", "objective": "The Sub-Fund seeks to outperform of the following index denominated in Euro: Euro Stoxx NR calculated with dividends net of withholding taxes reinvested, over the recommend investment term. The Sub-Fund may at any time invest in: - Equities of issuers having their registered office in the Euro zone: from 65% to 100% of its net assets; - Equities outside the Euro zone: from 0% to 35% of its net ass", "perf_1Y": 21.9876, "alpha_1Y": -0.0774, "beta_1Y": 1.2103, "sharpe_1Y": 0.3168, "vol_1Y": 16.1355, "maxdd_1Y": -9.6317, "ir_1Y": 0.0915, "te_1Y": 2.1226, "r2_1Y": 0.8201, "relperf_1Y": 2.8112, "perf_3Y": 26.8242, "alpha_3Y": -0.2358, "beta_3Y": 0.9903, "sharpe_3Y": 0.0999, "vol_3Y": 14.3018, "maxdd_3Y": -11.1885, "ir_3Y": -0.0853, "te_3Y": 2.8385, "r2_3Y": 0.5267, "relperf_3Y": -11.554, "perf_5Y": 26.1631, "alpha_5Y": -0.6238, "beta_5Y": 1.0837, "sharpe_5Y": 0.0496, "vol_5Y": 15.6385, "maxdd_5Y": -23.5613, "ir_5Y": -0.2085, "te_5Y": 2.678, "r2_5Y": 0.6531, "relperf_5Y": -50.2112, "perf_10Y": null, "alpha_10Y": null, "beta_10Y": null, "sharpe_10Y": null, "vol_10Y": null, "maxdd_10Y": null, "ir_10Y": null, "te_10Y": null, "r2_10Y": null, "relperf_10Y": null, "ytd": 8.1079, "inception": 28.27, "best_3m": null, "worst_3m": null, "perf_1m": 8.6758, "perf_3m": 3.2936, "perf_6m": 11.9089}, {"id": "LP68699641", "isin": "LU2052475568", "company": "Mandarine Gestion SA", "geo": "EuroZone", "domicile": "LUX", "launch": "2022-03-08", "ter": 2.13, "manager": "Adrien Dumas, Aurelien TAIEB", "objective": "The objective of the fund is to outperform its benchmark index, the EURO STOXX Net Return index (dividends reinvested), by selecting, via an active stock picking strategy, companies generating growth, in particular their results and their margins, above the average and presenting a potential of valorization. The Sub-Fund shall invest at least 75% of its assets in shares of companies which have the", "perf_1Y": 2.155, "alpha_1Y": -1.2564, "beta_1Y": 0.9784, "sharpe_1Y": 0.002, "vol_1Y": 12.6798, "maxdd_1Y": -12.4856, "ir_1Y": -0.8667, "te_1Y": 1.4819, "r2_1Y": 0.8434, "relperf_1Y": -17.0215, "perf_3Y": 1.2324, "alpha_3Y": -0.861, "beta_3Y": 0.989, "sharpe_3Y": -0.0573, "vol_3Y": 12.9031, "maxdd_3Y": -26.1885, "ir_3Y": -0.3889, "te_3Y": 2.2326, "r2_3Y": 0.6421, "relperf_3Y": -37.1458, "perf_5Y": -0.4042, "alpha_5Y": -1.0134, "beta_5Y": 1.0778, "sharpe_5Y": -0.039, "vol_5Y": 15.0635, "maxdd_5Y": -26.1885, "ir_5Y": -0.3931, "te_5Y": 2.4229, "r2_5Y": 0.6948, "relperf_5Y": -76.7785, "perf_10Y": 43.3831, "alpha_10Y": -0.4254, "beta_10Y": 0.9344, "sharpe_10Y": 0.0579, "vol_10Y": 13.8738, "maxdd_10Y": -26.1885, "ir_10Y": -0.2123, "te_10Y": 2.2213, "r2_10Y": 0.7013, "relperf_10Y": -109.1401, "ytd": 0.3874, "inception": 88.0741, "best_3m": null, "worst_3m": null, "perf_1m": 5.3911, "perf_3m": -0.7917, "perf_6m": 2.5989}, {"id": "LP68904908", "isin": "FR001400YMC0", "company": "Rothschild & Co Asset Management SCS", "geo": "EuroZone", "domicile": "FRA", "launch": "2025-04-29", "ter": null, "manager": "Anthony Bailly, Ludivine de Quincerot", "objective": "Rhodium's investment objective is to achieve, over a recommended investment horizon of at least 5 years, a net performance (after management fees) exceeding that of the Euro Stoxx DR (C) index, by maintaining a continuous investment and exposure of at least 90% of its net assets in equities issued in one or more Eurozone countries. The fund implements a socially responsible investment approach and", "perf_1Y": 15.6515, "alpha_1Y": -0.4026, "beta_1Y": 1.118, "sharpe_1Y": 0.2456, "vol_1Y": 14.4035, "maxdd_1Y": -9.9512, "ir_1Y": -0.1505, "te_1Y": 1.6626, "r2_1Y": 0.8559, "relperf_1Y": -3.525, "perf_3Y": null, "alpha_3Y": null, "beta_3Y": null, "sharpe_3Y": null, "vol_3Y": null, "maxdd_3Y": null, "ir_3Y": null, "te_3Y": null, "r2_3Y": null, "relperf_3Y": null, "perf_5Y": null, "alpha_5Y": null, "beta_5Y": null, "sharpe_5Y": null, "vol_5Y": null, "maxdd_5Y": null, "ir_5Y": null, "te_5Y": null, "r2_5Y": null, "relperf_5Y": null, "perf_10Y": null, "alpha_10Y": null, "beta_10Y": null, "sharpe_10Y": null, "vol_10Y": null, "maxdd_10Y": null, "ir_10Y": null, "te_10Y": null, "r2_10Y": null, "relperf_10Y": null, "ytd": 0.4465, "inception": 15.648, "best_3m": null, "worst_3m": null, "perf_1m": 6.9023, "perf_3m": -1.218, "perf_6m": 3.8524}], "holdings": {"LP60037956": [{"name": "ASML HOLDING NV ORD", "country": "NETHERLANDS", "weight": 4.4}, {"name": "SIEMENS AG ORD", "country": "GERMANY", "weight": 4.13}, {"name": "SCHNEIDER ELECTRIC SE ORD", "country": "FRANCE", "weight": 3.87}, {"name": "SANOFI SA ORD", "country": "FRANCE", "weight": 3.78}, {"name": "BNP PARIBAS SA ORD", "country": "FRANCE", "weight": 3.53}, {"name": "LVMH MOET HENNESSY LOUIS VUITTON SE ORD", "country": "FRANCE", "weight": 3.44}, {"name": "ALLIANZ SE ORD", "country": "GERMANY", "weight": 3.09}, {"name": "ENEL SPA ORD", "country": "ITALY", "weight": 2.97}, {"name": "SOCIETE GENERALE SA ORD", "country": "FRANCE", "weight": 2.86}, {"name": "UNICREDIT SPA ORD", "country": "ITALY", "weight": 2.83}], "LP68084236": [{"name": "ASML HOLDING NV ORD", "country": "NETHERLANDS", "weight": 9.28}, {"name": "ALLIANZ SE ORD", "country": "GERMANY", "weight": 5.02}, {"name": "SCHNEIDER ELECTRIC SE ORD", "country": "FRANCE", "weight": 4.99}, {"name": "IBERDROLA SA ORD", "country": "SPAIN", "weight": 4.85}, {"name": "INTESA SANPAOLO SPA ORD", "country": "ITALY", "weight": 4.46}, {"name": "DEUTSCHE TELEKOM AG ORD", "country": "GERMANY", "weight": 3.41}, {"name": "ERSTE GROUP BANK AG ORD", "country": "AUSTRIA", "weight": 3.32}, {"name": "L'AIR LIQUIDE SOCIETE ANONYME POUR L'ETUDE ET L'EXPLOITATION DES PROCEDES GEORGES CLAUDE SA ORD", "country": "FRANCE", "weight": 3.31}, {"name": "FINECOBANK BANCA FINECO SPA ORD", "country": "ITALY", "weight": 3.07}, {"name": "ING GROEP NV ORD", "country": "NETHERLANDS", "weight": 2.96}], "LP68240557": [{"name": "MUENCHENER RUECKVERSICHERUNGS GESELLSCHAFT AG IN MUENCHEN ORD", "country": "GERMANY", "weight": 1.44}, {"name": "ALLIANZ SE ORD", "country": "GERMANY", "weight": 1.4}, {"name": "L'OREAL SA ORD", "country": "FRANCE", "weight": 1.39}, {"name": "BANCO SANTANDER SA ORD", "country": "SPAIN", "weight": 1.32}, {"name": "L'AIR LIQUIDE SOCIETE ANONYME POUR L'ETUDE ET L'EXPLOITATION DES PROCEDES GEORGES CLAUDE SA ORD", "country": "FRANCE", "weight": 1.3}, {"name": "SANOFI SA ORD", "country": "FRANCE", "weight": 1.29}, {"name": "SIEMENS ENERGY AG ORD", "country": "GERMANY", "weight": 1.26}, {"name": "INDUSTRIA DE DISENO TEXTIL SA ORD", "country": "SPAIN", "weight": 1.25}, {"name": "SNAM SPA ORD", "country": "ITALY", "weight": 1.23}, {"name": "HERMES INTERNATIONAL SCA ORD", "country": "FRANCE", "weight": 1.23}], "LP68356476": [{"name": "ASML HOLDING NV ORD", "country": "NETHERLANDS", "weight": 6.77}, {"name": "BANCO SANTANDER SA ORD", "country": "SPAIN", "weight": 4.76}, {"name": "IBERDROLA SA ORD", "country": "SPAIN", "weight": 4.22}, {"name": "L'OREAL SA ORD", "country": "FRANCE", "weight": 4.21}, {"name": "ALLIANZ SE ORD", "country": "GERMANY", "weight": 4.09}, {"name": "SCHNEIDER ELECTRIC SE ORD", "country": "FRANCE", "weight": 4.07}, {"name": "SAP SE ORD", "country": "GERMANY", "weight": 3.63}, {"name": "SIEMENS AG ORD", "country": "GERMANY", "weight": 3.48}, {"name": "AIRBUS SE ORD", "country": "NETHERLANDS", "weight": 3.46}, {"name": "ENEL SPA ORD", "country": "ITALY", "weight": 3.46}], "LP68529581": [{"name": "SCHNEIDER ELECTRIC SE ORD", "country": "FRANCE", "weight": 5.28}, {"name": "ASML HOLDING NV ORD", "country": "NETHERLANDS", "weight": 5.24}, {"name": "SIEMENS AG ORD", "country": "GERMANY", "weight": 3.96}, {"name": "RELX PLC ORD", "country": "UNITED KINGDOM", "weight": 3.93}, {"name": "INTESA SANPAOLO SPA ORD", "country": "ITALY", "weight": 3.67}, {"name": "SAP SE ORD", "country": "GERMANY", "weight": 3.62}, {"name": "ASTRAZENECA PLC ORD", "country": "UNITED KINGDOM", "weight": 3.56}, {"name": "ESSILORLUXOTTICA SA ORD", "country": "FRANCE", "weight": 3.49}, {"name": "IBERDROLA SA ORD", "country": "SPAIN", "weight": 3.13}, {"name": "AXA SA ORD", "country": "FRANCE", "weight": 2.92}], "LP68645065": [{"name": "ASML HOLDING NV ORD", "country": "NETHERLANDS", "weight": 5.31}, {"name": "IBERDROLA SA ORD", "country": "SPAIN", "weight": 5.15}, {"name": "SCHNEIDER ELECTRIC SE ORD", "country": "FRANCE", "weight": 4.03}, {"name": "INTESA SANPAOLO SPA ORD", "country": "ITALY", "weight": 3.88}, {"name": "BUREAU VERITAS SA ORD", "country": "FRANCE", "weight": 3.6}, {"name": "KNORR BREMSE AG ORD", "country": "GERMANY", "weight": 3.51}, {"name": "CM-AM MONE ISR RC", "country": "OTHER", "weight": 3.49}, {"name": "PRYSMIAN SPA ORD", "country": "ITALY", "weight": 3.43}, {"name": "SIEMENS ENERGY AG ORD", "country": "GERMANY", "weight": 3.22}, {"name": "INFINEON TECHNOLOGIES AG ORD", "country": "GERMANY", "weight": 3.13}], "LP68699641": [{"name": "ASML HOLDING NV ORD", "country": "NETHERLANDS", "weight": 5.23}, {"name": "KINGSPAN GROUP PLC ORD", "country": "IRELAND", "weight": 5.13}, {"name": "EDP RENOVAVEIS SA ORD", "country": "SPAIN", "weight": 4.86}, {"name": "SPIE SA ORD", "country": "FRANCE", "weight": 4.67}, {"name": "E.ON SE ORD", "country": "GERMANY", "weight": 4.59}, {"name": "VEOLIA ENVIRONNEMENT SA ORD", "country": "FRANCE", "weight": 4.15}, {"name": "NOVOZYMES A/S ORD", "country": "DENMARK", "weight": 3.93}, {"name": "ALSTOM SA ORD", "country": "FRANCE", "weight": 3.9}, {"name": "VIRBAC SA ORD", "country": "FRANCE", "weight": 3.66}, {"name": "NIBE INDUSTRIER AB ORD", "country": "SWEDEN", "weight": 3.56}], "LP68904908": [{"name": "ASML HOLDING NV ORD", "country": "NETHERLANDS", "weight": 4.44}, {"name": "SIEMENS AG ORD", "country": "GERMANY", "weight": 4.17}, {"name": "SCHNEIDER ELECTRIC SE ORD", "country": "FRANCE", "weight": 3.91}, {"name": "SANOFI SA ORD", "country": "FRANCE", "weight": 3.81}, {"name": "BNP PARIBAS SA ORD", "country": "FRANCE", "weight": 3.56}, {"name": "LVMH MOET HENNESSY LOUIS VUITTON SE ORD", "country": "FRANCE", "weight": 3.46}, {"name": "ALLIANZ SE ORD", "country": "GERMANY", "weight": 3.13}, {"name": "ENEL SPA ORD", "country": "ITALY", "weight": 2.99}, {"name": "SOCIETE GENERALE SA ORD", "country": "FRANCE", "weight": 2.89}, {"name": "UNICREDIT SPA ORD", "country": "ITALY", "weight": 2.85}]}, "benchmark": [["2005-01-31", 361.71], ["2005-02-28", 372.89], ["2005-03-31", 371.1], ["2005-04-30", 364.27], ["2005-05-31", 382.35], ["2005-06-30", 395.58], ["2005-07-31", 408.92], ["2005-08-31", 409.82], ["2005-09-30", 428.19], ["2005-10-31", 418.18], ["2005-11-30", 432.27], ["2005-12-31", 447.66], ["2006-01-31", 463.83], ["2006-02-28", 474.26], ["2006-03-31", 485.52], ["2006-04-30", 490.11], ["2006-05-31", 467.53], ["2006-06-30", 471.33], ["2006-07-31", 479.63], ["2006-08-31", 493.79], ["2006-09-30", 503.97], ["2006-10-31", 521.84], ["2006-11-30", 520.64], ["2006-12-31", 540.76], ["2007-01-31", 552.11], ["2007-02-28", 541.26], ["2007-03-31", 556.82], ["2007-04-30", 578.23], ["2007-05-31", 596.82], ["2007-06-30", 593.48], ["2007-07-31", 573.34], ["2007-08-31", 568.6], ["2007-09-30", 571.85], ["2007-10-31", 588.38], ["2007-11-30", 562.03], ["2007-12-31", 553.54], ["2008-01-31", 489.4], ["2008-02-29", 485.27], ["2008-03-31", 467.22], ["2008-04-30", 496.36], ["2008-05-31", 499.47], ["2008-06-30", 449.55], ["2008-07-31", 441.22], ["2008-08-31", 449.27], ["2008-09-30", 399.68], ["2008-10-31", 346.95], ["2008-11-30", 323.43], ["2008-12-31", 308.97], ["2009-01-31", 300.43], ["2009-02-28", 272.53], ["2009-03-31", 278.88], ["2009-04-30", 318.69], ["2009-05-31", 334.33], ["2009-06-30", 331.34], ["2009-07-31", 362.45], ["2009-08-31", 381.22], ["2009-09-30", 392.0], ["2009-10-31", 383.26], ["2009-11-30", 387.87], ["2009-12-31", 412.09], ["2010-01-31", 401.04], ["2010-02-28", 399.9], ["2010-03-31", 430.01], ["2010-04-30", 425.74], ["2010-05-31", 404.75], ["2010-06-30", 402.79], ["2010-07-31", 423.12], ["2010-08-31", 417.27], ["2010-09-30", 431.61], ["2010-10-31", 442.33], ["2010-11-30", 436.37], ["2010-12-31", 459.95], ["2011-01-31", 467.45], ["2011-02-28", 479.0], ["2011-03-31", 462.53], ["2011-04-30", 478.25], ["2011-05-31", 477.73], ["2011-06-30", 464.8], ["2011-07-31", 452.25], ["2011-08-31", 405.81], ["2011-09-30", 387.2], ["2011-10-31", 417.09], ["2011-11-30", 412.45], ["2011-12-31", 420.35], ["2012-01-31", 437.85], ["2012-02-29", 456.02], ["2012-03-31", 455.67], ["2012-04-30", 448.15], ["2012-05-31", 421.12], ["2012-06-30", 442.4], ["2012-07-31", 460.82], ["2012-08-31", 470.61], ["2012-09-30", 475.28], ["2012-10-31", 479.01], ["2012-11-30", 489.52], ["2012-12-31", 496.77], ["2013-01-31", 510.74], ["2013-02-28", 516.59], ["2013-03-31", 525.07], ["2013-04-30", 533.78], ["2013-05-31", 544.67], ["2013-06-30", 517.06], ["2013-07-31", 543.98], ["2013-08-31", 541.18], ["2013-09-30", 565.63], ["2013-10-31", 587.87], ["2013-11-30", 593.91], ["2013-12-31", 600.04], ["2014-01-31", 590.1], ["2014-02-28", 619.58], ["2014-03-31", 614.69], ["2014-04-30", 624.31], ["2014-05-31", 640.55], ["2014-06-30", 637.2], ["2014-07-31", 626.78], ["2014-08-31", 639.53], ["2014-09-30", 642.13], ["2014-10-31", 630.97], ["2014-11-30", 651.57], ["2014-12-31", 643.24], ["2015-01-31", 689.89], ["2015-02-28", 738.07], ["2015-03-31", 750.44], ["2015-04-30", 751.19], ["2015-05-31", 763.73], ["2015-06-30", 729.46], ["2015-07-31", 758.74], ["2015-08-31", 696.3], ["2015-09-30", 668.02], ["2015-10-31", 722.01], ["2015-11-30", 742.33], ["2015-12-31", 705.0], ["2016-01-31", 660.1], ["2016-02-29", 645.53], ["2016-03-31", 654.57], ["2016-04-30", 666.03], ["2016-05-31", 682.66], ["2016-06-30", 649.66], ["2016-07-31", 673.88], ["2016-08-31", 678.87], ["2016-09-30", 678.14], ["2016-10-31", 671.13], ["2016-11-30", 678.2], ["2016-12-31", 717.21], ["2017-01-31", 714.99], ["2017-02-28", 736.81], ["2017-03-31", 761.27], ["2017-04-30", 776.32], ["2017-05-31", 787.61], ["2017-06-30", 767.72], ["2017-07-31", 765.02], ["2017-08-31", 758.97], ["2017-09-30", 788.55], ["2017-10-31", 803.62], ["2017-11-30", 787.39], ["2017-12-31", 793.07], ["2018-01-31", 806.24], ["2018-02-28", 775.52], ["2018-03-31", 760.1], ["2018-04-30", 794.23], ["2018-05-31", 795.29], ["2018-06-30", 790.31], ["2018-07-31", 815.1], ["2018-08-31", 797.66], ["2018-09-30", 800.24], ["2018-10-31", 755.99], ["2018-11-30", 748.52], ["2018-12-31", 707.68], ["2019-01-31", 752.44], ["2019-02-28", 783.67], ["2019-03-31", 799.81], ["2019-04-30", 829.89], ["2019-05-31", 788.92], ["2019-06-30", 824.16], ["2019-07-31", 826.74], ["2019-08-31", 815.58], ["2019-09-30", 845.73], ["2019-10-31", 854.55], ["2019-11-30", 878.72], ["2019-12-31", 897.47], ["2020-01-31", 886.91], ["2020-02-29", 812.94], ["2020-03-31", 694.95], ["2020-04-30", 740.13], ["2020-05-31", 765.33], ["2020-06-30", 788.72], ["2020-07-31", 781.2], ["2020-08-31", 805.06], ["2020-09-30", 793.74], ["2020-10-31", 753.21], ["2020-11-30", 857.46], ["2020-12-31", 879.59], ["2021-01-31", 873.0], ["2021-02-28", 894.28], ["2021-03-31", 951.73], ["2021-04-30", 972.79], ["2021-05-31", 997.96], ["2021-06-30", 1012.89], ["2021-07-31", 1033.73], ["2021-08-31", 1056.22], ["2021-09-30", 1021.47], ["2021-10-31", 1069.18], ["2021-11-30", 1042.17], ["2021-12-31", 1098.69], ["2022-01-31", 1056.63], ["2022-02-28", 1022.33], ["2022-03-31", 1032.53], ["2022-04-30", 1025.09], ["2022-05-31", 1015.69], ["2022-06-30", 934.23], ["2022-07-31", 1006.52], ["2022-08-31", 955.68], ["2022-09-30", 893.81], ["2022-10-31", 950.54], ["2022-11-30", 1016.07], ["2022-12-31", 981.76], ["2023-01-31", 1047.89], ["2023-02-28", 1067.54], ["2023-03-31", 1064.16], ["2023-04-30", 1090.19], ["2023-05-31", 1062.7], ["2023-06-30", 1088.33], ["2023-07-31", 1111.66], ["2023-08-31", 1083.43], ["2023-09-30", 1065.41], ["2023-10-31", 1026.89], ["2023-11-30", 1094.92], ["2023-12-31", 1136.87], ["2024-01-31", 1153.49], ["2024-02-29", 1176.38], ["2024-03-31", 1223.86], ["2024-04-30", 1212.03], ["2024-05-31", 1252.17], ["2024-06-30", 1237.65], ["2024-07-31", 1255.05], ["2024-08-31", 1274.47], ["2024-09-30", 1270.17], ["2024-10-31", 1228.74], ["2024-11-30", 1242.58], ["2024-12-31", 1236.82]], "bm_yearly": [[2006, 20.8], [2007, 2.36], [2008, -44.18], [2009, 33.38], [2010, 11.61], [2011, -8.61], [2012, 18.18], [2013, 20.79], [2014, 7.2], [2015, 9.6], [2016, 1.73], [2017, 10.58], [2018, -10.77], [2019, 26.82], [2020, -1.99], [2021, 24.91], [2022, -10.64], [2023, 15.8], [2024, 8.79]]};
+
+const FUNDS = DATA.funds;
+const HOLDINGS = DATA.holdings;
+const BM = DATA.benchmark;
+const BM_YEARLY = DATA.bm_yearly;
+
+const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#8b5cf6','#f97316'];
+const BM_COLOR = '#475569';
+
+function fundLabel(f){
+  const short = {
+    'Rothschild & Co Asset Management SCS':'Rothschild',
+    'Bnp Paribas Asset Management Europe SAS':'BNP Paribas AM',
+    'Fideas Capital SAS':'Fideas Capital',
+    'Montpensier Arbevel SAS':'Montpensier',
+    'DNCA Finance SCS':'DNCA Finance',
+    'Mandarine Gestion SA':'Mandarine'
+  };
+  let name = short[f.company] || f.company;
+  return name + ' (' + f.isin.slice(-4) + ')';
+}
+
+// Shorten long holding names
+function shortenName(n){
+  const map={
+    "L'AIR LIQUIDE SOCIETE ANONYME POUR L'ETUDE ET L'EXPLOITATION DES PROCEDES GEORGES CLAUDE SA":"AIR LIQUIDE",
+    "MUENCHENER RUECKVERSICHERUNGS GESELLSCHAFT AG IN MUENCHEN":"MUNICH RE",
+    "LVMH MOET HENNESSY LOUIS VUITTON SE":"LVMH",
+    "INDUSTRIA DE DISENO TEXTIL SA":"INDITEX",
+    "FINECOBANK BANCA FINECO SPA":"FINECOBANK",
+    "INTESA SANPAOLO SPA":"INTESA SANPAOLO",
+    "SCHNEIDER ELECTRIC SE":"SCHNEIDER ELECTRIC",
+    "DEUTSCHE TELEKOM AG":"DEUTSCHE TELEKOM",
+    "ERSTE GROUP BANK AG":"ERSTE GROUP",
+    "HERMES INTERNATIONAL SCA":"HERMÈS",
+    "BANCO SANTANDER SA":"BANCO SANTANDER",
+    "ESSILORLUXOTTICA SA":"ESSILORLUXOTTICA",
+    "VEOLIA ENVIRONNEMENT SA":"VEOLIA",
+    "INFINEON TECHNOLOGIES AG":"INFINEON",
+    "SIEMENS ENERGY AG":"SIEMENS ENERGY",
+    "EDP RENOVAVEIS SA":"EDP RENEWABLES",
+    "KINGSPAN GROUP PLC":"KINGSPAN",
+    "NOVOZYMES A/S":"NOVOZYMES",
+    "NIBE INDUSTRIER AB":"NIBE INDUSTRIER",
+    "BUREAU VERITAS SA":"BUREAU VERITAS",
+    "KNORR BREMSE AG":"KNORR-BREMSE",
+    "UNICREDIT SPA":"UNICREDIT",
+    "PRYSMIAN SPA":"PRYSMIAN",
+    "IBERDROLA SA":"IBERDROLA",
+    "ALLIANZ SE":"ALLIANZ",
+    "SIEMENS AG":"SIEMENS",
+    "SANOFI SA":"SANOFI",
+    "ENEL SPA":"ENEL",
+    "ASML HOLDING NV":"ASML",
+    "ASTRAZENECA PLC":"ASTRAZENECA",
+    "RELX PLC":"RELX",
+    "SAP SE":"SAP",
+    "AIRBUS SE":"AIRBUS",
+    "AXA SA":"AXA",
+    "ING GROEP NV":"ING GROUP",
+    "E.ON SE":"E.ON",
+    "ALSTOM SA":"ALSTOM",
+    "VIRBAC SA":"VIRBAC",
+    "SPIE SA":"SPIE",
+    "SNAM SPA":"SNAM",
+    "SOCIETE GENERALE SA":"SOCIÉTÉ GÉNÉRALE",
+    "BNP PARIBAS SA":"BNP PARIBAS",
+    "L'OREAL SA":"L'ORÉAL",
+  };
+  let clean = n.replace(/ ORD$/,'');
+  return map[clean] || (clean.length > 28 ? clean.slice(0,26)+'…' : clean);
+}
+
+// Benchmark computed metrics (from monthly data)
+const bmValsAll = BM.map(b=>b[1]);
+const bmLast = bmValsAll[bmValsAll.length-1];
+// BM cumulative returns
+const BM_CUM = {};
+const bmN = {1:12, 3:36, 5:60, 10:120};
+[1,3,5,10].forEach(y=>{
+  const n=bmN[y];
+  if(bmValsAll.length>n) BM_CUM[y+'Y']=((bmLast/bmValsAll[bmValsAll.length-1-n])-1)*100;
+});
+// BM annualised vol (from monthly returns)
+function calcBMStats(months){
+  if(bmValsAll.length<=months) return {vol:null,sharpe:null,perf:null};
+  const slice=bmValsAll.slice(bmValsAll.length-1-months);
+  const rets=[];
+  for(let i=1;i<slice.length;i++) rets.push((slice[i]/slice[i-1])-1);
+  const mean=rets.reduce((a,b)=>a+b,0)/rets.length;
+  const variance=rets.reduce((a,b)=>a+(b-mean)**2,0)/(rets.length-1);
+  const monthlyVol=Math.sqrt(variance);
+  const annVol=monthlyVol*Math.sqrt(12)*100;
+  const cumRet=((slice[slice.length-1]/slice[0])-1);
+  const annRet=(Math.pow(1+cumRet,12/months)-1)*100;
+  const sharpe=null; // Cannot compute — fund Sharpes use a risk-free rate we don't have
+  return {vol:annVol, sharpe, perf:cumRet*100};
+}
+const BM_STATS = {
+  '1Y': calcBMStats(12),
+  '3Y': calcBMStats(36),
+  '5Y': calcBMStats(60),
+  '10Y': calcBMStats(120)
+};
+
+function fmt(v,d=2){
+  if(v==null||v===undefined||isNaN(v)) return '—';
+  return Number(v).toFixed(d);
+}
+function fmtPct(v,d=2){
+  if(v==null||v===undefined||isNaN(v)) return '<span class="na">n/a</span>';
+  const n=Number(v);
+  const cls=n>=0?'pos':'neg';
+  return `<span class="${cls}">${n>=0?'+':''}${n.toFixed(d)}%</span>`;
+}
+
+// ============ TABS ============
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sec-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+// ============ OVERVIEW TABLE ============
+function buildOverviewTable(){
+  const tbl=document.getElementById('overviewTable');
+  let html=`<thead><tr><th>Fund</th><th>ISIN</th><th>Launch</th><th>TER</th><th class="num">YTD</th><th class="num">1Y</th><th class="num">3Y</th><th class="num">5Y</th><th class="num">Sharpe 1Y</th><th class="num">Vol 1Y</th><th class="num">Alpha 1Y</th></tr></thead><tbody>`;
+  FUNDS.forEach((f,i)=>{
+    html+=`<tr>
+      <td><span style="color:${COLORS[i]};font-weight:600">●</span> ${fundLabel(f)}</td>
+      <td class="mono" style="font-size:.72rem;color:var(--text3)">${f.isin}</td>
+      <td>${f.launch}</td>
+      <td class="num">${f.ter!=null?fmt(f.ter)+'%':'—'}</td>
+      <td class="num">${fmtPct(f.ytd)}</td>
+      <td class="num">${fmtPct(f.perf_1Y)}</td>
+      <td class="num">${fmtPct(f.perf_3Y)}</td>
+      <td class="num">${fmtPct(f.perf_5Y)}</td>
+      <td class="num">${fmt(f.sharpe_1Y)}</td>
+      <td class="num">${fmt(f.vol_1Y)}%</td>
+      <td class="num">${fmtPct(f.alpha_1Y)}</td>
+    </tr>`;
+  });
+  // Benchmark row
+  html+=`<tr style="background:rgba(71,85,105,.12);border-top:2px solid var(--border)">
+    <td><span style="color:${BM_COLOR};font-weight:600">■</span> <b>EURO STOXX NR</b> <span style="font-size:.7rem;color:var(--text3)">(Benchmark)</span></td>
+    <td class="mono" style="font-size:.72rem;color:var(--text3)">—</td>
+    <td>—</td>
+    <td class="num">—</td>
+    <td class="num">${fmtPct((function(){const dec=BM.filter(b=>b[0].endsWith('12-31'));if(!dec.length)return null;const lastDec=dec[dec.length-1][1];return((bmValsAll[bmValsAll.length-1]/lastDec)-1)*100})())}</td>
+    <td class="num">${fmtPct(BM_CUM['1Y'])}</td>
+    <td class="num">${fmtPct(BM_CUM['3Y'])}</td>
+    <td class="num">${fmtPct(BM_CUM['5Y'])}</td>
+    <td class="num">${BM_STATS['1Y'].sharpe!=null?fmt(BM_STATS['1Y'].sharpe):'—'}</td>
+    <td class="num">${BM_STATS['1Y'].vol!=null?fmt(BM_STATS['1Y'].vol)+'%':'—'}</td>
+    <td class="num">—</td>
+  </tr>`;
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+buildOverviewTable();
+
+// ============ BENCHMARK CHARTS ============
+function buildBMChart(){
+  const ctx=document.getElementById('bmChart').getContext('2d');
+  new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:BM.map(b=>b[0]),
+      datasets:[{label:'EURO STOXX NR',data:BM.map(b=>b[1]),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.08)',fill:true,pointRadius:0,borderWidth:2,tension:.3}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{ticks:{maxTicksLimit:12,color:'#64748b',font:{size:10}},grid:{color:'rgba(42,53,80,.4)'}},
+        y:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(42,53,80,.4)'}}
+      }
+    }
+  });
+}
+
+function buildBMYearlyChart(){
+  const ctx=document.getElementById('bmYearlyChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:BM_YEARLY.map(b=>b[0]),
+      datasets:[{label:'Annual Return %',data:BM_YEARLY.map(b=>b[1]),
+        backgroundColor:BM_YEARLY.map(b=>b[1]>=0?'rgba(16,185,129,.7)':'rgba(239,68,68,.7)'),
+        borderRadius:4,borderSkipped:false}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.toFixed(2)+'%'}}},
+      scales:{
+        x:{ticks:{color:'#64748b',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#64748b',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}}
+      }
+    }
+  });
+}
+buildBMChart();
+buildBMYearlyChart();
+
+// ============ PERFORMANCE BAR CHART ============
+let perfBarInstance=null;
+const perfFieldMap={
+  '1m':'perf_1m','3m':'perf_3m','6m':'perf_6m','1y':'perf_1Y',
+  '3y':'perf_3Y','5y':'perf_5Y','10y':'perf_10Y','ytd':'ytd','inception':'inception'
+};
+
+function buildPerfBar(period='1y'){
+  const field=perfFieldMap[period];
+  const labels=FUNDS.map(f=>fundLabel(f));
+  const values=FUNDS.map(f=>f[field]);
+  const colors=FUNDS.map((f,i)=>COLORS[i]);
+
+  if(perfBarInstance) perfBarInstance.destroy();
+  const ctx=document.getElementById('perfBarChart').getContext('2d');
+  perfBarInstance=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{data:values,backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:1,borderRadius:6,borderSkipped:false}]
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw!=null?c.raw.toFixed(2)+'%':'n/a'}}},
+      scales:{
+        x:{ticks:{color:'#64748b',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}},
+        y:{ticks:{color:'#e2e8f0',font:{size:11}},grid:{display:false}}
+      }
+    }
+  });
+}
+
+document.querySelectorAll('#perfPeriodToggle .period-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#perfPeriodToggle .period-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    buildPerfBar(b.dataset.p);
+  });
+});
+buildPerfBar('1y');
+
+// ============ RELATIVE PERFORMANCE ============
+let relPerfInstance=null;
+const relFieldMap={'1y':'relperf_1Y','3y':'relperf_3Y','5y':'relperf_5Y','10y':'relperf_10Y'};
+
+function buildRelPerf(period='1y'){
+  const field=relFieldMap[period];
+  const labels=FUNDS.map(f=>fundLabel(f));
+  const values=FUNDS.map(f=>f[field]);
+  const colors=values.map(v=>v!=null&&v>=0?'rgba(16,185,129,.8)':'rgba(239,68,68,.8)');
+
+  if(relPerfInstance) relPerfInstance.destroy();
+  const ctx=document.getElementById('relPerfChart').getContext('2d');
+  relPerfInstance=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{data:values,backgroundColor:colors,borderRadius:6,borderSkipped:false}]
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw!=null?c.raw.toFixed(2)+'%':'n/a'}}},
+      scales:{
+        x:{ticks:{color:'#64748b',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}},
+        y:{ticks:{color:'#e2e8f0',font:{size:11}},grid:{display:false}}
+      }
+    }
+  });
+}
+
+document.querySelectorAll('#relPeriodToggle .period-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#relPeriodToggle .period-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    buildRelPerf(b.dataset.p);
+  });
+});
+buildRelPerf('1y');
+
+// ============ RISK TABLE ============
+function buildRiskTable(period='1Y'){
+  const tbl=document.getElementById('riskTable');
+  const metrics=[
+    ['Performance',`perf_${period}`,'%'],
+    ['Volatility (Std Dev)',`vol_${period}`,'%'],
+    ['Sharpe Ratio',`sharpe_${period}`,''],
+    ['Alpha',`alpha_${period}`,'%'],
+    ['Beta',`beta_${period}`,''],
+    ['Max Drawdown',`maxdd_${period}`,'%'],
+    ['Information Ratio',`ir_${period}`,''],
+    ['Tracking Error',`te_${period}`,'%'],
+    ['R²',`r2_${period}`,''],
+  ];
+  let html='<thead><tr><th>Metric</th>';
+  FUNDS.forEach((f,i)=>html+=`<th class="num" style="color:${COLORS[i]}">${fundLabel(f)}</th>`);
+  html+=`<th class="num" style="color:${BM_COLOR}">EURO STOXX NR *</th>`;
+  html+='</tr></thead><tbody>';
+  // BM values for this period
+  const bms = BM_STATS[period] || {};
+  const bmMetricMap = {
+    'Performance': bms.perf,
+    'Volatility (Std Dev)': bms.vol, // monthly-based estimate
+    'Sharpe Ratio': null, // cannot compute: fund Sharpes use Rf we don't have
+    'Alpha': null, 'Beta': null, 'Max Drawdown': null,
+    'Information Ratio': null, 'Tracking Error': null, 'R²': null
+  };
+  metrics.forEach(([label,field,suffix])=>{
+    html+='<tr><td style="font-weight:500">'+label+'</td>';
+    FUNDS.forEach(f=>{
+      const v=f[field];
+      if(v==null) html+='<td class="num na">n/a</td>';
+      else{
+        let cls='';
+        if(suffix==='%'&&label!=='Volatility (Std Dev)'&&label!=='Tracking Error') cls=v>=0?'pos':'neg';
+        html+=`<td class="num ${cls}">${fmt(v)}${suffix}</td>`;
+      }
+    });
+    // Benchmark column
+    const bmv = bmMetricMap[label];
+    if(bmv==null) html+='<td class="num na" style="background:rgba(71,85,105,.08)">—</td>';
+    else{
+      let cls='';
+      if(suffix==='%'&&label!=='Volatility (Std Dev)'&&label!=='Tracking Error') cls=bmv>=0?'pos':'neg';
+      html+=`<td class="num ${cls}" style="background:rgba(71,85,105,.08)">${fmt(bmv)}${suffix}</td>`;
+    }
+    html+='</tr>';
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+document.querySelectorAll('#riskPeriodToggle .period-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#riskPeriodToggle .period-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    buildRiskTable(b.dataset.p);
+  });
+});
+buildRiskTable('1Y');
+
+// ============ SCATTER ============
+let scatterInstance=null;
+function buildScatter(period='1Y'){
+  if(scatterInstance) scatterInstance.destroy();
+  const ctx=document.getElementById('scatterChart').getContext('2d');
+  const datasets=FUNDS.map((f,i)=>{
+    const vol=f[`vol_${period}`];
+    let perf=f[`perf_${period}`];
+    // Annualise multi-year
+    if(period==='3Y'&&perf!=null) perf=((Math.pow(1+perf/100,1/3)-1)*100);
+    if(period==='5Y'&&perf!=null) perf=((Math.pow(1+perf/100,1/5)-1)*100);
+    return{
+      label:fundLabel(f),
+      data:vol!=null&&perf!=null?[{x:vol,y:perf}]:[],
+      backgroundColor:COLORS[i],
+      pointRadius:8,pointHoverRadius:11
+    };
+  });
+  // BM point removed: BM vol computed from monthly index levels ≠ fund vol from daily returns (data provider)
+  scatterInstance=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#94a3b8',usePointStyle:true,pointStyle:'circle',padding:12,font:{size:10}}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: Vol ${c.raw.x.toFixed(1)}%, Ret ${c.raw.y.toFixed(1)}%`}}},
+      scales:{
+        x:{title:{display:true,text:'Volatility (%)',color:'#64748b'},ticks:{color:'#64748b'},grid:{color:'rgba(42,53,80,.4)'}},
+        y:{title:{display:true,text:'Ann. Return (%)',color:'#64748b'},ticks:{color:'#64748b'},grid:{color:'rgba(42,53,80,.4)'}}
+      }
+    }
+  });
+}
+document.querySelectorAll('#scatterPeriodToggle .period-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#scatterPeriodToggle .period-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    buildScatter(b.dataset.p);
+  });
+});
+buildScatter('1Y');
+
+// ============ DRAWDOWN CHART ============
+function buildDrawdownChart(){
+  const ctx=document.getElementById('drawdownChart').getContext('2d');
+  const periods=['1Y','3Y','5Y'];
+  const datasets=FUNDS.map((f,i)=>({
+    label:fundLabel(f),
+    data:periods.map(p=>f[`maxdd_${p}`]),
+    backgroundColor:COLORS[i]+'99',
+    borderColor:COLORS[i],
+    borderWidth:1,borderRadius:4
+  }));
+  new Chart(ctx,{
+    type:'bar',
+    data:{labels:periods,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',usePointStyle:true,pointStyle:'rect',padding:10,font:{size:10}}},
+        tooltip:{callbacks:{label:c=>c.raw!=null?`${c.dataset.label}: ${c.raw.toFixed(2)}%`:'n/a'}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{display:false}},
+        y:{ticks:{color:'#64748b',callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}}
+      }
+    }
+  });
+}
+buildDrawdownChart();
+
+// ============ GLOBAL SHARPE & VOL CHARTS ============
+function buildGlobalSharpeVol(){
+  const fundsOnly=FUNDS.map(f=>fundLabel(f));
+  const sharpeVals=FUNDS.map(f=>f.sharpe_1Y);
+  const sharpeColors=COLORS.map(c=>c+'cc');
+  const sharpeBorders=[...COLORS];
+
+  // Vol chart: keep BM but note methodology difference
+  const volLabels=[...fundsOnly,'EURO STOXX NR *'];
+  const volVals=[...FUNDS.map(f=>f.vol_1Y), BM_STATS['1Y'].vol];
+  const volColors=[...COLORS.map(c=>c+'cc'),'rgba(71,85,105,.8)'];
+  const volBorders=[...COLORS,'#475569'];
+
+  const ctxS=document.getElementById('globalSharpeChart').getContext('2d');
+  new Chart(ctxS,{
+    type:'bar',
+    data:{labels:fundsOnly,datasets:[{data:sharpeVals,backgroundColor:sharpeColors,borderColor:sharpeBorders,borderWidth:1,borderRadius:6,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw!=null?'Sharpe: '+c.raw.toFixed(3):'n/a'}},
+        subtitle:{display:true,text:'Fund Sharpe ratios from data provider (includes risk-free rate deduction). BM excluded: methodology not replicable.',color:'#64748b',font:{size:9},padding:{bottom:4}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'rgba(42,53,80,.4)'}},
+        y:{ticks:{color:'#e2e8f0',font:{size:10}},grid:{display:false}}
+      }
+    }
+  });
+
+  const ctxV=document.getElementById('globalVolChart').getContext('2d');
+  new Chart(ctxV,{
+    type:'bar',
+    data:{labels:volLabels,datasets:[{data:volVals,backgroundColor:volColors,borderColor:volBorders,borderWidth:1,borderRadius:6,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw!=null?'Vol: '+c.raw.toFixed(2)+'%':'n/a'}},
+        subtitle:{display:true,text:'* BM volatility estimated from monthly index levels; fund volatility from data provider (daily returns). Not strictly comparable.',color:'#64748b',font:{size:9},padding:{bottom:4}}},
+      scales:{
+        x:{ticks:{color:'#64748b',callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}},
+        y:{ticks:{color:'#e2e8f0',font:{size:10}},grid:{display:false}}
+      }
+    }
+  });
+}
+buildGlobalSharpeVol();
+
+// ============ COMPARE TAB ============
+function buildCompareSelector(){
+  const sel=document.getElementById('compareFundSelector');
+  FUNDS.forEach((f,i)=>{
+    const chip=document.createElement('div');
+    chip.className='fund-chip'+(i===0?' active':'');
+    chip.innerHTML=`<span class="dot" style="background:${COLORS[i]}"></span>${fundLabel(f)}`;
+    chip.addEventListener('click',()=>{
+      sel.querySelectorAll('.fund-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      buildCompareDetail(i);
+    });
+    sel.appendChild(chip);
+  });
+  buildCompareDetail(0);
+}
+
+function buildCompareDetail(idx){
+  const f=FUNDS[idx];
+  const cont=document.getElementById('compareContent');
+  const color=COLORS[idx];
+  
+  // Helper for side-by-side fund vs BM cells
+  function dualCell(fv, bv, suffix='%', showDiff=true){
+    const fStr = fv!=null ? `<span class="${suffix==='%'?((fv>=0)?'pos':'neg'):''}">${fv>=0&&suffix==='%'?'+':''}${Number(fv).toFixed(2)}${suffix}</span>` : '<span class="na">n/a</span>';
+    const bStr = bv!=null ? `${Number(bv).toFixed(2)}${suffix}` : '<span class="na">n/a</span>';
+    let diffStr = '';
+    if(showDiff && fv!=null && bv!=null){
+      const d = fv - bv;
+      diffStr = `<div style="font-size:.65rem;margin-top:2px;color:${d>=0?'var(--green)':'var(--red)'}">Δ ${d>=0?'+':''}${d.toFixed(2)}</div>`;
+    }
+    return `<td class="num"><div style="font-weight:600">${fStr}</div><div style="font-size:.7rem;color:var(--text3);margin-top:1px">BM: ${bStr}</div>${diffStr}</td>`;
+  }
+
+  // Fund info cards
+  let html=`<div class="grid-2">
+    <div class="card" style="border-left:3px solid ${color}">
+      <div class="card-title">${fundLabel(f)} — Fund Profile</div>
+      <dl class="fund-info">
+        <dt>ISIN</dt><dd class="mono">${f.isin}</dd>
+        <dt>Manager</dt><dd>${f.manager||'—'}</dd>
+        <dt>Company</dt><dd>${f.company}</dd>
+        <dt>Domicile / Focus</dt><dd>${f.domicile} — ${f.geo}</dd>
+        <dt>Launch</dt><dd>${f.launch}</dd>
+        <dt>TER</dt><dd>${f.ter!=null?f.ter+'%':'—'}</dd>
+        <dt>Benchmark</dt><dd>EURO STOXX Net Return EUR</dd>
+      </dl>
+    </div>
+    <div class="card" style="border-left:3px solid var(--text3)">
+      <div class="card-title">Benchmark — EURO STOXX NR EUR</div>
+      <dl class="fund-info">
+        <dt>Type</dt><dd>Total Return (Net Dividends)</dd>
+        <dt>Region</dt><dd>Eurozone</dd>
+        <dt>Data Range</dt><dd>${BM[0][0]} → ${BM[BM.length-1][0]}</dd>
+        <dt>Last Level</dt><dd class="mono">${bmValsAll[bmValsAll.length-1].toFixed(2)}</dd>
+      </dl>
+    </div>
+  </div>`;
+
+  // Performance comparison table — fund vs benchmark across periods
+  html+=`<div class="card">
+    <div class="card-title">Performance Comparison — Fund vs Benchmark</div>
+    <div class="scroll-x"><table class="tbl">
+      <thead><tr>
+        <th>Metric</th>
+        <th class="num" style="min-width:120px">1 Year</th>
+        <th class="num" style="min-width:120px">3 Years</th>
+        <th class="num" style="min-width:120px">5 Years</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">Cumulative Return</td>
+          ${dualCell(f.perf_1Y, BM_CUM['1Y'])}
+          ${dualCell(f.perf_3Y, BM_CUM['3Y'])}
+          ${dualCell(f.perf_5Y, BM_CUM['5Y'])}
+        </tr>
+        <tr><td style="font-weight:600">Relative Performance</td>
+          <td class="num">${fmtPct(f.relperf_1Y)}</td>
+          <td class="num">${fmtPct(f.relperf_3Y)}</td>
+          <td class="num">${fmtPct(f.relperf_5Y)}</td>
+        </tr>
+        <tr style="background:rgba(42,53,80,.15)"><td colspan="4" style="font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:6px 12px">Also: YTD ${fmtPct(f.ytd)}  •  Since Inception ${fmtPct(f.inception)}  •  Best 3M (3Y) ${fmtPct(f.best_3m)}  •  Worst 3M (3Y) ${fmtPct(f.worst_3m)}</td></tr>
+      </tbody>
+    </table></div>
+  </div>`;
+
+  // Caveat: if fund has perf but no vol for a period, the data provider excluded risk metrics (strategy change)
+  const hasPerfNoRisk = ['5Y','10Y'].some(p => f['perf_'+p]!=null && f['vol_'+p]==null);
+  if(hasPerfNoRisk){
+    html+=`<div style="padding:10px 14px;margin-bottom:16px;border-radius:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);font-size:.78rem;color:var(--amber);line-height:1.5">
+      ⚠ This fund has cumulative return data for periods where risk metrics (Sharpe, volatility, alpha) are not available. This typically means the fund changed its investment strategy or benchmark during that window — the data provider does not compute risk-adjusted statistics across strategy changes, as they would not be meaningful. Cumulative returns still reflect actual NAV performance but may span different management approaches.
+    </div>`;
+  }
+
+  // Risk indicators table — fund vs benchmark across 1Y/3Y/5Y
+  html+=`<div class="card">
+    <div class="card-title">Risk Indicators — Fund vs Benchmark</div>
+    <div class="scroll-x"><table class="tbl">
+      <thead><tr>
+        <th>Metric</th>
+        <th class="num" style="min-width:120px">1 Year</th>
+        <th class="num" style="min-width:120px">3 Years</th>
+        <th class="num" style="min-width:120px">5 Years</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">Volatility (ann.) *</td>
+          ${dualCell(f.vol_1Y, BM_STATS['1Y']?.vol, '%', true)}
+          ${dualCell(f.vol_3Y, BM_STATS['3Y']?.vol, '%', true)}
+          ${dualCell(f.vol_5Y, BM_STATS['5Y']?.vol, '%', true)}
+        </tr>
+        <tr><td style="font-weight:600">Sharpe Ratio **</td>
+          <td class="num"><div style="font-weight:600">${f.sharpe_1Y!=null?fmt(f.sharpe_1Y,3):'<span class="na">n/a</span>'}</div></td>
+          <td class="num"><div style="font-weight:600">${f.sharpe_3Y!=null?fmt(f.sharpe_3Y,3):'<span class="na">n/a</span>'}</div></td>
+          <td class="num"><div style="font-weight:600">${f.sharpe_5Y!=null?fmt(f.sharpe_5Y,3):'<span class="na">n/a</span>'}</div></td>
+        </tr>
+        <tr><td style="font-weight:600">Alpha</td>
+          <td class="num">${fmtPct(f.alpha_1Y)}</td>
+          <td class="num">${fmtPct(f.alpha_3Y)}</td>
+          <td class="num">${fmtPct(f.alpha_5Y)}</td>
+        </tr>
+        <tr><td style="font-weight:600">Beta</td>
+          <td class="num">${f.beta_1Y!=null?fmt(f.beta_1Y):'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.beta_3Y!=null?fmt(f.beta_3Y):'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.beta_5Y!=null?fmt(f.beta_5Y):'<span class="na">n/a</span>'}</td>
+        </tr>
+        <tr><td style="font-weight:600">Max Drawdown</td>
+          <td class="num" style="color:var(--red)">${f.maxdd_1Y!=null?fmt(f.maxdd_1Y)+'%':'<span class="na">n/a</span>'}</td>
+          <td class="num" style="color:var(--red)">${f.maxdd_3Y!=null?fmt(f.maxdd_3Y)+'%':'<span class="na">n/a</span>'}</td>
+          <td class="num" style="color:var(--red)">${f.maxdd_5Y!=null?fmt(f.maxdd_5Y)+'%':'<span class="na">n/a</span>'}</td>
+        </tr>
+        <tr><td style="font-weight:600">Information Ratio</td>
+          <td class="num">${f.ir_1Y!=null?fmt(f.ir_1Y):'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.ir_3Y!=null?fmt(f.ir_3Y):'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.ir_5Y!=null?fmt(f.ir_5Y):'<span class="na">n/a</span>'}</td>
+        </tr>
+        <tr><td style="font-weight:600">Tracking Error</td>
+          <td class="num">${f.te_1Y!=null?fmt(f.te_1Y)+'%':'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.te_3Y!=null?fmt(f.te_3Y)+'%':'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.te_5Y!=null?fmt(f.te_5Y)+'%':'<span class="na">n/a</span>'}</td>
+        </tr>
+        <tr><td style="font-weight:600">R²</td>
+          <td class="num">${f.r2_1Y!=null?fmt(f.r2_1Y):'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.r2_3Y!=null?fmt(f.r2_3Y):'<span class="na">n/a</span>'}</td>
+          <td class="num">${f.r2_5Y!=null?fmt(f.r2_5Y):'<span class="na">n/a</span>'}</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>`;
+  html+=`<p style="font-size:.68rem;color:var(--text3);margin:-10px 0 14px 0;line-height:1.5">* BM volatility estimated from monthly index levels (×√12); fund volatility from data provider (daily returns) — not strictly comparable.<br>** Sharpe Ratio: from data provider, includes risk-free rate deduction. BM Sharpe not shown as the risk-free rate used is unknown.</p>`;
+
+  // Charts: cumulated returns + sharpe + vol
+  html+=`<div class="card">
+    <div class="card-title">Cumulated Return — Fund vs Benchmark (%)</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="compareBarChart"></canvas></div>
+  </div>`;
+  html+=`<div class="grid-2">
+    <div class="card">
+      <div class="card-title">Sharpe Ratio — Fund Only (no BM)</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="compareSharpeChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Volatility — Fund vs Benchmark *</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="compareVolChart"></canvas></div>
+    </div>
+  </div>`;
+
+  cont.innerHTML=html;
+
+  // Build comparison bar chart — only show periods where fund has performance data
+  const allPeriods=['1Y','3Y','5Y'];
+  const activePeriods=allPeriods.filter(p=>f[`perf_${p}`]!=null);
+  const fundVals=activePeriods.map(p=>f[`perf_${p}`]);
+  // BM cumulative returns from monthly data
+  const bmCum={};
+  const bmVals=BM.map(b=>b[1]);
+  const lastBM=bmVals[bmVals.length-1];
+  const yrsBack={'1Y':12,'3Y':36,'5Y':60};
+  activePeriods.forEach(p=>{
+    const n=yrsBack[p];
+    if(n && bmVals.length>n) bmCum[p]=((lastBM/bmVals[bmVals.length-1-n])-1)*100;
+  });
+
+  const ctx=document.getElementById('compareBarChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:activePeriods,
+      datasets:[
+        {label:fundLabel(f),data:fundVals,backgroundColor:COLORS[idx]+'cc',borderColor:COLORS[idx],borderWidth:1,borderRadius:6},
+        {label:'EURO STOXX NR',data:activePeriods.map(p=>bmCum[p]||null),backgroundColor:'rgba(71,85,105,.6)',borderColor:'#475569',borderWidth:1,borderRadius:6}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',usePointStyle:true,pointStyle:'rect',padding:14}},
+        tooltip:{callbacks:{label:c=>c.raw!=null?`${c.dataset.label}: ${c.raw.toFixed(2)}%`:'n/a'}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{display:false}},
+        y:{ticks:{color:'#64748b',callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}}
+      }
+    }
+  });
+
+  // Sharpe comparison chart — only show periods where fund has data
+  const riskPeriods=allPeriods.filter(p=>f[`sharpe_${p}`]!=null);
+  const fundSharpe=riskPeriods.map(p=>f[`sharpe_${p}`]);
+  const bmSharpe=riskPeriods.map(p=>BM_STATS[p]?BM_STATS[p].sharpe:null);
+  const ctxS=document.getElementById('compareSharpeChart').getContext('2d');
+  new Chart(ctxS,{
+    type:'bar',
+    data:{
+      labels:riskPeriods,
+      datasets:[
+        {label:fundLabel(f),data:fundSharpe,backgroundColor:COLORS[idx]+'cc',borderColor:COLORS[idx],borderWidth:1,borderRadius:6}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',usePointStyle:true,pointStyle:'rect',padding:14}},
+        tooltip:{callbacks:{label:c=>c.raw!=null?`${c.dataset.label}: ${c.raw.toFixed(3)}`:'n/a'}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{display:false}},
+        y:{ticks:{color:'#64748b'},grid:{color:'rgba(42,53,80,.4)'}}
+      }
+    }
+  });
+
+  // Volatility comparison chart
+  const fundVol=riskPeriods.map(p=>f[`vol_${p}`]);
+  const bmVol=riskPeriods.map(p=>BM_STATS[p]?BM_STATS[p].vol:null);
+  const ctxV=document.getElementById('compareVolChart').getContext('2d');
+  new Chart(ctxV,{
+    type:'bar',
+    data:{
+      labels:riskPeriods,
+      datasets:[
+        {label:fundLabel(f),data:fundVol,backgroundColor:COLORS[idx]+'cc',borderColor:COLORS[idx],borderWidth:1,borderRadius:6},
+        {label:'EURO STOXX NR',data:bmVol,backgroundColor:'rgba(71,85,105,.6)',borderColor:'#475569',borderWidth:1,borderRadius:6}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',usePointStyle:true,pointStyle:'rect',padding:14}},
+        tooltip:{callbacks:{label:c=>c.raw!=null?`${c.dataset.label}: ${c.raw.toFixed(2)}%`:'n/a'}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{display:false}},
+        y:{ticks:{color:'#64748b',callback:v=>v+'%'},grid:{color:'rgba(42,53,80,.4)'}}
+      }
+    }
+  });
+}
+buildCompareSelector();
+
+// ============ HOLDINGS TAB ============
+function buildHoldingsSelector(){
+  const sel=document.getElementById('holdingsFundSelector');
+  FUNDS.forEach((f,i)=>{
+    const chip=document.createElement('div');
+    chip.className='fund-chip'+(i===0?' active':'');
+    chip.innerHTML=`<span class="dot" style="background:${COLORS[i]}"></span>${fundLabel(f)}`;
+    chip.addEventListener('click',()=>{
+      sel.querySelectorAll('.fund-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      buildHoldingsDetail(i);
+    });
+    sel.appendChild(chip);
+  });
+  buildHoldingsDetail(0);
+}
+
+function buildHoldingsDetail(idx){
+  const f=FUNDS[idx];
+  const h=HOLDINGS[f.id]||[];
+  const cont=document.getElementById('holdingsContent');
+
+  let html=`<div class="grid-2">
+    <div class="card">
+      <div class="card-title">Top 10 Holdings</div>`;
+  const maxW=h.length?Math.max(...h.map(x=>x.weight)):1;
+  h.forEach((hld,j)=>{
+    const pct=(hld.weight/maxW)*100;
+    const hue=(j/h.length)*280;
+    html+=`<div class="holding-bar">
+      <div class="name">${shortenName(hld.name)}</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:hsl(${hue},60%,55%)"></div></div>
+      <div class="pct">${hld.weight}%</div>
+    </div>`;
+  });
+  html+=`</div>
+    <div class="card">
+      <div class="card-title">Country Allocation</div>
+      <div class="chart-wrap"><canvas id="countryPie"></canvas></div>
+    </div>
+  </div>`;
+  cont.innerHTML=html;
+
+  // Country pie
+  const countryMap={};
+  h.forEach(hld=>{
+    const c=hld.country||'OTHER';
+    countryMap[c]=(countryMap[c]||0)+hld.weight;
+  });
+  const countries=Object.entries(countryMap).sort((a,b)=>b[1]-a[1]);
+  const pieColors=['#6366f1','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#8b5cf6','#f97316','#84cc16','#14b8a6'];
+  const ctx=document.getElementById('countryPie').getContext('2d');
+  new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:countries.map(c=>c[0]),
+      datasets:[{data:countries.map(c=>c[1]),backgroundColor:pieColors.slice(0,countries.length),borderWidth:0}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      cutout:'55%',
+      plugins:{legend:{position:'right',labels:{color:'#94a3b8',padding:8,font:{size:11}}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toFixed(1)}%`}}}
+    }
+  });
+}
+buildHoldingsSelector();
+
+// ============ FUND PROFILES ============
+const PROFILES = [
+  {
+    id:'LP60037956', name:'R-co 4Change Net Zero Equity Euro',
+    sfdr:'Article 9', sfdr_ok:true, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Aims to achieve a performance net of management fees <b>above</b> the Euro Stoxx DR (C) index over a 5-year recommended horizon.',
+    strategy:'Active, fundamental stock-picking on Eurozone large caps. The fund pursues a Net Zero 2050 carbon trajectory with a mandatory –7% annual reduction in portfolio carbon intensity (base: Dec 2019). Carbon intensity must remain at least 20% below the benchmark at each rebalancing. The ESG approach combines enhanced selectivity based on environmental practices and carbon-intensity steering. Companies are categorised as "Leaders" (SBTi-validated targets) or "In Transition" (active climate commitment). Carbon data sourced from Carbon4 Finance. The fund also donates 0.15% of management fees annually to the Océan Polaire association (Polar Pod expedition). Holds the French ISR label.',
+    departure:'Concentrated Eurozone large-cap portfolio. The transition approach deliberately includes companies in traditionally high-emission sectors (energy, industrials, utilities) rather than excluding them — as stated by the managers, they "progressively increased the weight of emitting sectors" from 19% at launch to ~23%. This sets it apart from low-carbon strategies that simply avoid high-emitting companies.',
+    links:[
+      {label:'Fund Page (Rothschild & Co AM)',url:'https://am.eu.rothschildandco.com/en/our-funds/r-co-4change-net-zero-equity-euro/'},
+      {label:'Morningstar',url:'https://www.morningstar.fr/fr/funds/snapshot/snapshot.aspx?id=F0GBR04QV4'},
+      {label:'Net Zero Strategy Paper',url:'https://am.eu.rothschildandco.com/stock/file/news/788/20220217-r-co-4change-net-zero-equity-euro-en.pdf'}
+    ]
+  },
+  {
+    id:'LP68084236', name:'BNP Paribas Funds Euro Equity',
+    sfdr:'Article 8', sfdr_ok:false, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Seeks long-term capital growth by investing mainly in Eurozone large/mid-cap companies using a "Responsible Investment filter". Official benchmark is <b>MSCI EMU (NR)</b>, not EURO STOXX NR.',
+    strategy:'Active, concentrated fundamental stock-picking (34 positions as of April 2024). Applies BNP Paribas AM\'s proprietary ESG scoring: a base score of 50 is adjusted by Environment, Social, and Governance contributions, yielding a final score from 1 to 99. Portfolio ESG score must exceed the benchmark ESG score. Carbon footprint tracked via Trucost (Scope 1+2). However, the fund is <b>SFDR Article 8</b> — it promotes ESG characteristics but does not have a sustainable investment objective. It is NOT Article 9. Official benchmark is <b>MSCI EMU (NR)</b>. Allocation extends outside the Eurozone (U.S. ~8.5%, China, Singapore) — factsheet shows combined non-Eurozone exposure above 10%.',
+    departure:'Concentrated portfolio with tracking error of 3.3% (3Y). Sector-level: overweight in materials (+4.6%), energy (+2.8%), consumer staples (+1.9%); zero allocation to utilities (–5.5% vs index); underweight in industrials (–5.3%). Top holding ASML at ~9%. Country allocation tilts away from Germany (–9% vs index) with US and emerging market exposure not found in the benchmark.',
+    links:[
+      {label:'Fund Factsheet (BNP Paribas AM)',url:'https://docfinder.bnpparibas-am.com/api/files/fb7c6f00-1794-4dda-800c-20c5b7defda6/512'},
+      {label:'Quantalys',url:'https://www.quantalys.com/Fonds/14532'},
+      {label:'BNP Paribas AM Sustainability',url:'https://www.bnpparibas-am.com/en/sustainability-documents/'}
+    ]
+  },
+  {
+    id:'LP68240557', name:'Fideas Smart for Climate (Betamax Eurozone)',
+    sfdr:'Article 9', sfdr_ok:true, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Aims to outperform the EURO STOXX Net Total Return Index (dividends reinvested) over a 5-year recommended period.',
+    strategy:'Quantitative "Multi Smart Beta" allocation across 11 baskets — including value, size, momentum, quality, minimum variance (per Fideas Capital\'s launch announcement) — diversified within the EURO STOXX 300 universe, resulting in approximately 280 positions. On top of this factor allocation, the proprietary Smart for Climate® carbon overlay reallocates the portfolio at each quarterly rebalancing to reduce carbon intensity by 25–30% vs the initial Multi Smart Beta portfolio (per the Sicavonline fund page and official press release). Companies are scored on their energy-transition strategy and GHG emissions. The fund holds the French ISR label (per the press release). The prospectus confirms a sustainable investment objective consistent with SFDR Article 9.',
+    departure:'Highly diversified — approximately 280 positions across 11 factor baskets (per the launch announcement), in stark contrast to the concentrated benchmark. This systematic, multi-factor approach avoids sector biases by design (the Smart for Climate® overlay explicitly aims to reduce carbon without introducing sector tilts). The broad diversification results in lower single-stock risk and different risk-return characteristics than conviction-based peers.',
+    links:[
+      {label:'Sicavonline Fund Page',url:'https://www.sicavonline.fr/index.cfm?action=fiche&code=00000X82575'},
+      {label:'Fideas Capital Website',url:'https://www.fideascapital.com'},
+      {label:'Launch Announcement (Patrimoine24)',url:'https://www.patrimoine24.com/isr/5510-fideas-capital-annonce-le-lancement-du-fonds-fideas-smart-for-climate-actions-euro-zone.html'}
+    ]
+  },
+  {
+    id:'LP68356476', name:'Best Business Models SRI',
+    sfdr:'Article 9', sfdr_ok:true, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Seeks to outperform the Euro Stoxx index over a recommended investment period of more than 5 years, through active discretionary management integrating ESG criteria.',
+    strategy:'Active, conviction-based stock-picking using the proprietary "Business Models" methodology developed by Montpensier Arbevel. The approach evaluates companies\' business model durability, pricing power, and competitive moats, combined with a four-step proprietary ESG analysis: (1) exclusions (arms, coal, tobacco, adult entertainment, gambling, GMO, palm oil), (2) governance analysis via the "MGF – Montpensier Governance Flag" method emphasising good governance practices, (3) contribution assessment to environmental/social transitions via the "Montpensier Impact Assessment" model, and (4) portfolio ESG scoring ensuring the portfolio scores above the benchmark. Classified SFDR Article 9 (sustainable investment objective). Holds the French ISR label. At least 60% invested in Eurozone equities, typically 75%+.',
+    departure:'Concentrated portfolio driven by high-conviction stock-picking. The "Business Models" lens leads to overweights in quality-growth names with strong pricing power. At least 75% PEA-eligible, with a focus on durable competitive advantages. The ESG exclusion layer (arms, coal, tobacco, adult entertainment, gambling) removes certain benchmark constituents, creating structural sector deviations.',
+    links:[
+      {label:'Fund Page (Montpensier Arbevel)',url:'https://montpensier-arbevel.com/fonds/best-business-models-sri/'},
+      {label:'KID Document',url:'https://priips.predica.com/credit-agricole/DIS_FR0013079761.pdf'}
+    ]
+  },
+  {
+    id:'LP68529581', name:'DNCA Invest Beyond Semperosa (Share A)',
+    sfdr:'Article 9', sfdr_ok:true, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Seeks to outperform the Euro Stoxx NR (SXXT Index) calculated with net dividends reinvested, over the recommended investment term.',
+    strategy:'Active, discretionary stock-picking focused on companies contributing to five transitions identified by the ABA model: demographic, medical, economic, lifestyle, and ecological (per DNCA\'s official documentation). The proprietary "ABA — Above &amp; Beyond Analysis" model combines two dimensions — Corporate Responsibility and Sustainable Transition — with a "best-in-universe" approach (per the KID). The fund performs ESG analysis on at least 90% of its securities and excludes the bottom 20% of worst-rated issuers (per the KID). Investment focuses on companies whose revenues are significantly linked to UN Sustainable Development Goals (SDGs). 65–100% Eurozone equities, up to 35% outside Eurozone, up to 10% in sub-€200M market cap (per the prospectus). SFDR Article 9 (per the KID).',
+    departure:'Wider geographic scope than pure Eurozone funds — the prospectus allows up to 35% outside Eurozone and up to 10% in sub-€200M market cap. The focus on companies with strong social/environmental impact per the SDG framework creates sector and country deviations from the benchmark, particularly in healthcare and quality-growth names.',
+    links:[
+      {label:'Fund Page (DNCA Investments)',url:'https://www.dnca-investments.com/en/funds/dnca-invest-beyond-semperosa/units/a-lu1907595398'},
+      {label:'Quantalys',url:'https://www.quantalys.com/Fonds/736782'},
+      {label:'Towards Sustainability Label',url:'https://towardssustainability.be/fr/produits/dnca-invest-beyond-semperosa'}
+    ]
+  },
+  {
+    id:'LP68645065', name:'DNCA Invest Beyond Semperosa (Share B)',
+    sfdr:'Article 9', sfdr_ok:true, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Same sub-fund as Share A (LU1907595398) — seeks to outperform the Euro Stoxx NR over the recommended term. Share B (LU2254337392) is a different share class with distinct fee structure, launched Feb 2021.',
+    strategy:'Identical investment strategy to Share A — same portfolio, same managers (Eyroulet, Dunand-Chatellet, Avice), same ABA proprietary ESG model and SDG-focused approach. The difference is in the fee structure and distribution channel. Both share classes are SFDR Article 9.',
+    departure:'Same portfolio positioning as Share A. Higher TER (1.97% vs 1.89% for Share A, per the fund data) explains any performance lag vs Share A.',
+    links:[
+      {label:'Fund Page (DNCA Investments)',url:'https://www.dnca-investments.com/en/funds/dnca-invest-beyond-semperosa/units/a-lu1907595398'}
+    ]
+  },
+  {
+    id:'LP68699641', name:'Mandarine Social Leaders (ex-Mandarine Active)',
+    sfdr:'Article 9', sfdr_ok:true, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Seeks long-term capital growth by outperforming the EURO STOXX Net Return (EUR) index, through active stock-picking of Eurozone companies meeting ESG criteria with above-average growth profiles.',
+    strategy:'Active "stock-picking" strategy selecting Eurozone companies meeting positive ESG criteria with above-average growth profiles (per the prospectus). The fund employs a "Best-in-Universe" non-financial investment strategy (per the Mandarine Gestion website), favouring issuers with the best extra-financial ratings regardless of sector. The in-house ESG team assigns extra-financial ratings to issuers, analysing pillars including Stakeholders (SH), producing an "ESG-View Score" ranging from –2 to +2 (per the KID document). At least 75% of assets in EEA-headquartered companies. In line with SRI Label guidelines, the Fund excludes issuers in fossil fuels, companies contravening international standards, tobacco, controversial weapons, and coal (per the KID). Classified SFDR Article 9 (per both the KID and Quantalys). Renamed from "Mandarine Active" to "Mandarine Social Leaders" on 17 November 2022 (per the KID). Benchmark changed from Stoxx 600 DR to Eurostoxx NR on 01/12/2017 (per the fund page).',
+    departure:'Distinctive portfolio with a "social leaders" tilt — the fund selects companies whose social performance stands out in their investment universe, irrespective of sector. This results in significant sector departures from a standard Eurozone index. The ESG exclusion layer (fossil fuels, tobacco, controversial weapons, coal, companies contravening international standards) further differentiates it. Benchmark changed from Stoxx 600 DR to Eurostoxx NR in Dec 2017, as confirmed on the fund page.',
+    links:[
+      {label:'Fund Page (Mandarine Gestion)',url:'https://mandarine-gestion.com/BE/fr/funds/mandarine-social-leaders/shares/lu2052475568'},
+      {label:'KID Document',url:'https://www.mandarine-gestion.com/INT/en/docs/funds/mandarine-social-leaders/LU2052475568/KID'},
+      {label:'Mandarine Gestion ESG Approach',url:'https://www.mandarine-gestion.com/FR/en/demarche-responsable'}
+    ]
+  },
+  {
+    id:'LP68904908', name:'Rhodium (R-co 4Change Net Zero Equity Euro P EUR)',
+    sfdr:'Article 9', sfdr_ok:true, active:true,
+    performance_obj:'Outperform',
+    perf_desc:'Aims to achieve a net performance exceeding the Euro Stoxx DR (C) index over a 5-year recommended horizon. Same strategy as R-co 4Change Net Zero Equity Euro (FR0010784835) — distinct share class (P EUR) with a different fee structure. TER not yet available (fund launched April 2025).',
+    strategy:'Identical investment strategy to the R-co 4Change Net Zero Equity Euro C share — same Net Zero 2050 carbon trajectory (–7% annual reduction), same managers (Anthony Bailly, Ludivine de Quincerot), same ESG approach and Carbon4 Finance data. Launched April 29, 2025 as a new share class (P EUR) under ISIN FR001400YMC0. SFDR Article 9. Very short track record (launched less than a year ago), so most multi-year metrics are unavailable.',
+    departure:'Virtually identical portfolio to the C share (FR0010784835). Top holdings mirror the C share. Performance differences vs the C share will primarily reflect the fee differential between share classes.',
+    links:[
+      {label:'Fund Page (Rothschild & Co AM)',url:'https://am.eu.rothschildandco.com/en/our-funds/r-co-4change-net-zero-equity-euro/'}
+    ]
+  }
+];
+
+function buildProfiles(){
+  const cont=document.getElementById('profileCards');
+  let html='';
+  PROFILES.forEach((p,i)=>{
+    const color=COLORS[i];
+    const sfdrBadge=p.sfdr_ok
+      ?`<span class="badge badge-esg">${p.sfdr}</span>`
+      :`<span class="badge" style="background:rgba(245,158,11,.15);color:var(--amber)">${p.sfdr}</span>`;
+    html+=`<div class="card" style="border-left:3px solid ${color}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="color:${color};font-size:1.1rem;font-weight:700">●</span>
+        <h3 style="font-size:1rem;font-weight:700;margin:0">${p.name}</h3>
+        ${sfdrBadge}
+        <span class="badge" style="background:rgba(99,102,241,.15);color:var(--accent2)">Active</span>
+        <span class="badge" style="background:rgba(6,182,212,.12);color:var(--cyan)">Obj: ${p.performance_obj} Benchmark</span>
+      </div>
+      <p style="font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:12px">${p.perf_desc}</p>
+      <div style="margin-bottom:12px">
+        <div style="font-size:.72rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Investment Strategy</div>
+        <p style="font-size:.8rem;color:var(--text);line-height:1.65">${p.strategy}</p>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:.72rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">How it Departs from the Index</div>
+        <p style="font-size:.8rem;color:var(--text);line-height:1.65">${p.departure}</p>
+      </div>
+      <div>
+        <div style="font-size:.72rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Official Documentation</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${p.links.map(l=>`<a href="${l.url}" target="_blank" rel="noopener" style="display:inline-block;padding:5px 12px;border-radius:6px;background:var(--surface2);color:var(--accent2);font-size:.75rem;text-decoration:none;border:1px solid var(--border);transition:all .15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">${l.label} ↗</a>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+  cont.innerHTML=html;
+}
+buildProfiles();
+
+</script>
+</body>
+</html>
