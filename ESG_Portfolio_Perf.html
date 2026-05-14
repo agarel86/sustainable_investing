@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<title>EURO STOXX 600 — ESG Portfolio Builder</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -213,9 +211,113 @@ const CRISES=[
 
 function trToJsonKey(tr){return tr.replace(/^TR\./i,'').toUpperCase();}
 
+function trToDedupeKey(tr){
+  return trToJsonKey(tr).replace(/[^A-Z0-9]/g,'');
+}
+
+var TR_LABEL_PRETTY={
+'ANIMALWELLBEING':'Animal wellbeing',
+'ARMAMENTS':'Armaments',
+'PORNOGRAPHY':'Pornography',
+'CONTRACEPTIVES':'Contraceptives',
+'CLUSTERBOMBS':'Cluster bombs',
+'ANTIPERSONNELLANDMINES':'Anti-personnel landmines',
+'ABORTIFACIENTS':'Abortifacients',
+'PORKPRODUCTS':'Pork products',
+'EMBRYONICSTEMCELLRESEARCH':'Embryonic stem cell research',
+'TOBACCO':'Tobacco',
+'GAMBLING':'Gambling',
+'ALCOHOL':'Alcohol',
+'NUCLEAR':'Nuclear / civil nuclear',
+'NUCLEARWEAPONS':'Nuclear weapons',
+'CIVILIANFIREARMS':'Civilian firearms',
+'LANDMINES':'Landmines',
+'OBESITYRISK':'Obesity risk',
+'NOTAPPROVEDDRUG':'Not approved drug',
+'CLUSTERBOMBSANDMINES':'Cluster bombs and mines',
+'ANALYTICENVCONTROV':'Analytic indicators — Env (controversies)',
+  'CONTROVENV':'Controversies - Env',
+  'RECENTCONTROVENV':'Recent controversies - Env',
+  'CONTROVMGTCOMP':'Controversies - management Comp',
+  'CONTROVERSIESCOUNT':'Controversies Count',
+  'TRESGCCONTROVERSIESSCORE':'TRESGC Controversies Score',
+  'CONTROVANTICOMPETITION':'Controversies - Anti Competition',
+  'CONTROVBUSINESSETHICS':'Controversies - Business Ethics',
+  'CONTROVCOPYRIGHTS':'Controversies - Copyrights',
+  'CONTROVCRITICALCOUNTRIES':'Controversies - Critical Countries',
+  'CONTROVPUBLICHEALTH':'Controversies - Public Health',
+  'CONTROVTAXFRAUD':'Controversies - Tax Fraud',
+  'CONTROVCHILDLABOR':'Controversies - Child Labor',
+  'CONTROVHUMANRIGHTS':'Controversies - Human Rights',
+  'CONTROVFREEDOMOFASSOCIATION':'Controversies - Freedom of Association',
+  'CONTROVCONSUMER':'Controversies - Consumer',
+  'CONTROVCUSTOMERHS':'Controversies - Customer (health & safety)',
+  'CONTROVPRIVACY':'Controversies - Privacy',
+  'CONTROVPRODUCTACCESS':'Controversies - Product Access',
+  'CONTROVRESPMARKETING':'Controversies - responsible Marketing',
+  'CONTROVRESPONSIBLERD':'Controversies - Responsible R&D',
+  'CONTROVEMISSION':'Controversies - Emission',
+  'CONTROVWASTEWATERMANAGEMENT':'Controversies - Wastewater Management',
+  'CONTROVLOWCARBONTRANSITION':'Controversies - Low Carbon Transition',
+  'RESOURCEUSECONTROVERSIES':'Resource Use Controversies',
+  'BIODIVERSITYANDECOSYSTEMCONTROVERSIES':'Biodiversity And Ecosystem Controversies',
+  'POLLUTIONCONTROVERSIES':'Pollution Controversies',
+  'CONTROVACCOUNTING':'Controversies - Accounting',
+  'CONTROVINSIDERDEALINGS':'Controversies - Insider Dealings',
+  'CONTROVSHAREHOLDERS':'Controversies - Shareholders',
+  'CONTROVDIVERSITYOPPORTUNITY':'Controversies - Diversity Opportunity',
+  'CONTROVEMPLOYEESHS':'Controversies - Employees (health & safety)',
+  'CONTROVWORKINGCONDITION':'Controversies - Working Condition',
+  'RECENTCONTROVANTICOMPETITION':'Recent controversies - Anti Competition',
+  'RECENTCONTROVBUSINESSETHICS':'Recent controversies - Business Ethics',
+  'RECENTCONTROVCOPYRIGHTS':'Recent controversies - Copyrights',
+  'RECENTCONTROVCRITICALCOUNTRIES':'Recent controversies - Critical Countries',
+  'RECENTCONTROVPUBLICHEALTH':'Recent controversies - Public Health',
+  'RECENTCONTROVTAXFRAUD':'Recent controversies - Tax Fraud',
+  'RECENTCONTROVCHILDLABOR':'Recent controversies - Child Labor',
+  'RECENTCONTROVHUMANRIGHTS':'Recent controversies - Human Rights',
+  'RECENTCONTROVCONSUMER':'Recent controversies - Consumer',
+  'RECENTCONTROVCUSTOMERHS':'Recent controversies - Customer (health & safety)',
+  'RECENTCONTROVDIVERSITY':'Recent controversies - Diversity',
+  'RECENTCONTROVEMPLOYEESHS':'Recent controversies - Employees (health & safety)',
+  'RECENTCONTROVEMISSION':'Recent controversies - Emission',
+  'RECENTCONTROVWASTEWATERMANAGEMENT':'Recent controversies - Wastewater Management',
+  'RECENTCONTROVLOWCARBONTRANSITION':'Recent controversies - Low Carbon Transition',
+  'RECENTRESOURCEUSECONTROVERSIES':'Recent Resource Use Controversies',
+  'RECENTBIODIVERSITYANDECOSYSTEMCONTROVERSIES':'Recent Biodiversity And Ecosystem Controversies',
+  'RECENTPOLLUTIONCONTROVERSIES':'Recent Pollution Controversies',
+  'RECENTCONTROVINSIDERDEALINGS':'Recent controversies - Insider Dealings',
+  'RECENTCONTROVPRIVACY':'Recent controversies - Privacy',
+  'RECENTCONTROVPRODUCTACCESS':'Recent controversies - Product Access',
+  'RECENTCONTROVRESPMARKETING':'Recent controversies - responsible Marketing',
+  'RECENTCONTROVRESPONSIBLERD':'Recent controversies - Responsible R&D',
+  'RECENTCONTROVSHAREHOLDERS':'Recent controversies - Shareholders',
+  'RECENTCONTROVACCOUNTING':'Recent controversies - Accounting',
+  'RECENTCONTROVWORKINGCONDITION':'Recent controversies - Working Condition',
+  'ANALYTICACCOUNTINGCONTROV':'Analytic indicators — Accounting (controversies)',
+  'ANALYTICANTICOMPETITIONCONTROV':'Analytic indicators — Anti Competition (controversies)',
+  'ANALYTICBRIBERYFRAUDCONTROV':'Analytic indicators — Bribery Fraud (controversies)',
+  'ANALYTICCUSTOMERCONTROV':'Analytic indicators — Customer (controversies)',
+  'ANALYTICEXECCOMPCONTROV':'Analytic indicators — Exec Comp (controversies)',
+  'ANALYTICINSIDERDEALINGSCONTROV':'Analytic indicators — Insider Dealings (controversies)',
+  'ANALYTICRESPMARKETINGCONTROV':'Analytic indicators — responsible Marketing (controversies)',
+  'ANALYTICWORKINGCONDITIONCONTROV':'Analytic indicators — Working Condition (controversies)',
+  'CONTROVRECENTMGTCOMP':'Controversies - Recent management Comp',
+};
+
 function isCountField(tr){
   if(/ControversiesScore|Score$/i.test(tr))return false;
   return /^(TR\.)?(Controv|RecentControv|ControversiesCount|ResourceUseControversies|BiodiversityAndEcosystemControversies|PollutionControversies|Strikes|ProductRecall|MgtDepartures)/i.test(tr);
+}
+
+function getEsgCell(src,dedupeKey){
+  if(!src||dedupeKey==null||dedupeKey==='')return null;
+  if(Object.prototype.hasOwnProperty.call(src,dedupeKey))return src[dedupeKey];
+  for(var p in src){
+    if(!Object.prototype.hasOwnProperty.call(src,p))continue;
+    if(trToDedupeKey('TR.'+p)===dedupeKey)return src[p];
+  }
+  return null;
 }
 
 function parseMarketCapCsv(text){
@@ -254,23 +356,36 @@ function buildDataset(rawJson, trOrder, mcapMap){
     Object.keys(esg).forEach(function(y){
       var row=esg[y];
       if(!row||typeof row!=='object')return;
-      Object.keys(row).forEach(function(k){dataKeysGlobal[k]=1;});
+      Object.keys(row).forEach(function(k){dataKeysGlobal[trToDedupeKey('TR.'+k)]=1;});
     });
   });
   var keySet=Object.keys(dataKeysGlobal);
   var COL=[];
-  var seenCol={};
+  var seenByTr={};
+  var seenDedupe={};
   function addCol(tr){
-    if(seenCol[tr])return;
-    var jk=trToJsonKey(tr);
-    if(!dataKeysGlobal[jk])return;
-    COL.push(tr);seenCol[tr]=1;
+    if(seenByTr[tr])return;
+    var dk=trToDedupeKey(tr);
+    if(!dataKeysGlobal[dk])return;
+    if(seenDedupe[dk])return;
+    COL.push(tr);
+    seenByTr[tr]=1;
+    seenDedupe[dk]=1;
   }
   trOrder.forEach(addCol);
-  keySet.sort().forEach(function(jk){
-    var tr='TR.'+jk;
-    if(!seenCol[tr]){COL.push(tr);seenCol[tr]=1;}
+  keySet.sort().forEach(function(rawKey){
+    addCol('TR.'+rawKey);
   });
+  (function finalDedupeCols(){
+    var seen={},out=[];
+    COL.forEach(function(tr){
+      var d=trToDedupeKey(tr);
+      if(seen[d])return;
+      seen[d]=1;
+      out.push(tr);
+    });
+    COL=out;
+  })();
   COLS=COL;
   CAT_I=[];
   var n=COLS.length;
@@ -289,8 +404,9 @@ function buildDataset(rawJson, trOrder, mcapMap){
       var row=esg[py];
       if(!row)return;
       for(var i=0;i<n;i++){
-        var jk=trToJsonKey(COLS[i]);
-        if(Object.prototype.hasOwnProperty.call(row,jk))noteSample(i,row[jk]);
+        var dk=trToDedupeKey(COLS[i]);
+        var gv=getEsgCell(row,dk);
+        if(gv!=null)noteSample(i,gv);
       }
     });
   });
@@ -349,8 +465,8 @@ function buildDataset(rawJson, trOrder, mcapMap){
       if(!src||typeof src!=='object')return;
       var row={};
       for(var i=0;i<n;i++){
-        var jk=trToJsonKey(COLS[i]);
-        var v=Object.prototype.hasOwnProperty.call(src,jk)?src[jk]:null;
+        var dk=trToDedupeKey(COLS[i]);
+        var v=getEsgCell(src,dk);
         if(v==null&&FI_SET[i])v=false;
         if(v==null&&ZI_SET[i])v=0;
         row[i]=v;
@@ -368,6 +484,8 @@ function buildDataset(rawJson, trOrder, mcapMap){
 }
 
 function friendlyNameFromTr(tr){
+  var k=trToDedupeKey(tr);
+  if(TR_LABEL_PRETTY[k])return TR_LABEL_PRETTY[k];
   return tr.replace(/^TR\./,'').replace(/([a-z])([A-Z0-9])/g,function(_,a,b){return a+' '+b;});
 }
 
@@ -543,7 +661,7 @@ window.closeModal=closeModal;
 
 window.addEventListener('DOMContentLoaded',function(){
 var ld=document.getElementById('loading');
-ld.querySelector('div:last-child').textContent='Loading data… (loader build '+ESG_PF_DATA_LOADER_BUILD+'). If errors mention only stoxx_data.json HTTP 404, the site is still serving an old copy of this HTML — re-upload this file to the same path as the URL and hard-refresh (Ctrl+F5).';
+ld.querySelector('div:last-child').textContent='Loading data… (build '+ESG_PF_DATA_LOADER_BUILD+')';
 loadAllData().then(function(built){
 D=built;COLS=D.C;LABELS=D.L;BI=D.BI;NI=D.NI;KNI=D.KN;CAT_I=D.CI;ZI_SET={};FI_SET={};(D.ZI||[]).forEach(function(i){ZI_SET[i]=1;});(D.FI||[]).forEach(function(i){FI_SET[i]=1;});
 ld.style.display='none';
@@ -1080,6 +1198,7 @@ function loadConfig(event){var file=event.target.files[0];if(!file)return;
   }catch(err){alert('Error reading config: '+err.message);}};
   reader.readAsText(file);event.target.value='';}
 window.loadConfig=loadConfig;
+
 </script>
 </body>
 </html>
