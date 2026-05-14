@@ -183,7 +183,7 @@ align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap
 </div></div></div>
 <script>
 /* Data: stoxx_data.json.gz then .json; esg_tr_field_order.json; optional stoxx_market_cap_panel.csv. If opened from github.com/.../blob/..., loads from raw.githubusercontent.com. Override: window.STOXX_DATA_URL for STOXX file only. */
-var ESG_PF_DATA_LOADER_BUILD='2026-05-13-r5';
+var ESG_PF_DATA_LOADER_BUILD='2026-05-13-r6';
 function cacheBustFetchUrl(urlStr){
   try{var u=new URL(urlStr,document.URL);u.searchParams.set('pfloader',ESG_PF_DATA_LOADER_BUILD);return u.href;}
   catch(e){return urlStr+(String(urlStr).indexOf('?')>=0?'&':'?')+'pfloader='+encodeURIComponent(ESG_PF_DATA_LOADER_BUILD);}}
@@ -314,11 +314,18 @@ function isCountField(tr){
 
 function getEsgCell(src,dedupeKey){
   if(!src||dedupeKey==null||dedupeKey==='')return null;
-  if(Object.prototype.hasOwnProperty.call(src,dedupeKey))return src[dedupeKey];
-  for(var p in src){
-    if(!Object.prototype.hasOwnProperty.call(src,p))continue;
-    if(trToDedupeKey('TR.'+p)===dedupeKey)return src[p];
+  var cache=src.__esgCanon;
+  if(!cache){
+    cache=Object.create(null);
+    for(var p in src){
+      if(!Object.prototype.hasOwnProperty.call(src,p))continue;
+      if(p==='__esgCanon')continue;
+      cache[trToDedupeKey('TR.'+p)]=src[p];
+    }
+    try{Object.defineProperty(src,'__esgCanon',{value:cache,enumerable:false,writable:false,configurable:true});}
+    catch(e){src.__esgCanon=cache;}
   }
+  if(Object.prototype.hasOwnProperty.call(cache,dedupeKey))return cache[dedupeKey];
   return null;
 }
 
