@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance — Sustainable Investing · 20 May 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep: #1a3c34;
+    --green-mid: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #d8f3dc;
+    --cream: #fdfaf5;
+    --sand: #f0ebe3;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --white: #ffffff;
+    --border: #e0ddd6;
+    --check-accent: #40916c;
+    --row-hover: rgba(82,183,136,.06);
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* --- HEADER --- */
+  .hero {
+    background: var(--green-deep);
+    color: var(--white);
+    padding: 2.5rem 1.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(82,183,136,.15), transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 800px; margin: 0 auto; position: relative; }
+  .hero-label {
+    font-size: .7rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--green-light);
+    margin-bottom: .6rem;
+    font-weight: 500;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    line-height: 1.15;
+    margin-bottom: .5rem;
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.4rem;
+    font-size: .85rem;
+    color: rgba(255,255,255,.7);
+    margin-top: .6rem;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: .35rem; }
+  .hero-meta svg { width: 15px; height: 15px; opacity: .6; }
+
+  /* --- MAIN --- */
+  .main { max-width: 800px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  /* Search */
+  .search-bar {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--cream);
+    padding: .75rem 0;
+    margin-bottom: .5rem;
+  }
+  .search-bar input {
+    width: 100%;
+    padding: .7rem 1rem .7rem 2.6rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: .95rem;
+    background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%236b6b6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='5'/%3E%3Cline x1='12' y1='12' x2='16.5' y2='16.5'/%3E%3C/svg%3E") .75rem center no-repeat;
+    transition: border-color .2s;
+    outline: none;
+  }
+  .search-bar input:focus { border-color: var(--green-mid); }
+
+  /* Section */
+  .section { margin-bottom: 2rem; }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: .6rem;
+    padding: 0 .25rem;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--green-deep);
+  }
+  .section-badge {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: var(--green-pale);
+    color: var(--green-mid);
+    padding: .22rem .6rem;
+    border-radius: 20px;
+  }
+
+  /* Table */
+  .att-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  .att-table thead th {
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: .75rem .6rem;
+    text-align: left;
+    background: var(--sand);
+    border-bottom: 1.5px solid var(--border);
+  }
+  .att-table thead th:nth-child(3),
+  .att-table thead th:nth-child(4) { text-align: center; }
+  .att-table tbody tr { transition: background .15s; }
+  .att-table tbody tr:hover { background: var(--row-hover); }
+  .att-table tbody tr.hidden { display: none; }
+  .att-table tbody td {
+    padding: .6rem;
+    border-bottom: 1px solid var(--border);
+    font-size: .9rem;
+    vertical-align: middle;
+  }
+  .att-table tbody tr:last-child td { border-bottom: none; }
+  .td-num { color: var(--text-muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+  .td-name { font-weight: 500; }
+  .td-name small { display: block; font-weight: 400; font-size: .78rem; color: var(--text-muted); }
+
+  /* Checkbox */
+  .cb-wrap { display: flex; justify-content: center; }
+  .cb-wrap input[type=checkbox] { display: none; }
+  .cb-wrap label {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+    background: var(--white);
+  }
+  .cb-wrap label:hover { border-color: var(--green-light); }
+  .cb-wrap input:checked + label {
+    background: var(--check-accent);
+    border-color: var(--check-accent);
+  }
+  .cb-wrap label svg { opacity: 0; transition: opacity .15s; }
+  .cb-wrap input:checked + label svg { opacity: 1; }
+
+  /* Counter */
+  .counter {
+    font-size: .82rem;
+    color: var(--text-muted);
+    padding: .5rem .25rem 0;
+  }
+  .counter b { color: var(--green-mid); font-weight: 700; }
+
+  /* Export */
+  .export-row {
+    display: flex;
+    gap: .75rem;
+    justify-content: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .65rem 1.4rem;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary {
+    background: var(--green-mid);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(45,106,79,.25);
+  }
+  .btn-primary:hover { box-shadow: 0 4px 14px rgba(45,106,79,.35); }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--green-deep);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--green-mid); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--green-deep); color: var(--white);
+    padding: .65rem 1.4rem; border-radius: var(--radius);
+    font-size: .88rem; font-weight: 500;
+    box-shadow: 0 6px 24px rgba(0,0,0,.18);
+    opacity: 0; transition: all .35s ease;
+    pointer-events: none; z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* responsive */
+  @media (max-width: 500px) {
+    .att-table thead th, .att-table tbody td { padding: .45rem .35rem; font-size: .82rem; }
+    .td-num { display: none; }
+    .hero { padding: 2rem 1rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Attendance Sheet</div>
+    <h1>Sustainable Investing</h1>
+    <div class="hero-meta">
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Wednesday, 20 May 2026
+      </span>
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Prof. Alexandre Garel
+      </span>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="Search by name…" autocomplete="off" spellcheck="false">
+  </div>
+
+  <!-- G2 — MORNING -->
+  <div class="section" id="sec-g2">
+    <div class="section-header">
+      <div class="section-title">Group 2 — Morning</div>
+      <span class="section-badge">9 : 00 – 12 : 00</span>
+    </div>
+    <table class="att-table" id="table-g2">
+      <thead>
+        <tr>
+          <th style="width:42px">#</th>
+          <th>Student</th>
+          <th style="width:70px">Slot 1</th>
+          <th style="width:70px">Slot 2</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="counter" id="counter-g2"></div>
+  </div>
+
+  <!-- G1 — AFTERNOON -->
+  <div class="section" id="sec-g1">
+    <div class="section-header">
+      <div class="section-title">Group 1 — Afternoon</div>
+      <span class="section-badge">14 : 00 – 17 : 00</span>
+    </div>
+    <table class="att-table" id="table-g1">
+      <thead>
+        <tr>
+          <th style="width:42px">#</th>
+          <th>Student</th>
+          <th style="width:70px">Slot 1</th>
+          <th style="width:70px">Slot 2</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="counter" id="counter-g1"></div>
+  </div>
+
+  <div class="export-row">
+    <button class="btn btn-primary" onclick="exportCSV()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </button>
+    <button class="btn btn-secondary" onclick="resetAll()">Reset all</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// --- DATA ---
+const G2 = [
+  {id:"137805378",last:"GREDYS",first:"Emilie"},
+  {id:"140011298",last:"JEDDOU",first:"Inasse"},
+  {id:"138793067",last:"JORGE",first:"Matéo"},
+  {id:"134718066",last:"KEMGUEFACK NGUEFACK",first:"Vicky Derboise"},
+  {id:"139384407",last:"KHATCHADOURIAN",first:"Nicolas"},
+  {id:"137507917",last:"KIRUPAKARAN",first:"Kathiravan"},
+  {id:"116222694",last:"KOUAME",first:"Emmanuelle"},
+  {id:"145114708",last:"KPOMAHO",first:"Emmanuel"},
+  {id:"140789256",last:"KUMAR",first:"Smriti"},
+  {id:"138752928",last:"LACOMBE",first:"Jane"},
+  {id:"137312528",last:"LE TOHIC",first:"Léonard"},
+  {id:"102303368",last:"LEJEAL",first:"Maxime"},
+  {id:"140196763",last:"LLORCA",first:"Jean"},
+  {id:"139563661",last:"MAHJOUB",first:"Farah"},
+  {id:"139384274",last:"MALOSSE",first:"Lauryne"},
+  {id:"139364345",last:"MANDAKA",first:"Claurena"},
+  {id:"139641200",last:"MARKINA",first:"Arina"},
+  {id:"138677858",last:"MARTENO",first:"Max"},
+  {id:"102312889",last:"MARY",first:"Léa"},
+  {id:"137920388",last:"MATHURIN",first:"Anselme"},
+  {id:"143327176",last:"MBAYE",first:"Gagne-Siry"},
+  {id:"139681976",last:"MESHUN WIAH",first:"Ester"},
+  {id:"78336092",last:"MOUJIB",first:"Houria"},
+  {id:"145274065",last:"MUKADI",first:"Rebecca"},
+  {id:"140256693",last:"OLIVEIRA NOGUEIRA",first:"Marina"},
+  {id:"141181687",last:"RABOIN",first:"Thomas"},
+  {id:"140653844",last:"RASOAMANARIVO",first:"Tsiresy"},
+  {id:"141226860",last:"RICHER",first:"Camille"},
+  {id:"137507701",last:"RINKER",first:"Laura"},
+  {id:"142191465",last:"SAUSSAY",first:"Julien"},
+  {id:"102312377",last:"SCHWARTZ",first:"Johanna"},
+  {id:"134875076",last:"SOARES",first:"Léandro"},
+  {id:"137359253",last:"TINNIN",first:"Uzair"},
+  {id:"139365886",last:"ULMANN",first:"Emilie"},
+  {id:"137818613",last:"WASKO",first:"Amelia"},
+  {id:"114859950",last:"ZHANG",first:"Boshen"}
+];
+
+const G1 = [
+  {id:"140015558",last:"AGOSSOU",first:"Roseline"},
+  {id:"143326331",last:"AYACHE",first:"Ilies"},
+  {id:"142315064",last:"BATAL",first:"Omar"},
+  {id:"89872193",last:"BAYCHELIER",first:"Thomas"},
+  {id:"101933501",last:"BEDOGNI-CUEVAS",first:"Sonya"},
+  {id:"140015767",last:"BERGERAS",first:"Constance"},
+  {id:"138205485",last:"BEY-ROZET-SOTTO",first:"Tom"},
+  {id:"136530654",last:"BOUAOUIDA",first:"Raja"},
+  {id:"138415578",last:"BOUDRAR",first:"Basma"},
+  {id:"140398482",last:"BROUSSE",first:"Louis"},
+  {id:"64432945",last:"CALCO",first:"Romain"},
+  {id:"134547902",last:"CHAGUER",first:"Younes"},
+  {id:"137306425",last:"CHALOUAN",first:"Ilias"},
+  {id:"144526079",last:"CHELLALI",first:"Karim"},
+  {id:"102307654",last:"CISSE",first:"Sadhigatou"},
+  {id:"144289152",last:"CISTERNA",first:"Florisa"},
+  {id:"138667754",last:"CLERVOY",first:"Eléanne"},
+  {id:"139681583",last:"CURNEY",first:"Paul"},
+  {id:"140011451",last:"DAHIO",first:"Marie"},
+  {id:"135360535",last:"DANGUI",first:"Constance Anne-Divine"},
+  {id:"139364426",last:"DE KOUADIO",first:"Marc Alain"},
+  {id:"102326840",last:"DESPREZ",first:"Lucas"},
+  {id:"145360409",last:"DJINADOU",first:"Kenneth"},
+  {id:"139563517",last:"DONDJI-SONFACK",first:"Gufflet"},
+  {id:"141182555",last:"DUPRAZ",first:"Julie"},
+  {id:"137312709",last:"DUTHILLEUL",first:"Christopher"},
+  {id:"139384510",last:"EL MESSADI",first:"Noura"},
+  {id:"134547807",last:"EL MOUDDEN",first:"Achraf"},
+  {id:"140321643",last:"EL OUIDANI",first:"Imane"},
+  {id:"139563351",last:"ELMOUKHLISSE",first:"Kenza"},
+  {id:"139620904",last:"FONTAINE",first:"Thibault"},
+  {id:"139385587",last:"GEORGES-BAZARD",first:"Manon"},
+  {id:"142319084",last:"GHAZI",first:"Abdellah"},
+  {id:"139563596",last:"GONTIER ACKERMANN",first:"Mathias"},
+  {id:"144812165",last:"ICHAR",first:"Maël"},
+  {id:"142315228",last:"JAOUHARI",first:"Iliass"},
+  {id:"135626183",last:"NGUYEN",first:"Melvil"}
+];
+
+// --- LOCAL-STORAGE PERSISTENCE ---
+const STORAGE_KEY = 'att_20may2026';
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function saveState() {
+  const state = {};
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    if (cb.checked) state[cb.id] = true;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// --- RENDER ---
+function buildTable(group, tableId, prefix) {
+  const tbody = document.querySelector('#' + tableId + ' tbody');
+  const saved = loadState();
+  group.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    const c1id = prefix + '_s1_' + s.id;
+    const c2id = prefix + '_s2_' + s.id;
+    tr.setAttribute('data-search', (s.first + ' ' + s.last).toLowerCase());
+    tr.innerHTML = `
+      <td class="td-num">${i + 1}</td>
+      <td class="td-name">${s.last}, ${s.first} <small>${s.id}</small></td>
+      <td><div class="cb-wrap"><input type="checkbox" id="${c1id}" ${saved[c1id] ? 'checked' : ''}><label for="${c1id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></label></div></td>
+      <td><div class="cb-wrap"><input type="checkbox" id="${c2id}" ${saved[c2id] ? 'checked' : ''}><label for="${c2id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></label></div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+buildTable(G2, 'table-g2', 'g2');
+buildTable(G1, 'table-g1', 'g1');
+
+// --- PERSIST ON CHANGE ---
+document.addEventListener('change', e => {
+  if (e.target.type === 'checkbox') { saveState(); updateCounters(); }
+});
+
+// --- COUNTERS ---
+function countChecked(prefix) {
+  const boxes = document.querySelectorAll(`input[id^="${prefix}_s1_"]`);
+  let c1 = 0, c2 = 0;
+  boxes.forEach(cb => { if (cb.checked) c1++; });
+  document.querySelectorAll(`input[id^="${prefix}_s2_"]`).forEach(cb => { if (cb.checked) c2++; });
+  return { total: boxes.length, c1, c2 };
+}
+function updateCounters() {
+  ['g2','g1'].forEach(p => {
+    const {total, c1, c2} = countChecked(p);
+    document.getElementById('counter-' + p).innerHTML =
+      `Slot 1: <b>${c1}</b> / ${total} &nbsp;·&nbsp; Slot 2: <b>${c2}</b> / ${total}`;
+  });
+}
+updateCounters();
+
+// --- SEARCH ---
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.att-table tbody tr').forEach(tr => {
+    tr.classList.toggle('hidden', q && !tr.dataset.search.includes(q));
+  });
+});
+
+// --- EXPORT CSV ---
+function exportCSV() {
+  let csv = 'Group,StudentID,LastName,FirstName,Slot1,Slot2\n';
+  function addRows(group, prefix, label) {
+    group.forEach(s => {
+      const s1 = document.getElementById(prefix + '_s1_' + s.id).checked ? 1 : 0;
+      const s2 = document.getElementById(prefix + '_s2_' + s.id).checked ? 1 : 0;
+      csv += `${label},${s.id},"${s.last}","${s.first}",${s1},${s2}\n`;
+    });
+  }
+  addRows(G2, 'g2', 'G2-Morning');
+  addRows(G1, 'g1', 'G1-Afternoon');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'attendance_20may2026.csv';
+  a.click();
+  showToast('CSV downloaded ✓');
+}
+
+// --- RESET ---
+function resetAll() {
+  if (!confirm('Clear all attendance marks?')) return;
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+  localStorage.removeItem(STORAGE_KEY);
+  updateCounters();
+  showToast('All marks cleared');
+}
+
+// --- TOAST ---
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
