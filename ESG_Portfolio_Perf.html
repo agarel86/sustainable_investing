@@ -204,8 +204,7 @@ const CRISES=[
 {n:'COVID-19 Extended',s:'2020-02',e:'2020-12',d:'Full pandemic year incl. recovery'},
 {n:'2022 Rate Shock',s:'2022-01',e:'2022-06',d:'Inflation surge, rate hikes, bond rout'},
 {n:'Ukraine / Energy Crisis',s:'2022-02',e:'2022-09',d:'Russian invasion, gas price surge'},
-{n:'UK Gilt Crisis',s:'2022-09',e:'2022-10',d:'Truss mini-budget, gilt meltdown'},
-{n:'SVB / Banking Stress',s:'2023-03',e:'2023-03',d:'SVB collapse, Credit Suisse rescue'},
+
 {n:'2018 Q4 Selloff',s:'2018-10',e:'2018-12',d:'Trade war fears, ECB tightening'},
 {n:'China/Oil 2015-16',s:'2015-08',e:'2016-02',d:'China devaluation, commodity collapse'},
 {n:'Greek Crisis (Grexit)',s:'2015-06',e:'2015-08',d:'Capital controls, referendum Jul 5, bailout Aug'},
@@ -1316,11 +1315,11 @@ h+='<div class="scroll-x"><table><thead><tr><th>Metric</th>';
 pds.forEach(function(p){h+='<th colspan=2>'+p.l+'</th>';});
 h+='</tr><tr><th></th>';pds.forEach(function(){h+='<th style="color:var(--a2)">PF</th><th style="color:var(--t3)">BMK</th>';});
 h+='</tr></thead><tbody>';
-[{l:'Cumulative Return',f:cumR},{l:'Ann. Return',f:annR},{l:'Ann. Volatility',f:annV},
-{l:'Sharpe',f:sha},{l:'Sortino',f:sor},{l:'Max Drawdown',f:function(r){return -mdd(r);}}].forEach(function(mt){
+[{l:'Cumulative Return',f:cumR,fmt:fp},{l:'Ann. Return',f:annR,fmt:fp},{l:'Ann. Volatility',f:annV,fmt:fp},
+{l:'Sharpe',f:sha,fmt:fn},{l:'Sortino',f:sor,fmt:fn},{l:'Max Drawdown',f:function(r){return -mdd(r);},fmt:fp}].forEach(function(mt){
 h+='<tr><td><strong>'+mt.l+'</strong></td>';
 pds.forEach(function(p){var pv=mt.f(p.p),bv=mt.f(p.b);
-h+='<td class="mn '+cp(pv)+'">'+fp(pv)+'</td><td class="mn" style="color:var(--t3)">'+fp(bv)+'</td>';});h+='</tr>';});
+h+='<td class="mn '+cp(pv)+'">'+mt.fmt(pv)+'</td><td class="mn" style="color:var(--t3)">'+mt.fmt(bv)+'</td>';});h+='</tr>';});
 h+='<tr><td><strong>Alpha</strong></td>';pds.forEach(function(p){var r=ab(p.p,p.b);h+='<td class="mn '+cp(r.a)+'">'+fp(r.a)+'</td><td class="mn" style="color:var(--t3)">—</td>';});
 h+='</tr><tr><td><strong>Beta</strong></td>';pds.forEach(function(p){var r=ab(p.p,p.b);h+='<td class="mn">'+fn(r.b)+'</td><td class="mn" style="color:var(--t3)">1.00</td>';});
 h+='</tr></tbody></table></div></div>';
