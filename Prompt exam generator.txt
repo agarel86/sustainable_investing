@@ -1,0 +1,50 @@
+Context: This is the Markdown of one specific chapter of my course. For this chapter, generate 70 exam questions with solutions and store them in an appropriate format. We will repeat this process for all chapters, and later build a practice tool for students.
+General rules:
+
+Never invent or hallucinate. Everything must be factually correct and cross-checked.
+Verify every question against the course material. Only keep questions you can also validate externally.
+Be exhaustive. Complete the full task for every document — no skipping, no placeholders.
+Every question must be fully self-contained: include enough context that any reader can understand what is being asked and why, without needing to refer back to the course notes.
+
+Question breakdown (70 per chapter):
+
+40 comprehension questions — Test key concepts, ideas, and understanding of ESG investing, specifically the aspects covered in this chapter. All questions must be grounded in the course content. Each question should provide sufficient context so the concept being tested is clear on its own.
+10 numerical application questions — Build on the calculations in the notes and create variations. The core teaching takeaway should remain the same but applied to a different context. For each question:
+
+Present the problem with a realistic, contextualized scenario (not raw numbers in isolation).
+Provide five credible candidate answers, each showing the calculation steps leading to the result (e.g. "Carbon cost = 1.5 Mt × €100/t = €150M/yr → net CF = 90−150 = −€60M/yr → NPV = −400+(−60)×11.47 = −€1,088.2M"). Students have no calculator — they must identify the correct method by following the maths in each option. Do not show only the final number.
+The model answer column provides the full worked-out solution showing all reasoning and calculation steps.
+Each numerical question must include a follow-up interpretation question (e.g., "Is there a free lunch? Why?", "What does this imply about the penalty structure?"). The student must answer this as well. The interpretation question and its expected answer should be included in both the Question and Model Answer columns.
+
+
+10 current events questions — Focus on recent news, controversies, scandals, or regulatory developments closely linked to the chapter's topics but NOT the examples already used in the course notes. The student must connect the event to specific concepts, findings, or conclusions from the chapter. Do not use generic phrasing like "using the course's framework." Instead, explicitly name the relevant concept, model, finding, or author the student should mobilize (e.g., "discuss how this connects to the substitution hypothesis documented by Lam & Wurgler (2024)" or "analyze through the lens of the DNSH criteria under the EU Taxonomy"). The model answer should be structured as a clear marking guide: state the key points a good answer must hit (3–5 bullet points), with enough guidance to grade consistently but without scripting a single "right" paragraph.
+10 "argue for or against" questions — Each question presents a major debate or controversial claim related to the chapter's themes and asks the student to argue either in favor or against (specified in the question). These assess the ability to construct and defend a reasoned position. Questions should draw from live ESG debates — including but not limited to: defense sector exclusion from green finance, nuclear in green taxonomies, the ESG backlash narrative, whether green bonds add anything new vs. conventional finance, materiality vs. double materiality, the usefulness of exclusion policies, regulatory fragmentation, label proliferation, whether engagement is cheap talk, SLB credibility, greenwashing enforcement, sovereign green bonds, etc. The student's position does not need to come exclusively from the course — they should draw on broader reasoning, but anchor key arguments in course concepts. The model answer should list the 4–6 strongest arguments for the assigned side, noting which draw on course material and which require independent reasoning.
+
+Excel output — two sheets, strict formatting:
+Sheet 1: "All Questions"
+
+Columns: # | Category | Question | Model Answer
+Column widths: A=5, B=18, C=80, D=100
+Header row: Arial 11pt bold, white text, dark blue fill (#2F5496), centered, wrap text
+Body rows: Arial 10pt, wrap text, top-aligned
+All cells: thin borders on all sides
+Freeze panes on row 1 (headers always visible)
+Auto-filter enabled on all columns
+Category values: "Comprehension", "Numerical", "Current Events", "Argue For/Against"
+Questions numbered sequentially 1–70
+
+Sheet 2: "Numerical Choices"
+
+Columns: # | Question | Model Answer | Choice A | Choice B | Choice C | Choice D | Choice E | Correct Choice
+Column widths: A=5, B=80, C=100, Choice columns=30 each, Correct column=10
+Same header formatting as Sheet 1 (dark blue fill, white bold Arial 11pt)
+Same body formatting (Arial 10pt, wrap text, thin borders)
+Freeze panes on row 1
+The # column matches the question number from Sheet 1
+Correct Choice: letter A–E indicating which choice is correct
+Each choice shows step-by-step calculation with the final result at the end — same label/unit throughout (e.g. all lines end with NPV = …), plausible but only one correct path
+The full worked-out solution appears only in the Model Answer column
+
+File naming: Chapter_[ChapterName]_70_Questions.xlsx (or _100_ for longer banks)
+
+Practice tool: practice_questions.html loads these files locally. French copies: Chapter_*_FR.xlsx (generate with generate_fr_workbooks.py). Supported categories: Comprehension, Numerical, Current Events, Argue For/Against, Advanced.

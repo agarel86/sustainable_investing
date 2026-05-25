@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESG Practice Questions</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #1a1a2e;
+  --paper: #f7f5f0;
+  --paper-warm: #ece8df;
+  --accent: #2F5496;
+  --accent-light: #4a73b5;
+  --accent-faint: rgba(47,84,150,0.07);
+  --accent-glow: rgba(47,84,150,0.15);
+  --green: #2d6a4f;
+  --green-faint: rgba(45,106,79,0.08);
+  --orange: #c17817;
+  --orange-faint: rgba(193,120,23,0.08);
+  --red: #9b2226;
+  --red-faint: rgba(155,34,38,0.08);
+  --purple: #6a4c93;
+  --purple-faint: rgba(106,76,147,0.08);
+  --border: rgba(26,26,46,0.1);
+  --shadow-sm: 0 1px 3px rgba(26,26,46,0.06);
+  --shadow-md: 0 4px 16px rgba(26,26,46,0.08);
+  --shadow-lg: 0 8px 32px rgba(26,26,46,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 2.5rem 2rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--green), var(--orange), var(--accent));
+}
+
+header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+header p {
+  margin: 0.5rem 0 0;
+  opacity: 0.6;
+  font-size: 0.95rem;
+}
+
+.lang-switch {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.lang-btn {
+  padding: 0.4rem 0.85rem;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid rgba(247,245,240,0.25);
+  background: transparent;
+  color: var(--paper);
+  transition: all 0.2s;
+}
+
+.lang-btn:hover { border-color: var(--paper); }
+.lang-btn.active {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--paper);
+}
+
+/* ── EXAM INFO ── */
+.exam-info {
+  margin-bottom: 2rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.exam-info summary {
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--accent);
+  list-style: none;
+}
+
+.exam-info summary::-webkit-details-marker { display: none; }
+
+.exam-info-body {
+  padding: 0 1.25rem 1.25rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: rgba(26,26,46,0.82);
+}
+
+.exam-info-body > p { margin-bottom: 1rem; }
+
+.question-types {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.type-card {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--accent);
+  background: var(--accent-faint);
+}
+
+.type-card h4 {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.35rem;
+  color: var(--accent);
+}
+
+.type-card p { margin: 0; font-size: 0.88rem; }
+
+.type-card[data-type="comprehension"] { border-color: var(--green); background: var(--green-faint); }
+.type-card[data-type="comprehension"] h4 { color: var(--green); }
+.type-card[data-type="numerical"] { border-color: var(--orange); background: var(--orange-faint); }
+.type-card[data-type="numerical"] h4 { color: var(--orange); }
+.type-card[data-type="events"] { border-color: var(--purple); background: var(--purple-faint); }
+.type-card[data-type="events"] h4 { color: var(--purple); }
+.type-card[data-type="argue"] { border-color: #1d6a8a; background: rgba(29,106,138,0.08); }
+.type-card[data-type="argue"] h4 { color: #1d6a8a; }
+.type-card[data-type="advanced"] { border-color: var(--red); background: var(--red-faint); }
+.type-card[data-type="advanced"] h4 { color: var(--red); }
+
+/* ── MAIN ── */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── CHAPTER SELECT ── */
+.chapter-select-area {
+  margin-bottom: 2rem;
+}
+
+.chapter-select-area label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.chapter-select-area select {
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231a1a2e' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+}
+
+.chapter-select-area select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.chapter-select-area .start-btn {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.chapter-select-area .start-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(26,26,46,0.45);
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── QUESTION CARD ── */
+.question-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  gap: 0.75rem;
+}
+
+.q-number {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  opacity: 0.35;
+  flex-shrink: 0;
+}
+
+.cat-badge {
+  padding: 0.3rem 0.85rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.cat-badge.Comprehension  { background: var(--green-faint); color: var(--green); }
+.cat-badge.Numerical      { background: var(--orange-faint); color: var(--orange); }
+.cat-badge.Current\ Events,
+.cat-badge[data-c="Current Events"] { background: var(--purple-faint); color: var(--purple); }
+.cat-badge.Advanced       { background: var(--red-faint); color: var(--red); }
+.cat-badge.Argue\ For\/Against,
+.cat-badge[data-c="Argue For/Against"] { background: rgba(29,106,138,0.1); color: #1d6a8a; }
+
+.card-body { padding: 1.5rem; }
+
+.question-text {
+  font-size: 1.08rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  color: var(--ink);
+}
+
+/* ── TEXTAREA ── */
+.answer-area {
+  width: 100%;
+  min-height: 160px;
+  padding: 1rem 1.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  color: var(--ink);
+  background: var(--paper);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.answer-area:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: #fff;
+}
+
+.answer-area::placeholder {
+  color: rgba(26,26,46,0.3);
+}
+
+/* ── BUTTONS ── */
+.card-actions {
+  padding: 1rem 1.5rem 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-light); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.btn-secondary:hover { background: var(--accent-faint); }
+
+.btn-ghost {
+  background: transparent;
+  color: rgba(26,26,46,0.5);
+  border-color: var(--border);
+}
+.btn-ghost:hover { color: var(--ink); border-color: rgba(26,26,46,0.25); }
+
+/* ── MODEL ANSWER ── */
+.model-answer {
+  margin: 0 1.5rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, var(--accent-faint), rgba(47,84,150,0.03));
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  display: none;
+  animation: answerIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.model-answer.visible { display: block; }
+
+@keyframes answerIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.model-answer-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+
+.model-answer-text {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--ink);
+  opacity: 0.85;
+}
+
+/* ── NUMERICAL CHOICES ── */
+.numerical-section-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.choices-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.choice-btn {
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.55;
+  white-space: normal;
+  cursor: pointer;
+  border: 2px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.follow-up-prompt {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin: 1rem 0 0.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--orange-faint);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--orange);
+}
+
+.validation-hint {
+  font-size: 0.82rem;
+  color: var(--red);
+  margin-top: 0.5rem;
+  display: none;
+}
+
+.validation-hint.visible { display: block; }
+
+.practice-note {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(26,26,46,0.65);
+  background: var(--green-faint);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--green);
+}
+
+.choice-btn:hover { border-color: var(--accent); background: var(--accent-faint); }
+.choice-btn.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+.choice-btn.correct { border-color: var(--green); background: var(--green); color: #fff; }
+.choice-btn.wrong { border-color: var(--red); background: var(--red-faint); color: var(--red); opacity: 0.7; }
+
+/* ── LOADING ── */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: rgba(26,26,46,0.4);
+}
+
+.loading-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: rgba(26,26,46,0.35);
+}
+
+.empty-state svg {
+  width: 64px; height: 64px;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.empty-state h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  header { padding: 1.5rem 1rem 1.25rem; }
+  main { padding: 1.25rem 1rem 3rem; }
+  .card-body { padding: 1.25rem; }
+  .card-actions { padding: 0.75rem 1.25rem 1.25rem; }
+  .model-answer { margin: 0 1.25rem 1.25rem; }
+  .stats-bar { gap: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-row">
+      <h1 id="page-title">Sustainable Investing — Practice Questions</h1>
+      <div class="lang-switch">
+        <button type="button" class="lang-btn active" data-lang="en" id="lang-en">EN</button>
+        <button type="button" class="lang-btn" data-lang="fr" id="lang-fr">FR</button>
+      </div>
+    </div>
+    <p id="chapter-subtitle">Select a chapter to begin</p>
+  </div>
+</header>
+
+<main>
+  <details class="exam-info" open>
+    <summary id="exam-info-summary">Question types — what to expect on the final exam</summary>
+    <div class="exam-info-body">
+      <p id="exam-info-intro"></p>
+      <div class="question-types" id="question-types"></div>
+    </div>
+  </details>
+
+  <div class="chapter-select-area" id="chapter-picker">
+    <label for="chapter-select" id="label-chapter">Chapter</label>
+    <select id="chapter-select">
+      <option value="" disabled selected>— Choose a chapter —</option>
+    </select>
+    <button type="button" class="btn btn-primary start-btn" id="start-btn" disabled></button>
+  </div>
+
+  <p class="practice-note" id="practice-note" style="display:none;"></p>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar" style="display:none;">
+    <div class="stat">
+      <span class="stat-label" id="label-stat-total">Questions</span>
+      <span class="stat-value" id="stat-total">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label" id="label-stat-seen">Seen</span>
+      <span class="stat-value" id="stat-seen">0</span>
+    </div>
+  </div>
+
+  <!-- Question Container -->
+  <div id="question-container">
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+      </svg>
+      <h3>Choose a chapter above</h3>
+      <p>Then click Start practice for a random question</p>
+    </div>
+  </div>
+</main>
+
+<script>
+const CHAPTERS = [
+  { key: "introduction", fileEn: "Chapter_Introduction_100_Questions.xlsx", fileFr: "Chapter_Introduction_100_Questions_FR.xlsx" },
+  { key: "esg", fileEn: "Chapter_ESG_Scores_100_Questions.xlsx", fileFr: "Chapter_ESG_Scores_100_Questions_FR.xlsx" },
+  { key: "bonds", fileEn: "Chapter_FirmBonds_70_Questions.xlsx", fileFr: "Chapter_FirmBonds_70_Questions_FR.xlsx" },
+  { key: "portfolio", fileEn: "Chapter_SustPortfolio_70_Questions.xlsx", fileFr: "Chapter_SustPortfolio_70_Questions_FR.xlsx" },
+  { key: "performance", fileEn: "Chapter_SustPerformance_70_Questions.xlsx", fileFr: "Chapter_SustPerformance_70_Questions_FR.xlsx" },
+  { key: "realeffects", fileEn: "Chapter_RealEffects_70_Questions.xlsx", fileFr: "Chapter_RealEffects_70_Questions_FR.xlsx" }
+];
+
+const I18N = {
+  en: {
+    pageTitle: "Sustainable Investing — Practice Questions",
+    subtitlePick: "Select a chapter to begin",
+    subtitleActive: (n) => n + " — random practice questions",
+    examSummary: "Question types — what to expect on the final exam",
+    examIntro: "Each chapter bank mixes the categories below. The final exam uses the same types: you must know what each one expects and how to structure your answer.",
+    chapter: "Chapter",
+    chooseChapter: "— Choose a chapter —",
+    start: "Start practice",
+    questions: "In question bank",
+    seen: "Seen (no limit)",
+    practiceNote: "Practice as long as you like — questions are drawn at random from the full bank. You are not required to complete every question.",
+    pickChapterTitle: "Choose a chapter above",
+    pickChapterHint: "Then click Start practice for a random question",
+    loading: "Loading questions…",
+    noQuestions: "No questions available",
+    selectOne: "Select the option with the correct calculation steps",
+    followUpOptional: "Follow-up (optional — check against the model answer)",
+    followUpPlaceholder: "Write your commentary here…",
+    answerPlaceholder: "Write your answer here…",
+    optionalNotes: "Optional notes…",
+    showSolution: "Show Solution",
+    next: "Next Question →",
+    skip: "Skip",
+    changeChapter: "Change chapter",
+    modelAnswer: "Model Answer",
+    errLoad: "Could not load questions",
+    errServer: "Place the Excel file next to this page and open via a local server (e.g. python -m http.server).",
+    frMissing: "French workbook not found — showing English questions. Run generate_fr_workbooks.py to create *_FR.xlsx files.",
+    types: {
+      comprehension: { title: "Comprehension", text: "Explain concepts, mechanisms, and implications from the chapter. Open-ended written answers: definitions, comparisons, and causal reasoning — not dates or trivia." },
+      numerical: { title: "Numerical", text: "Apply course calculations to a scenario. Five options each show the calculation steps (not just the final number — no calculator assumed). Pick the path that is mathematically correct. If there is a follow-up, interpret the result in writing." },
+      events: { title: "Current events", text: "Short commentary linking a recent news item to named course concepts, findings, or authors. Mobilise specific ideas from the chapter — not a generic “framework” paragraph." },
+      argue: { title: "Argue for / against", text: "Defend an assigned side of a live ESG debate. Structured argument using course material where relevant plus broader reasoning. Model answers list strongest points for that side." },
+      advanced: { title: "Advanced", text: "Extension questions beyond the core syllabus: apply chapter tools to new situations and synthesise across ideas." }
+    },
+    chapters: {
+      introduction: "Ch. 1 — Introduction",
+      esg: "Ch. 2 — ESG Scores",
+      bonds: "Ch. 3 — Firm Bonds",
+      portfolio: "Ch. 4 — Sustainable Portfolio",
+      performance: "Ch. 5 — Sustainable Performance",
+      realeffects: "Ch. 6 — Real Effects"
+    },
+    categories: {
+      "Comprehension": "Comprehension",
+      "Numerical": "Numerical",
+      "Current Events": "Current Events",
+      "Advanced": "Advanced",
+      "Argue For/Against": "Argue for / against"
+    }
+  },
+  fr: {
+    pageTitle: "Investissement durable — Questions d'entraînement",
+    subtitlePick: "Choisissez un chapitre pour commencer",
+    subtitleActive: (n) => n + " — questions aléatoires",
+    examSummary: "Types de questions — à quoi s'attendre à l'examen final",
+    examIntro: "Chaque banque de chapitre mélange les catégories ci-dessous. L'examen final reprend les mêmes types : vous devez savoir ce que chacun exige et comment structurer votre réponse.",
+    chapter: "Chapitre",
+    chooseChapter: "— Choisir un chapitre —",
+    start: "Commencer",
+    questions: "Dans la banque",
+    seen: "Vues (sans limite)",
+    practiceNote: "Entraînez-vous autant que vous voulez — les questions sont tirées au hasard dans toute la banque. Vous n'êtes pas obligé de tout faire.",
+    pickChapterTitle: "Choisissez un chapitre ci-dessus",
+    pickChapterHint: "Puis cliquez sur Commencer pour une question aléatoire",
+    loading: "Chargement…",
+    noQuestions: "Aucune question disponible",
+    selectOne: "Choisissez l'option dont le calcul est correct",
+    followUpOptional: "Question de suivi (facultatif — comparez avec la réponse modèle)",
+    followUpPlaceholder: "Rédigez votre commentaire ici…",
+    answerPlaceholder: "Rédigez votre réponse ici…",
+    optionalNotes: "Notes facultatives…",
+    showSolution: "Voir la correction",
+    next: "Question suivante →",
+    skip: "Passer",
+    changeChapter: "Changer de chapitre",
+    modelAnswer: "Réponse modèle",
+    errLoad: "Impossible de charger les questions",
+    errServer: "Placez le fichier Excel à côté de cette page et ouvrez via un serveur local (ex. python -m http.server).",
+    frMissing: "Fichier français introuvable — affichage en anglais. Exécutez generate_fr_workbooks.py pour créer les fichiers *_FR.xlsx.",
+    types: {
+      comprehension: { title: "Compréhension", text: "Expliquer concepts, mécanismes et implications du chapitre. Réponse écrite ouverte : définitions, comparaisons, raisonnement causal — pas de dates ou anecdotes." },
+      numerical: { title: "Numérique", text: "Appliquer les calculs du cours à un scénario. Choisir le bon résultat parmi cinq valeurs plausibles (même unité, ex. VAN = …). S'il y a une question de suivi, l'interpréter par écrit (arbitrage, implication politique, etc.)." },
+      events: { title: "Actualité", text: "Court commentaire reliant une actualité à des concepts, résultats ou auteurs nommés du cours. Mobiliser des idées précises du chapitre — pas un paragraphe générique sur « le cadre du cours »." },
+      argue: { title: "Pour / contre", text: "Défendre une position assignée dans un débat ESG actuel. Argumentation structurée, ancrée dans le cours quand c'est pertinent. Les réponses modèles listent les arguments les plus solides pour ce camp." },
+      advanced: { title: "Approfondissement", text: "Questions d'extension : appliquer les outils du chapitre à de nouvelles situations et synthétiser plusieurs idées." }
+    },
+    chapters: {
+      introduction: "Ch. 1 — Introduction",
+      esg: "Ch. 2 — Scores ESG",
+      bonds: "Ch. 3 — Obligations d'entreprise",
+      portfolio: "Ch. 4 — Portefeuille durable",
+      performance: "Ch. 5 — Performance durable",
+      realeffects: "Ch. 6 — Effets réels"
+    },
+    categories: {
+      "Comprehension": "Compréhension",
+      "Numerical": "Numérique",
+      "Current Events": "Actualité",
+      "Advanced": "Approfondissement",
+      "Argue For/Against": "Pour / contre"
+    }
+  }
+};
+
+// ─── STATE ───
+let lang = localStorage.getItem('practice-lang') || 'en';
+let frFallback = false;
+let currentChapter = null;
+let currentQuestions = [];
+let seenSet = new Set();
+let currentQuestion = null;
+let numericalData = {};
+let selectedChoice = null;
+
+function t(key, ...args) {
+  const v = I18N[lang][key];
+  return typeof v === 'function' ? v(...args) : v;
+}
+
+function chapterFile(ch) {
+  return lang === 'fr' ? ch.fileFr : ch.fileEn;
+}
+
+function chapterName(ch) {
+  return I18N[lang].chapters[ch.key];
+}
+
+function categoryLabel(cat) {
+  return I18N[lang].categories[cat] || cat;
+}
+
+function chapterIndexFromUrl() {
+  const param = new URLSearchParams(location.search).get('chapter');
+  if (!param) return -1;
+  const lower = param.trim().toLowerCase();
+  let idx = CHAPTERS.findIndex(c => c.key === lower);
+  if (idx >= 0) return idx;
+  const n = parseInt(param, 10);
+  return !isNaN(n) && CHAPTERS[n] ? n : -1;
+}
+
+function renderExamInfo() {
+  document.getElementById('exam-info-summary').textContent = t('examSummary');
+  document.getElementById('exam-info-intro').textContent = t('examIntro');
+  const order = ['comprehension', 'numerical', 'events', 'argue', 'advanced'];
+  document.getElementById('question-types').innerHTML = order.map(k => {
+    const tp = t('types')[k];
+    return `<div class="type-card" data-type="${k}"><h4>${escapeHtml(tp.title)}</h4><p>${escapeHtml(tp.text)}</p></div>`;
+  }).join('');
+}
+
+function applyStaticUi() {
+  document.documentElement.lang = lang;
+  document.getElementById('page-title').textContent = t('pageTitle');
+  document.getElementById('label-chapter').textContent = t('chapter');
+  document.getElementById('start-btn').textContent = t('start');
+  document.getElementById('label-stat-total').textContent = t('questions');
+  document.getElementById('label-stat-seen').textContent = t('seen');
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  renderExamInfo();
+  const sel = document.getElementById('chapter-select');
+  const cur = sel.value;
+  const ph = sel.querySelector('option[value=""]');
+  sel.innerHTML = '';
+  const place = document.createElement('option');
+  place.value = '';
+  place.disabled = true;
+  place.selected = cur === '';
+  place.textContent = t('chooseChapter');
+  sel.appendChild(place);
+  CHAPTERS.forEach((ch, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = chapterName(ch);
+    sel.appendChild(opt);
+  });
+  if (cur !== '') sel.value = cur;
+}
+
+function setLanguage(newLang) {
+  lang = newLang;
+  localStorage.setItem('practice-lang', lang);
+  applyStaticUi();
+  if (!currentChapter) {
+    document.getElementById('chapter-subtitle').textContent = t('subtitlePick');
+    document.title = t('pageTitle');
+    showChapterPrompt();
+  } else {
+    startPractice(currentChapter);
+  }
+}
+
+// ─── INIT ───
+function init() {
+  const sel = document.getElementById('chapter-select');
+  const startBtn = document.getElementById('start-btn');
+
+  document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
+  document.getElementById('lang-fr').addEventListener('click', () => setLanguage('fr'));
+
+  applyStaticUi();
+
+  const urlIdx = chapterIndexFromUrl();
+  if (urlIdx >= 0) {
+    sel.value = urlIdx;
+    startBtn.disabled = false;
+  }
+
+  sel.addEventListener('change', () => { startBtn.disabled = sel.value === ''; });
+  startBtn.addEventListener('click', () => {
+    if (sel.value === '') return;
+    startPractice(CHAPTERS[parseInt(sel.value, 10)]);
+  });
+
+  document.getElementById('chapter-subtitle').textContent = t('subtitlePick');
+}
+
+async function startPractice(ch) {
+  currentChapter = ch;
+  document.getElementById('chapter-subtitle').textContent = t('subtitleActive', chapterName(ch));
+  document.title = (lang === 'fr' ? 'Entraînement — ' : 'Practice — ') + chapterName(ch);
+  await loadChapter(ch);
+}
+
+function parseCorrectChoice(val) {
+  if (val === undefined || val === null || val === '') return 1;
+  const s = String(val).trim().toUpperCase();
+  if (/^[A-E]$/.test(s)) return s.charCodeAt(0) - 64;
+  const n = parseInt(s, 10);
+  return isNaN(n) ? 1 : n;
+}
+
+function parseNumericalSheet(ws) {
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+  if (!rows.length) return;
+  const header = rows[0].map(h => String(h || '').trim());
+  const choiceCols = [];
+  let correctCol = -1;
+  header.forEach((h, i) => {
+    if (/^Choice\s+[1-5]$/i.test(h) || /^Choice\s+[A-E]$/i.test(h)) choiceCols.push(i);
+    if (/Correct Choice/i.test(h)) correctCol = i;
+  });
+  if (choiceCols.length === 0) {
+    for (let i = 3; i <= 7; i++) choiceCols.push(i);
+  }
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row[0] === undefined || row[0] === null || row[0] === '') continue;
+    const numId = row[0];
+    const choices = [];
+    for (const c of choiceCols) {
+      if (row[c] !== undefined && row[c] !== null && row[c] !== '') {
+        choices.push(String(row[c]));
+      }
+    }
+    const correctNum = parseCorrectChoice(correctCol >= 0 ? row[correctCol] : row[8]);
+    numericalData[numId] = { choices: choices.slice(0, 5), correctNum };
+  }
+}
+
+// ─── LOAD CHAPTER ───
+async function loadChapter(ch) {
+  let url = chapterFile(ch);
+  frFallback = false;
+
+  showLoading();
+  currentQuestions = [];
+  numericalData = {};
+  seenSet.clear();
+
+  async function loadFile(file) {
+    const resp = await fetch(file);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return XLSX.read(await resp.arrayBuffer(), { type: 'array' });
+  }
+
+  try {
+    let wb;
+    try {
+      wb = await loadFile(url);
+    } catch (e) {
+      if (lang === 'fr') {
+        url = ch.fileEn;
+        frFallback = true;
+        wb = await loadFile(url);
+      } else throw e;
+    }
+
+    const ws = wb.Sheets['All Questions'];
+    if (!ws) throw new Error('Sheet "All Questions" not found');
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[2]) continue;
+      currentQuestions.push({
+        id: row[0],
+        category: (row[1] || '').trim(),
+        question: String(row[2]).trim(),
+        answer: String(row[3] || '').trim()
+      });
+    }
+
+    if (wb.Sheets['Numerical Choices']) {
+      parseNumericalSheet(wb.Sheets['Numerical Choices']);
+    }
+
+    const note = document.getElementById('practice-note');
+    note.textContent = t('practiceNote');
+    note.style.display = 'block';
+    document.getElementById('stats-bar').style.display = 'flex';
+    updateStats();
+    nextQuestion();
+
+    if (frFallback) {
+      const banner = document.createElement('p');
+      banner.className = 'fr-fallback-banner';
+      banner.style.cssText = 'margin-bottom:1rem;padding:0.75rem 1rem;background:var(--orange-faint);border-radius:8px;font-size:0.88rem;color:var(--orange);';
+      banner.textContent = t('frMissing');
+      document.getElementById('question-container').prepend(banner);
+    }
+
+  } catch (err) {
+    showError(err.message, url);
+    document.getElementById('stats-bar').style.display = 'none';
+  }
+}
+
+function resetToChapterPicker() {
+  currentChapter = null;
+  currentQuestions = [];
+  seenSet.clear();
+  document.getElementById('stats-bar').style.display = 'none';
+  document.getElementById('practice-note').style.display = 'none';
+  document.getElementById('chapter-subtitle').textContent = t('subtitlePick');
+  document.title = t('pageTitle');
+  showChapterPrompt();
+}
+
+function showChapterPrompt() {
+  document.getElementById('question-container').innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+      </svg>
+      <h3>${escapeHtml(t('pickChapterTitle'))}</h3>
+      <p>${escapeHtml(t('pickChapterHint'))}</p>
+    </div>
+  `;
+}
+
+// ─── STATS ───
+function updateStats() {
+  document.getElementById('stat-total').textContent = currentQuestions.length;
+  document.getElementById('stat-seen').textContent = seenSet.size;
+}
+
+// ─── PICK RANDOM QUESTION ───
+function nextQuestion() {
+  selectedChoice = null;
+
+  if (currentQuestions.length === 0) {
+    showEmpty(t('noQuestions'));
+    return;
+  }
+
+  const q = currentQuestions[Math.floor(Math.random() * currentQuestions.length)];
+  currentQuestion = q;
+  renderQuestion(q);
+}
+
+function splitNumericalQuestion(text) {
+  const followBlock = text.split(/\n\n(?:Follow-up|Question de suivi|Suite)\s*:\s*/i);
+  if (followBlock.length >= 2) {
+    return { calc: followBlock[0].trim(), followUp: followBlock.slice(1).join('\n\n').trim() };
+  }
+  const splitters = [
+    /\s+and explain\s+/i,
+    /\s+Then explain\s+/i,
+    /\s+What does this\s+/i,
+    /\s+If market cap\s+/i,
+    /\s+Additionally[,:]?\s+/i,
+    /\s+Explain why\s+/i,
+    /\s+Explain whether\s+/i,
+    /\.\s+(Then|What|Explain|If)\s+/i,
+    /\?\s+(What|Explain|How)\s+/i,
+  ];
+  for (const re of splitters) {
+    const m = text.match(re);
+    if (m && m.index > 20) {
+      const calc = text.slice(0, m.index).trim();
+      let followUp = text.slice(m.index).trim();
+      followUp = followUp.replace(/^(and explain|then explain|what does this|if market cap|additionally|explain why|explain whether)\s*/i, '');
+      followUp = followUp.replace(/^\.\s*/, '');
+      if (!/^[A-Z]/.test(followUp)) followUp = followUp.charAt(0).toUpperCase() + followUp.slice(1);
+      return { calc, followUp };
+    }
+  }
+  return { calc: text, followUp: null };
+}
+
+function numericalRequiresChoice(q) {
+  return q.category === 'Numerical' && numericalData[q.id]?.choices?.length > 0;
+}
+
+// ─── RENDER ───
+function renderQuestion(q) {
+  const container = document.getElementById('question-container');
+  const isNumerical = q.category === 'Numerical';
+  const numInfo = isNumerical ? numericalData[q.id] : null;
+  const shuffledChoices = numInfo?.choices?.length ? shuffle([...numInfo.choices]) : [];
+  let calcText = q.question;
+  let followUp = null;
+  if (isNumerical) {
+    const parts = splitNumericalQuestion(q.question);
+    calcText = parts.calc;
+    followUp = parts.followUp;
+    q.followUp = followUp;
+  }
+
+  container.innerHTML = `
+    <div class="question-card">
+      <div class="card-header">
+        <span class="q-number">#${q.id}</span>
+        <span class="cat-badge" data-c="${q.category}">${escapeHtml(categoryLabel(q.category))}</span>
+      </div>
+      <div class="card-body">
+        <div class="question-text">${escapeHtml(calcText)}</div>
+        ${isNumerical && shuffledChoices.length > 0 ? `
+          <div class="numerical-section-label">${escapeHtml(t('selectOne'))}</div>
+          <div class="choices-grid" id="choices-grid">
+            ${shuffledChoices.map((ch, i) => `
+              <button type="button" class="choice-btn" data-idx="${i}" data-val="${escapeAttr(ch)}" onclick="selectChoice(this)">${escapeHtml(ch)}</button>
+            `).join('')}
+          </div>
+        ` : ''}
+        ${followUp ? `
+          <div class="follow-up-prompt">${escapeHtml(followUp)}</div>
+          <div class="numerical-section-label">${escapeHtml(t('followUpOptional'))}</div>
+        ` : ''}
+        <textarea class="answer-area" id="student-answer" placeholder="${followUp ? t('followUpPlaceholder') : t('answerPlaceholder')}"></textarea>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-primary" onclick="showSolution()">${escapeHtml(t('showSolution'))}</button>
+        <button class="btn btn-secondary" onclick="markAndNext()">${escapeHtml(t('next'))}</button>
+        <button class="btn btn-ghost" onclick="skipQuestion()">${escapeHtml(t('skip'))}</button>
+        <button class="btn btn-ghost" onclick="resetToChapterPicker()">${escapeHtml(t('changeChapter'))}</button>
+      </div>
+      <div class="model-answer" id="model-answer">
+        <div class="model-answer-label">${escapeHtml(t('modelAnswer'))}</div>
+        <div class="model-answer-text" id="model-answer-text"></div>
+      </div>
+    </div>
+  `;
+}
+
+function selectChoice(btn) {
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedChoice = btn.dataset.val;
+}
+
+function showSolution() {
+  const q = currentQuestion;
+  if (!q) return;
+  const el = document.getElementById('model-answer');
+  document.getElementById('model-answer-text').textContent = q.answer;
+  el.classList.add('visible');
+
+  // Reveal correct/wrong for numerical choices
+  if (q.category === 'Numerical' && numericalData[q.id]) {
+    const correctIdx = numericalData[q.id].correctNum;
+    const correctVal = numericalData[q.id].choices[correctIdx - 1];
+    document.querySelectorAll('.choice-btn').forEach(btn => {
+      btn.disabled = true;
+      if (btn.dataset.val === correctVal) {
+        btn.classList.add('correct');
+      } else if (btn.classList.contains('selected')) {
+        btn.classList.add('wrong');
+      }
+    });
+  }
+
+  seenSet.add(q.id);
+  updateStats();
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function markAndNext() {
+  if (currentQuestion) seenSet.add(currentQuestion.id);
+  updateStats();
+  nextQuestion();
+  window.scrollTo({ top: document.getElementById('question-container').offsetTop - 20, behavior: 'smooth' });
+}
+
+function skipQuestion() {
+  if (currentQuestion) seenSet.add(currentQuestion.id);
+  updateStats();
+  nextQuestion();
+  window.scrollTo({ top: document.getElementById('question-container').offsetTop - 20, behavior: 'smooth' });
+}
+
+// ─── UTILITY ───
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function escapeAttr(s) {
+  return s.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function showLoading() {
+  document.getElementById('question-container').innerHTML = `
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>${escapeHtml(t('loading'))}</p>
+    </div>
+  `;
+}
+
+function showEmpty(msg) {
+  document.getElementById('question-container').innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+      </svg>
+      <h3>${escapeHtml(msg || t('noQuestions'))}</h3>
+    </div>
+  `;
+}
+
+function showError(msg, url) {
+  document.getElementById('question-container').innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+      </svg>
+      <h3>${escapeHtml(t('errLoad'))}</h3>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">${escapeHtml(msg)}</p>
+      <p style="margin-top:0.75rem;font-size:0.82rem;word-break:break-all;opacity:0.5;">${escapeHtml(url)}</p>
+      <p style="margin-top:1rem;font-size:0.85rem;">${escapeHtml(t('errServer'))} <code>${escapeHtml(currentChapter ? chapterFile(currentChapter) : 'Chapter_*.xlsx')}</code></p>
+    </div>
+  `;
+}
+
+// ─── GO ───
+init();
+</script>
+</body>
+</html>
