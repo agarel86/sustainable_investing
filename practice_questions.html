@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ESG Practice Questions</title>
+<!-- build: 2026-05-27-v2 — 4 question types, EN/FR, GitHub-relative xlsx paths -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -76,6 +77,15 @@ header h1 {
   letter-spacing: -0.02em;
   max-width: 900px;
   margin: 0 auto;
+}
+
+.build-tag {
+  font-size: 0.7rem;
+  opacity: 0.35;
+  margin-top: 0.35rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .header-inner {
@@ -173,6 +183,21 @@ header p {
 
 .type-card p { margin: 0; font-size: 0.88rem; }
 
+.type-card[data-type] {
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.type-card[data-type]:hover {
+  box-shadow: 0 2px 8px rgba(26, 26, 46, 0.08);
+  transform: translateY(-1px);
+}
+
+.type-card.filter-active {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .type-card[data-type="comprehension"] { border-color: var(--green); background: var(--green-faint); }
 .type-card[data-type="comprehension"] h4 { color: var(--green); }
 .type-card[data-type="numerical"] { border-color: var(--orange); background: var(--orange-faint); }
@@ -181,8 +206,6 @@ header p {
 .type-card[data-type="events"] h4 { color: var(--purple); }
 .type-card[data-type="argue"] { border-color: #1d6a8a; background: rgba(29,106,138,0.08); }
 .type-card[data-type="argue"] h4 { color: #1d6a8a; }
-.type-card[data-type="advanced"] { border-color: var(--red); background: var(--red-faint); }
-.type-card[data-type="advanced"] h4 { color: var(--red); }
 
 /* ── MAIN ── */
 main {
@@ -245,11 +268,56 @@ main {
   display: flex;
   gap: 1.5rem;
   flex-wrap: wrap;
+  align-items: center;
   margin-bottom: 2rem;
   padding: 1rem 1.25rem;
   background: #fff;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+}
+
+.stats-bar .pool-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.stats-bar .filter-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 10rem;
+}
+
+.stats-bar .filter-stat label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(26, 26, 46, 0.5);
+  font-weight: 600;
+}
+
+.stats-bar .filter-stat select {
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  max-width: 14rem;
+}
+
+.bank-breakdown {
+  font-size: 0.85rem;
+  color: rgba(26, 26, 46, 0.55);
+  margin: -0.5rem 0 1.25rem;
+  line-height: 1.5;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
 }
 
 .stat {
@@ -319,7 +387,6 @@ main {
 .cat-badge.Numerical      { background: var(--orange-faint); color: var(--orange); }
 .cat-badge.Current\ Events,
 .cat-badge[data-c="Current Events"] { background: var(--purple-faint); color: var(--purple); }
-.cat-badge.Advanced       { background: var(--red-faint); color: var(--red); }
 .cat-badge.Argue\ For\/Against,
 .cat-badge[data-c="Argue For/Against"] { background: rgba(29,106,138,0.1); color: #1d6a8a; }
 
@@ -330,6 +397,46 @@ main {
   line-height: 1.7;
   margin-bottom: 1.5rem;
   color: var(--ink);
+}
+
+.question-text .prose-block,
+.follow-up-prompt .prose-block,
+.model-answer-text .prose-block {
+  white-space: pre-line;
+}
+
+.question-text strong,
+.follow-up-prompt strong,
+.model-answer-text strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.case-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.25rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.case-table th,
+.case-table td {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.case-table th {
+  background: rgba(47, 84, 150, 0.08);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.case-table tbody tr:nth-child(even) {
+  background: rgba(26, 26, 46, 0.02);
 }
 
 /* ── TEXTAREA ── */
@@ -378,8 +485,13 @@ main {
   transition: all 0.2s;
 }
 
-.btn:hover { transform: translateY(-1px); }
-.btn:active { transform: translateY(0); }
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
 
 .btn-primary {
   background: var(--accent);
@@ -567,6 +679,7 @@ main {
       </div>
     </div>
     <p id="chapter-subtitle">Select a chapter to begin</p>
+    <p class="build-tag" id="build-tag" aria-hidden="true"></p>
   </div>
 </header>
 
@@ -588,9 +701,14 @@ main {
   </div>
 
   <p class="practice-note" id="practice-note" style="display:none;"></p>
+  <p class="bank-breakdown" id="bank-breakdown" style="display:none;"></p>
 
   <!-- Stats -->
   <div class="stats-bar" id="stats-bar" style="display:none;">
+    <div class="filter-stat">
+      <label for="category-filter" id="label-category-filter">Question type</label>
+      <select id="category-filter" aria-label="Filter by question type"></select>
+    </div>
     <div class="stat">
       <span class="stat-label" id="label-stat-total">Questions</span>
       <span class="stat-value" id="stat-total">0</span>
@@ -598,6 +716,13 @@ main {
     <div class="stat">
       <span class="stat-label" id="label-stat-seen">Seen</span>
       <span class="stat-value" id="stat-seen">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label" id="label-stat-remaining">Remaining</span>
+      <span class="stat-value" id="stat-remaining">0</span>
+    </div>
+    <div class="pool-actions">
+      <button type="button" class="btn btn-secondary btn-sm" id="reset-pool-btn" onclick="resetQuestionPool()"></button>
     </div>
   </div>
 
@@ -614,6 +739,8 @@ main {
 </main>
 
 <script>
+const BUILD_ID = '2026-05-27-v2';
+
 const CHAPTERS = [
   { key: "introduction", fileEn: "Chapter_Introduction_100_Questions.xlsx", fileFr: "Chapter_Introduction_100_Questions_FR.xlsx" },
   { key: "esg", fileEn: "Chapter_ESG_Scores_100_Questions.xlsx", fileFr: "Chapter_ESG_Scores_100_Questions_FR.xlsx" },
@@ -629,36 +756,53 @@ const I18N = {
     subtitlePick: "Select a chapter to begin",
     subtitleActive: (n) => n + " — random practice questions",
     examSummary: "Question types — what to expect on the final exam",
-    examIntro: "Each chapter bank mixes the categories below. The final exam uses the same types: you must know what each one expects and how to structure your answer.",
+    examIntro: "Each chapter bank mixes the categories below. The final exam uses the same types. On top of these categories, you may also have to comment on one or two real-life fund cases — for example a factsheet, top holdings, performance track record, fees, or sustainability claims — applied to concepts from that chapter.",
     chapter: "Chapter",
     chooseChapter: "— Choose a chapter —",
     start: "Start practice",
     questions: "In question bank",
-    seen: "Seen (no limit)",
-    practiceNote: "Practice as long as you like — questions are drawn at random from the full bank. You are not required to complete every question.",
+    seen: "Seen",
+    remaining: "Remaining",
+    resetPool: "Reset question pool",
+    practiceNote: "Each question is shown once per session. When the pool is empty, reset it to practice again. Use the type filter (or click a card above) to practice only numerical cases, etc.",
+    filterAll: "All types",
+    filterLabel: "Question type",
+    bankBreakdown: (parts) => "In this bank: " + parts.join(" · ") + ".",
+    filterEmpty: "No questions of this type in the current filter. Choose another type or reset the pool.",
+    poolCompleteTitle: "You have seen every question in this chapter",
+    poolCompleteHint: "Reset the pool to shuffle through them again, or change chapter.",
     pickChapterTitle: "Choose a chapter above",
     pickChapterHint: "Then click Start practice for a random question",
     loading: "Loading questions…",
     noQuestions: "No questions available",
-    selectOne: "Select the option with the correct calculation steps",
+    noMcqData: "Open answer — work through every part (a), (b), (c) in the text box with calculations shown, then check the model answer.",
+    openNumericalPrompt: "Write your full answer below (all parts). Show calculations.",
+    yourAnswer: "Your answer",
+    selectOne: "Step 1 — Select the option that matches your NPV comparison (Option A vs B)",
+    interpretRequired: "Step 2 — Your recommendation (optional)",
+    interpretPromptDefault: "Recommend what management should do. Which option maximizes NPV under realistic assumptions? Name factors not already in the case that could materially raise or lower either option’s NPV.",
+    modelCalc: "Model answer — calculus & conclusion",
+    modelInterpret: "Model answer — interpretation",
+    interpretWarn: "Please write a short interpretation before continuing.",
     followUpOptional: "Follow-up (optional — check against the model answer)",
     followUpPlaceholder: "Write your commentary here…",
     answerPlaceholder: "Write your answer here…",
     optionalNotes: "Optional notes…",
     showSolution: "Show Solution",
+    prev: "← Previous",
     next: "Next Question →",
     skip: "Skip",
     changeChapter: "Change chapter",
     modelAnswer: "Model Answer",
     errLoad: "Could not load questions",
-    errServer: "Place the Excel file next to this page and open via a local server (e.g. python -m http.server).",
-    frMissing: "French workbook not found — showing English questions. Run generate_fr_workbooks.py to create *_FR.xlsx files.",
+    errHint: "The question bank for this chapter could not be loaded. If you manage this site, check that all Chapter_*.xlsx files are published alongside this page.",
+    frMissing: "French version unavailable for this chapter — showing English.",
+    bankCount: (n) => n + " questions in this bank",
     types: {
       comprehension: { title: "Comprehension", text: "Explain concepts, mechanisms, and implications from the chapter. Open-ended written answers: definitions, comparisons, and causal reasoning — not dates or trivia." },
-      numerical: { title: "Numerical", text: "Apply course calculations to a scenario. Five options each show the calculation steps (not just the final number — no calculator assumed). Pick the path that is mathematically correct. If there is a follow-up, interpret the result in writing." },
+      numerical: { title: "Numerical", text: "Structured exercises (NPV, SLB cash flows, etc.): answer every part (a), (b), (c) in the text box with calculations shown. No multiple choice — open answer, then compare with the model solution." },
       events: { title: "Current events", text: "Short commentary linking a recent news item to named course concepts, findings, or authors. Mobilise specific ideas from the chapter — not a generic “framework” paragraph." },
-      argue: { title: "Argue for / against", text: "Defend an assigned side of a live ESG debate. Structured argument using course material where relevant plus broader reasoning. Model answers list strongest points for that side." },
-      advanced: { title: "Advanced", text: "Extension questions beyond the core syllabus: apply chapter tools to new situations and synthesise across ideas." }
+      argue: { title: "Argue for / against", text: "Defend an assigned side of a live ESG debate. Structured argument using course material where relevant plus broader reasoning. Model answers list strongest points for that side." }
     },
     chapters: {
       introduction: "Ch. 1 — Introduction",
@@ -672,7 +816,6 @@ const I18N = {
       "Comprehension": "Comprehension",
       "Numerical": "Numerical",
       "Current Events": "Current Events",
-      "Advanced": "Advanced",
       "Argue For/Against": "Argue for / against"
     }
   },
@@ -681,36 +824,53 @@ const I18N = {
     subtitlePick: "Choisissez un chapitre pour commencer",
     subtitleActive: (n) => n + " — questions aléatoires",
     examSummary: "Types de questions — à quoi s'attendre à l'examen final",
-    examIntro: "Chaque banque de chapitre mélange les catégories ci-dessous. L'examen final reprend les mêmes types : vous devez savoir ce que chacun exige et comment structurer votre réponse.",
+    examIntro: "Chaque banque de chapitre mélange les catégories ci-dessous. L'examen final reprend les mêmes types. En complément, il peut vous être demandé de commenter un ou deux cas réels de fonds — par exemple une fiche commerciale, les principales lignes, la performance, les frais ou les allégations durabilité — en les reliant aux concepts du chapitre.",
     chapter: "Chapitre",
     chooseChapter: "— Choisir un chapitre —",
     start: "Commencer",
     questions: "Dans la banque",
-    seen: "Vues (sans limite)",
-    practiceNote: "Entraînez-vous autant que vous voulez — les questions sont tirées au hasard dans toute la banque. Vous n'êtes pas obligé de tout faire.",
+    seen: "Vues",
+    remaining: "Restantes",
+    resetPool: "Réinitialiser la banque",
+    practiceNote: "Chaque question n'apparaît qu'une fois par session. Quand la banque est vide, réinitialisez pour recommencer. Utilisez le filtre par type (ou cliquez une carte ci-dessus) pour ne faire que les numériques, etc.",
+    filterAll: "Tous les types",
+    filterLabel: "Type de question",
+    bankBreakdown: (parts) => "Dans cette banque : " + parts.join(" · ") + ".",
+    filterEmpty: "Aucune question pour ce filtre. Choisissez un autre type ou réinitialisez la banque.",
+    poolCompleteTitle: "Vous avez vu toutes les questions de ce chapitre",
+    poolCompleteHint: "Réinitialisez la banque pour les revoir, ou changez de chapitre.",
     pickChapterTitle: "Choisissez un chapitre ci-dessus",
     pickChapterHint: "Puis cliquez sur Commencer pour une question aléatoire",
     loading: "Chargement…",
     noQuestions: "Aucune question disponible",
-    selectOne: "Choisissez l'option dont le calcul est correct",
+    noMcqData: "Réponse ouverte — traitez chaque partie (a), (b), (c) ci-dessous avec vos calculs, puis consultez la correction.",
+    openNumericalPrompt: "Rédigez votre réponse complète ci-dessous (toutes les parties). Montrez les calculs.",
+    yourAnswer: "Votre réponse",
+    selectOne: "Étape 1 — Choisir l'option qui correspond à votre comparaison de VAN (A vs B)",
+    interpretRequired: "Étape 2 — Votre recommandation (facultatif)",
+    interpretPromptDefault: "Que recommandez-vous ? Quelle option maximise la VAN sous des hypothèses réalistes ? Citez des facteurs non déjà dans le cas qui pourraient augmenter ou réduire fortement la VAN de chaque option.",
+    modelCalc: "Réponse modèle — calcul et conclusion",
+    modelInterpret: "Réponse modèle — interprétation",
+    interpretWarn: "Veuillez rédiger une courte interprétation avant de continuer.",
     followUpOptional: "Question de suivi (facultatif — comparez avec la réponse modèle)",
     followUpPlaceholder: "Rédigez votre commentaire ici…",
     answerPlaceholder: "Rédigez votre réponse ici…",
     optionalNotes: "Notes facultatives…",
     showSolution: "Voir la correction",
+    prev: "← Précédente",
     next: "Question suivante →",
     skip: "Passer",
     changeChapter: "Changer de chapitre",
     modelAnswer: "Réponse modèle",
     errLoad: "Impossible de charger les questions",
-    errServer: "Placez le fichier Excel à côté de cette page et ouvrez via un serveur local (ex. python -m http.server).",
-    frMissing: "Fichier français introuvable — affichage en anglais. Exécutez generate_fr_workbooks.py pour créer les fichiers *_FR.xlsx.",
+    errHint: "La banque de questions de ce chapitre n'a pas pu être chargée. Vérifiez que tous les fichiers Chapter_*.xlsx sont bien publiés au même emplacement que cette page.",
+    frMissing: "Version française indisponible pour ce chapitre — affichage en anglais.",
+    bankCount: (n) => n + " questions dans cette banque",
     types: {
       comprehension: { title: "Compréhension", text: "Expliquer concepts, mécanismes et implications du chapitre. Réponse écrite ouverte : définitions, comparaisons, raisonnement causal — pas de dates ou anecdotes." },
-      numerical: { title: "Numérique", text: "Appliquer les calculs du cours à un scénario. Choisir le bon résultat parmi cinq valeurs plausibles (même unité, ex. VAN = …). S'il y a une question de suivi, l'interpréter par écrit (arbitrage, implication politique, etc.)." },
+      numerical: { title: "Numérique", text: "Exercices structurés (VAN, flux SLB, etc.) : répondez à chaque partie (a), (b), (c) dans la zone de texte en montrant vos calculs. Pas de QCM — réponse ouverte, puis comparez avec la correction." },
       events: { title: "Actualité", text: "Court commentaire reliant une actualité à des concepts, résultats ou auteurs nommés du cours. Mobiliser des idées précises du chapitre — pas un paragraphe générique sur « le cadre du cours »." },
-      argue: { title: "Pour / contre", text: "Défendre une position assignée dans un débat ESG actuel. Argumentation structurée, ancrée dans le cours quand c'est pertinent. Les réponses modèles listent les arguments les plus solides pour ce camp." },
-      advanced: { title: "Approfondissement", text: "Questions d'extension : appliquer les outils du chapitre à de nouvelles situations et synthétiser plusieurs idées." }
+      argue: { title: "Pour / contre", text: "Défendre une position assignée dans un débat ESG actuel. Argumentation structurée, ancrée dans le cours quand c'est pertinent. Les réponses modèles listent les arguments les plus solides pour ce camp." }
     },
     chapters: {
       introduction: "Ch. 1 — Introduction",
@@ -724,7 +884,6 @@ const I18N = {
       "Comprehension": "Compréhension",
       "Numerical": "Numérique",
       "Current Events": "Actualité",
-      "Advanced": "Approfondissement",
       "Argue For/Against": "Pour / contre"
     }
   }
@@ -736,9 +895,24 @@ let frFallback = false;
 let currentChapter = null;
 let currentQuestions = [];
 let seenSet = new Set();
+let questionHistory = [];
+let historyIndex = -1;
 let currentQuestion = null;
 let numericalData = {};
 let selectedChoice = null;
+let categoryFilter = 'all';
+
+const FILTER_TYPE_MAP = {
+  all: null,
+  comprehension: 'Comprehension',
+  numerical: 'Numerical',
+  events: 'Current Events',
+  argue: 'Argue For/Against'
+};
+
+const FILTER_CAT_TO_TYPE = Object.fromEntries(
+  Object.entries(FILTER_TYPE_MAP).filter(([, v]) => v).map(([k, v]) => [v, k])
+);
 
 function t(key, ...args) {
   const v = I18N[lang][key];
@@ -747,6 +921,11 @@ function t(key, ...args) {
 
 function chapterFile(ch) {
   return lang === 'fr' ? ch.fileFr : ch.fileEn;
+}
+
+/** Resolve workbook path relative to this page (works on GitHub Pages and any subpath). */
+function dataFileUrl(filename) {
+  return new URL(filename, window.location.href).href;
 }
 
 function chapterName(ch) {
@@ -770,22 +949,112 @@ function chapterIndexFromUrl() {
 function renderExamInfo() {
   document.getElementById('exam-info-summary').textContent = t('examSummary');
   document.getElementById('exam-info-intro').textContent = t('examIntro');
-  const order = ['comprehension', 'numerical', 'events', 'argue', 'advanced'];
+  const order = ['comprehension', 'numerical', 'events', 'argue'];
   document.getElementById('question-types').innerHTML = order.map(k => {
     const tp = t('types')[k];
-    return `<div class="type-card" data-type="${k}"><h4>${escapeHtml(tp.title)}</h4><p>${escapeHtml(tp.text)}</p></div>`;
+    const active = categoryFilter === k ? ' filter-active' : '';
+    return `<div class="type-card${active}" data-type="${k}" role="button" tabindex="0" title="${escapeHtml(lang === 'fr' ? 'Filtrer sur ce type' : 'Practice this type only')}"><h4>${escapeHtml(tp.title)}</h4><p>${escapeHtml(tp.text)}</p></div>`;
   }).join('');
+}
+
+function countByCategory() {
+  const counts = {};
+  for (const q of currentQuestions) {
+    const c = q.category || 'Other';
+    counts[c] = (counts[c] || 0) + 1;
+  }
+  return counts;
+}
+
+function filteredQuestions() {
+  const cat = FILTER_TYPE_MAP[categoryFilter];
+  if (!cat) return currentQuestions;
+  return currentQuestions.filter(q => q.category === cat);
+}
+
+function formatBankBreakdown() {
+  const counts = countByCategory();
+  const order = ['Comprehension', 'Numerical', 'Current Events', 'Argue For/Against'];
+  const parts = [];
+  for (const cat of order) {
+    if (counts[cat]) parts.push(`${counts[cat]} ${categoryLabel(cat)}`);
+  }
+  for (const [cat, n] of Object.entries(counts)) {
+    if (!order.includes(cat)) parts.push(`${n} ${categoryLabel(cat)}`);
+  }
+  return parts.length ? t('bankBreakdown', parts) : '';
+}
+
+function populateCategoryFilter() {
+  const sel = document.getElementById('category-filter');
+  const counts = countByCategory();
+  const options = [{ value: 'all', label: t('filterAll'), n: currentQuestions.length }];
+  for (const [typeKey, cat] of Object.entries(FILTER_TYPE_MAP)) {
+    if (!cat || !counts[cat]) continue;
+    options.push({
+      value: typeKey,
+      label: `${t('types')[typeKey].title} (${counts[cat]})`,
+      n: counts[cat]
+    });
+  }
+  sel.innerHTML = options.map(o =>
+    `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label)}</option>`
+  ).join('');
+  sel.value = categoryFilter;
+  if (!options.some(o => o.value === categoryFilter)) categoryFilter = 'all';
+  sel.value = categoryFilter;
+  document.getElementById('label-category-filter').textContent = t('filterLabel');
+}
+
+function onCategoryFilterChange() {
+  categoryFilter = document.getElementById('category-filter').value || 'all';
+  renderExamInfo();
+  updateStats();
+  const pool = unseenQuestions();
+  if (pool.length === 0 && filteredQuestions().length > 0) {
+    showEmpty(t('filterEmpty'));
+  } else if (pool.length > 0) {
+    nextQuestion();
+  } else if (filteredQuestions().length === 0) {
+    showEmpty(t('filterEmpty'));
+  }
+}
+
+function bindTypeCardFilters() {
+  const host = document.getElementById('question-types');
+  if (host._filterBound) return;
+  host._filterBound = true;
+  host.addEventListener('click', e => {
+    const card = e.target.closest('.type-card[data-type]');
+    if (!card || !currentChapter) return;
+    categoryFilter = card.dataset.type;
+    const sel = document.getElementById('category-filter');
+    if (sel) sel.value = categoryFilter;
+    onCategoryFilterChange();
+  });
+  host.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest('.type-card[data-type]');
+    if (!card) return;
+    e.preventDefault();
+    card.click();
+  });
 }
 
 function applyStaticUi() {
   document.documentElement.lang = lang;
+  document.getElementById('build-tag').textContent = BUILD_ID;
   document.getElementById('page-title').textContent = t('pageTitle');
   document.getElementById('label-chapter').textContent = t('chapter');
   document.getElementById('start-btn').textContent = t('start');
   document.getElementById('label-stat-total').textContent = t('questions');
   document.getElementById('label-stat-seen').textContent = t('seen');
+  document.getElementById('label-stat-remaining').textContent = t('remaining');
+  const resetBtn = document.getElementById('reset-pool-btn');
+  if (resetBtn) resetBtn.textContent = t('resetPool');
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
   renderExamInfo();
+  bindTypeCardFilters();
   const sel = document.getElementById('chapter-select');
   const cur = sel.value;
   const ph = sel.querySelector('option[value=""]');
@@ -845,17 +1114,26 @@ function init() {
 
 async function startPractice(ch) {
   currentChapter = ch;
-  document.getElementById('chapter-subtitle').textContent = t('subtitleActive', chapterName(ch));
   document.title = (lang === 'fr' ? 'Entraînement — ' : 'Practice — ') + chapterName(ch);
   await loadChapter(ch);
 }
 
-function parseCorrectChoice(val) {
-  if (val === undefined || val === null || val === '') return 1;
-  const s = String(val).trim().toUpperCase();
-  if (/^[A-E]$/.test(s)) return s.charCodeAt(0) - 64;
+function normChoice(s) {
+  return String(s).replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function resolveCorrectIndex(correctRaw, choices) {
+  if (!choices.length) return 1;
+  const s = String(correctRaw ?? '').trim();
+  const upper = s.toUpperCase();
+  if (/^[A-E]$/.test(upper)) return upper.charCodeAt(0) - 64;
   const n = parseInt(s, 10);
-  return isNaN(n) ? 1 : n;
+  if (!isNaN(n) && n >= 1 && n <= choices.length) return n;
+  const sn = normChoice(s);
+  let idx = choices.findIndex(ch => normChoice(ch) === sn);
+  if (idx >= 0) return idx + 1;
+  idx = choices.findIndex(ch => normChoice(ch).includes(sn) || sn.includes(normChoice(ch)));
+  return idx >= 0 ? idx + 1 : 1;
 }
 
 function parseNumericalSheet(ws) {
@@ -869,35 +1147,54 @@ function parseNumericalSheet(ws) {
     if (/Correct Choice/i.test(h)) correctCol = i;
   });
   if (choiceCols.length === 0) {
-    for (let i = 3; i <= 7; i++) choiceCols.push(i);
+    for (let i = 3; i < Math.min(header.length, 8); i++) choiceCols.push(i);
   }
+  const numericalIds = new Set(
+    currentQuestions.filter(q => q.category === 'Numerical').map(q => String(q.id))
+  );
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row[0] === undefined || row[0] === null || row[0] === '') continue;
-    const numId = row[0];
+    const numId = String(row[0]);
+    if (numericalIds.size && !numericalIds.has(numId)) continue;
     const choices = [];
     for (const c of choiceCols) {
       if (row[c] !== undefined && row[c] !== null && row[c] !== '') {
         choices.push(String(row[c]));
       }
     }
-    const correctNum = parseCorrectChoice(correctCol >= 0 ? row[correctCol] : row[8]);
-    numericalData[numId] = { choices: choices.slice(0, 5), correctNum };
+    if (choices.length === 0) {
+      for (let c = 3; c < 23 && c < row.length; c++) {
+        if (row[c] !== undefined && row[c] !== null && row[c] !== '') {
+          choices.push(String(row[c]));
+        }
+      }
+    }
+    const trimmed = choices.slice(0, 5);
+    if (!trimmed.length) continue;
+    const correctRaw = correctCol >= 0 ? row[correctCol] : row[8];
+    numericalData[numId] = {
+      choices: trimmed,
+      correctNum: resolveCorrectIndex(correctRaw, trimmed),
+      correctVal: trimmed[resolveCorrectIndex(correctRaw, trimmed) - 1]
+    };
   }
 }
 
 // ─── LOAD CHAPTER ───
 async function loadChapter(ch) {
-  let url = chapterFile(ch);
+  let file = chapterFile(ch);
   frFallback = false;
 
   showLoading();
   currentQuestions = [];
   numericalData = {};
   seenSet.clear();
+  clearQuestionHistory();
+  categoryFilter = 'all';
 
-  async function loadFile(file) {
-    const resp = await fetch(file);
+  async function loadWorkbook(filename) {
+    const resp = await fetch(dataFileUrl(filename));
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     return XLSX.read(await resp.arrayBuffer(), { type: 'array' });
   }
@@ -905,12 +1202,12 @@ async function loadChapter(ch) {
   try {
     let wb;
     try {
-      wb = await loadFile(url);
+      wb = await loadWorkbook(file);
     } catch (e) {
       if (lang === 'fr') {
-        url = ch.fileEn;
+        file = ch.fileEn;
         frFallback = true;
-        wb = await loadFile(url);
+        wb = await loadWorkbook(file);
       } else throw e;
     }
 
@@ -920,9 +1217,9 @@ async function loadChapter(ch) {
 
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      if (!row || !row[2]) continue;
+      if (!row || row[2] === undefined || row[2] === null || String(row[2]).trim() === '') continue;
       currentQuestions.push({
-        id: row[0],
+        id: String(row[0]),
         category: (row[1] || '').trim(),
         question: String(row[2]).trim(),
         answer: String(row[3] || '').trim()
@@ -936,7 +1233,19 @@ async function loadChapter(ch) {
     const note = document.getElementById('practice-note');
     note.textContent = t('practiceNote');
     note.style.display = 'block';
+    const breakdown = document.getElementById('bank-breakdown');
+    breakdown.textContent = formatBankBreakdown();
+    breakdown.style.display = 'block';
+    document.getElementById('chapter-subtitle').textContent =
+      t('subtitleActive', chapterName(currentChapter)) + ' · ' + t('bankCount', currentQuestions.length);
+    populateCategoryFilter();
+    const filterSel = document.getElementById('category-filter');
+    if (!filterSel._changeBound) {
+      filterSel._changeBound = true;
+      filterSel.addEventListener('change', onCategoryFilterChange);
+    }
     document.getElementById('stats-bar').style.display = 'flex';
+    renderExamInfo();
     updateStats();
     nextQuestion();
 
@@ -949,17 +1258,29 @@ async function loadChapter(ch) {
     }
 
   } catch (err) {
-    showError(err.message, url);
+    showError(err.message);
     document.getElementById('stats-bar').style.display = 'none';
   }
+}
+
+function clearQuestionHistory() {
+  questionHistory = [];
+  historyIndex = -1;
+}
+
+function findQuestion(id) {
+  return currentQuestions.find(q => String(q.id) === String(id));
 }
 
 function resetToChapterPicker() {
   currentChapter = null;
   currentQuestions = [];
   seenSet.clear();
+  clearQuestionHistory();
   document.getElementById('stats-bar').style.display = 'none';
   document.getElementById('practice-note').style.display = 'none';
+  document.getElementById('bank-breakdown').style.display = 'none';
+  categoryFilter = 'all';
   document.getElementById('chapter-subtitle').textContent = t('subtitlePick');
   document.title = t('pageTitle');
   showChapterPrompt();
@@ -977,30 +1298,126 @@ function showChapterPrompt() {
   `;
 }
 
+function unseenQuestions() {
+  return filteredQuestions().filter(q => !seenSet.has(String(q.id)));
+}
+
 // ─── STATS ───
 function updateStats() {
-  document.getElementById('stat-total').textContent = currentQuestions.length;
-  document.getElementById('stat-seen').textContent = seenSet.size;
+  const pool = filteredQuestions();
+  const total = pool.length;
+  const seen = pool.filter(q => seenSet.has(String(q.id))).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-seen').textContent = seen;
+  document.getElementById('stat-remaining').textContent = Math.max(0, total - seen);
+}
+
+function resetQuestionPool() {
+  seenSet.clear();
+  clearQuestionHistory();
+  updateStats();
+  nextQuestion();
+  window.scrollTo({ top: document.getElementById('question-container').offsetTop - 20, behavior: 'smooth' });
+}
+
+function showPoolComplete() {
+  document.getElementById('question-container').innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <h3>${escapeHtml(t('poolCompleteTitle'))}</h3>
+      <p>${escapeHtml(t('poolCompleteHint'))}</p>
+      <button type="button" class="btn btn-primary" style="margin-top:1.25rem;" onclick="resetQuestionPool()">${escapeHtml(t('resetPool'))}</button>
+      <button type="button" class="btn btn-ghost" style="margin-top:0.75rem;" onclick="resetToChapterPicker()">${escapeHtml(t('changeChapter'))}</button>
+    </div>
+  `;
+  currentQuestion = null;
+  clearQuestionHistory();
+}
+
+function scrollToQuestion() {
+  const el = document.getElementById('question-container');
+  if (el) window.scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' });
+}
+
+function displayQuestion(q, { addToHistory = false } = {}) {
+  if (!q) return;
+  selectedChoice = null;
+  currentQuestion = q;
+  if (addToHistory) {
+    if (historyIndex < questionHistory.length - 1) {
+      questionHistory = questionHistory.slice(0, historyIndex + 1);
+    }
+    questionHistory.push(String(q.id));
+    historyIndex = questionHistory.length - 1;
+    seenSet.add(String(q.id));
+    updateStats();
+  }
+  renderQuestion(q);
+}
+
+function goPrevious() {
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  const q = findQuestion(questionHistory[historyIndex]);
+  if (q) {
+    displayQuestion(q);
+    scrollToQuestion();
+  }
 }
 
 // ─── PICK RANDOM QUESTION ───
 function nextQuestion() {
-  selectedChoice = null;
-
   if (currentQuestions.length === 0) {
     showEmpty(t('noQuestions'));
     return;
   }
 
-  const q = currentQuestions[Math.floor(Math.random() * currentQuestions.length)];
-  currentQuestion = q;
-  renderQuestion(q);
+  if (historyIndex >= 0 && historyIndex < questionHistory.length - 1) {
+    historyIndex++;
+    const q = findQuestion(questionHistory[historyIndex]);
+    if (q) {
+      displayQuestion(q);
+      scrollToQuestion();
+      return;
+    }
+  }
+
+  const pool = unseenQuestions();
+  if (pool.length === 0) {
+    if (filteredQuestions().length === 0) {
+      showEmpty(t('filterEmpty'));
+    } else {
+      showPoolComplete();
+    }
+    return;
+  }
+
+  const q = pool[Math.floor(Math.random() * pool.length)];
+  displayQuestion(q, { addToHistory: true });
+}
+
+function splitModelAnswer(text) {
+  if (!text) return { calc: '', interpret: '' };
+  const parts = text.split(/\n+---INTERPRETATION---\n+/i);
+  if (parts.length >= 2) {
+    return {
+      calc: parts[0].replace(/^PART 1[^\n]*\n?/i, '').trim(),
+      interpret: parts.slice(1).join('\n\n').replace(/^PART 2[^\n]*\n?/i, '').trim()
+    };
+  }
+  return { calc: text.trim(), interpret: '' };
 }
 
 function splitNumericalQuestion(text) {
-  const followBlock = text.split(/\n\n(?:Follow-up|Question de suivi|Suite)\s*:\s*/i);
+  const followBlock = text.split(/\n\n(?:Interpretation|Follow-up|Question de suivi)(?:\s*\([^)]*\))?\s*:\s*/i);
   if (followBlock.length >= 2) {
     return { calc: followBlock[0].trim(), followUp: followBlock.slice(1).join('\n\n').trim() };
+  }
+  const abMatch = text.match(/^([\s\S]+?)\n\n\([a-c]\)/i);
+  if (abMatch) {
+    return { calc: abMatch[1].trim(), followUp: text.slice(abMatch[1].length).trim() };
   }
   const splitters = [
     /\s+and explain\s+/i,
@@ -1028,21 +1445,26 @@ function splitNumericalQuestion(text) {
 }
 
 function numericalRequiresChoice(q) {
-  return q.category === 'Numerical' && numericalData[q.id]?.choices?.length > 0;
+  return q.category === 'Numerical' && numericalData[String(q.id)]?.choices?.length > 0;
 }
 
 // ─── RENDER ───
 function renderQuestion(q) {
   const container = document.getElementById('question-container');
   const isNumerical = q.category === 'Numerical';
-  const numInfo = isNumerical ? numericalData[q.id] : null;
+  const numInfo = isNumerical ? numericalData[String(q.id)] : null;
   const shuffledChoices = numInfo?.choices?.length ? shuffle([...numInfo.choices]) : [];
+  const hasMcq = isNumerical && shuffledChoices.length > 0;
   let calcText = q.question;
   let followUp = null;
   if (isNumerical) {
     const parts = splitNumericalQuestion(q.question);
     calcText = parts.calc;
-    followUp = parts.followUp;
+    if (hasMcq) {
+      followUp = parts.followUp || t('interpretPromptDefault');
+    } else {
+      followUp = parts.followUp || t('openNumericalPrompt');
+    }
     q.followUp = followUp;
   }
 
@@ -1053,7 +1475,7 @@ function renderQuestion(q) {
         <span class="cat-badge" data-c="${q.category}">${escapeHtml(categoryLabel(q.category))}</span>
       </div>
       <div class="card-body">
-        <div class="question-text">${escapeHtml(calcText)}</div>
+        <div class="question-text">${formatRichText(calcText)}</div>
         ${isNumerical && shuffledChoices.length > 0 ? `
           <div class="numerical-section-label">${escapeHtml(t('selectOne'))}</div>
           <div class="choices-grid" id="choices-grid">
@@ -1061,22 +1483,28 @@ function renderQuestion(q) {
               <button type="button" class="choice-btn" data-idx="${i}" data-val="${escapeAttr(ch)}" onclick="selectChoice(this)">${escapeHtml(ch)}</button>
             `).join('')}
           </div>
+        ` : (isNumerical ? `
+          <div class="follow-up-prompt">${formatRichText(followUp || t('openNumericalPrompt'))}</div>
+          <div class="numerical-section-label">${escapeHtml(t('yourAnswer'))}</div>
+        ` : '')}
+        ${hasMcq ? `
+          <div class="follow-up-prompt">${formatRichText(followUp)}</div>
+          <div class="numerical-section-label">${escapeHtml(t('interpretRequired'))}</div>
         ` : ''}
-        ${followUp ? `
-          <div class="follow-up-prompt">${escapeHtml(followUp)}</div>
-          <div class="numerical-section-label">${escapeHtml(t('followUpOptional'))}</div>
-        ` : ''}
-        <textarea class="answer-area" id="student-answer" placeholder="${followUp ? t('followUpPlaceholder') : t('answerPlaceholder')}"></textarea>
+        <textarea class="answer-area" id="student-answer" placeholder="${isNumerical && !hasMcq ? t('followUpPlaceholder') : (hasMcq || followUp ? t('followUpPlaceholder') : t('answerPlaceholder'))}"></textarea>
       </div>
       <div class="card-actions">
         <button class="btn btn-primary" onclick="showSolution()">${escapeHtml(t('showSolution'))}</button>
+        <button class="btn btn-ghost" onclick="goPrevious()" ${historyIndex <= 0 ? 'disabled' : ''}>${escapeHtml(t('prev'))}</button>
         <button class="btn btn-secondary" onclick="markAndNext()">${escapeHtml(t('next'))}</button>
         <button class="btn btn-ghost" onclick="skipQuestion()">${escapeHtml(t('skip'))}</button>
         <button class="btn btn-ghost" onclick="resetToChapterPicker()">${escapeHtml(t('changeChapter'))}</button>
       </div>
       <div class="model-answer" id="model-answer">
-        <div class="model-answer-label">${escapeHtml(t('modelAnswer'))}</div>
+        <div class="model-answer-label" id="model-answer-label-calc">${escapeHtml(t('modelCalc'))}</div>
         <div class="model-answer-text" id="model-answer-text"></div>
+        <div class="model-answer-label" id="model-answer-label-interpret" style="display:none;margin-top:1rem;">${escapeHtml(t('modelInterpret'))}</div>
+        <div class="model-answer-text" id="model-answer-interpret" style="display:none;"></div>
       </div>
     </div>
   `;
@@ -1092,16 +1520,27 @@ function showSolution() {
   const q = currentQuestion;
   if (!q) return;
   const el = document.getElementById('model-answer');
-  document.getElementById('model-answer-text').textContent = q.answer;
+  const parts = splitModelAnswer(q.answer);
+  document.getElementById('model-answer-text').innerHTML = formatRichText(parts.calc || q.answer);
+  const interpEl = document.getElementById('model-answer-interpret');
+  const interpLabel = document.getElementById('model-answer-label-interpret');
+  if (parts.interpret) {
+    interpEl.innerHTML = formatRichText(parts.interpret);
+    interpEl.style.display = 'block';
+    interpLabel.style.display = 'block';
+  } else {
+    interpEl.style.display = 'none';
+    interpLabel.style.display = 'none';
+  }
   el.classList.add('visible');
 
   // Reveal correct/wrong for numerical choices
-  if (q.category === 'Numerical' && numericalData[q.id]) {
-    const correctIdx = numericalData[q.id].correctNum;
-    const correctVal = numericalData[q.id].choices[correctIdx - 1];
+  if (q.category === 'Numerical' && numericalData[String(q.id)]) {
+    const nd = numericalData[String(q.id)];
+    const correctVal = nd.correctVal || nd.choices[nd.correctNum - 1];
     document.querySelectorAll('.choice-btn').forEach(btn => {
       btn.disabled = true;
-      if (btn.dataset.val === correctVal) {
+      if (normChoice(btn.dataset.val) === normChoice(correctVal)) {
         btn.classList.add('correct');
       } else if (btn.classList.contains('selected')) {
         btn.classList.add('wrong');
@@ -1109,23 +1548,17 @@ function showSolution() {
     });
   }
 
-  seenSet.add(q.id);
-  updateStats();
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function markAndNext() {
-  if (currentQuestion) seenSet.add(currentQuestion.id);
-  updateStats();
   nextQuestion();
-  window.scrollTo({ top: document.getElementById('question-container').offsetTop - 20, behavior: 'smooth' });
+  scrollToQuestion();
 }
 
 function skipQuestion() {
-  if (currentQuestion) seenSet.add(currentQuestion.id);
-  updateStats();
   nextQuestion();
-  window.scrollTo({ top: document.getElementById('question-container').offsetTop - 20, behavior: 'smooth' });
+  scrollToQuestion();
 }
 
 // ─── UTILITY ───
@@ -1141,6 +1574,75 @@ function escapeHtml(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+function formatInline(s) {
+  return escapeHtml(String(s)).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function isTableRow(line) {
+  const t = String(line || '').trim();
+  return t.startsWith('|') && t.endsWith('|') && (t.match(/\|/g) || []).length >= 2;
+}
+
+function isTableSeparator(line) {
+  return /^\|[\s\-:|]+\|$/.test(String(line || '').trim());
+}
+
+function parseTableRow(line) {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+}
+
+function renderMarkdownTable(lines) {
+  const rows = lines.filter(l => !isTableSeparator(l)).map(parseTableRow);
+  if (!rows.length) return '';
+  const colCount = Math.max(...rows.map(r => r.length));
+  const pad = row => {
+    while (row.length < colCount) row.push('');
+    return row;
+  };
+  let html = '<table class="case-table"><thead><tr>';
+  pad(rows[0]).forEach(cell => { html += `<th>${formatInline(cell) || '&nbsp;'}</th>`; });
+  html += '</tr></thead><tbody>';
+  for (let r = 1; r < rows.length; r++) {
+    html += '<tr>';
+    pad(rows[r]).forEach(cell => { html += `<td>${formatInline(cell) || '&nbsp;'}</td>`; });
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  return html;
+}
+
+function formatPlainBlock(s) {
+  const t = String(s || '');
+  if (!t.trim()) return '';
+  return `<div class="prose-block">${formatInline(t)}</div>`;
+}
+
+/** Line breaks, **bold**, and markdown pipe tables from Excel question text. */
+function formatRichText(s) {
+  if (!s) return '';
+  const lines = String(s).split(/\r?\n/);
+  const parts = [];
+  let i = 0;
+  while (i < lines.length) {
+    if (isTableRow(lines[i])) {
+      const block = [];
+      while (i < lines.length && isTableRow(lines[i])) {
+        block.push(lines[i]);
+        i++;
+      }
+      parts.push(renderMarkdownTable(block));
+    } else {
+      const block = [];
+      while (i < lines.length && !isTableRow(lines[i])) {
+        block.push(lines[i]);
+        i++;
+      }
+      parts.push(formatPlainBlock(block.join('\n')));
+    }
+  }
+  return parts.join('');
 }
 
 function escapeAttr(s) {
@@ -1167,16 +1669,14 @@ function showEmpty(msg) {
   `;
 }
 
-function showError(msg, url) {
+function showError(msg) {
   document.getElementById('question-container').innerHTML = `
     <div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
       </svg>
       <h3>${escapeHtml(t('errLoad'))}</h3>
-      <p style="margin-top:0.5rem;font-size:0.9rem;">${escapeHtml(msg)}</p>
-      <p style="margin-top:0.75rem;font-size:0.82rem;word-break:break-all;opacity:0.5;">${escapeHtml(url)}</p>
-      <p style="margin-top:1rem;font-size:0.85rem;">${escapeHtml(t('errServer'))} <code>${escapeHtml(currentChapter ? chapterFile(currentChapter) : 'Chapter_*.xlsx')}</code></p>
+      <p style="margin-top:0.75rem;font-size:0.9rem;">${escapeHtml(t('errHint'))}</p>
     </div>
   `;
 }
